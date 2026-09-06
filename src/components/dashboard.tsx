@@ -4,8 +4,11 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Sun, CalendarClock, Wallet, FolderKanban, Church, Code2, AlertTriangle, ArrowRight, Check } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SectionCard } from "@/components/section-card";
 import { AddCommitmentDialog, AddBillDialog, AddProjectDialog } from "@/components/entry-dialogs";
+import { AREAS } from "@/lib/areas";
 import type { Commitment, Bill, Project } from "@/lib/types";
 
 interface DashboardData {
@@ -28,6 +31,10 @@ function dayLabel(iso: string) {
   const label = weekdayFmt.format(d);
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
+
+const financasColor = AREAS.find((a) => a.key === "financas")!.color;
+const igrejaColor = AREAS.find((a) => a.key === "igreja_ministerio")!.color;
+const devColor = AREAS.find((a) => a.key === "desenvolvimento")!.color;
 
 export function Dashboard() {
   const router = useRouter();
@@ -58,10 +65,10 @@ export function Dashboard() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="mb-8 text-xl font-bold">O que precisa da minha atenção?</h1>
+    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+      <h1 className="mb-6 text-2xl font-bold tracking-tight">O que precisa da minha atenção?</h1>
 
-      <div className="space-y-8">
+      <div className="space-y-5">
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
           <TodaySection data={data} onChange={load} />
         </motion.div>
@@ -72,10 +79,10 @@ export function Dashboard() {
           <FinanceSection finance={data.finance} />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <ProjectsSection title="PROJETOS" projects={data.projects} onChange={load} />
+          <ProjectsSection title="Projetos" icon={FolderKanban} color="#71717a" projects={data.projects} onChange={load} />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <ProjectsSection title="IGREJA & MINISTÉRIO" projects={data.church} onChange={load} defaultArea="igreja_ministerio" />
+          <ProjectsSection title="Igreja & Ministério" icon={Church} color={igrejaColor} projects={data.church} onChange={load} defaultArea="igreja_ministerio" />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
           <DevSection dev={data.dev} />
@@ -83,10 +90,6 @@ export function Dashboard() {
       </div>
     </div>
   );
-}
-
-export function SectionTitle({ children }: { children: string }) {
-  return <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{children}</h2>;
 }
 
 function TodaySection({ data, onChange }: { data: DashboardData; onChange: () => void }) {
@@ -103,137 +106,141 @@ function TodaySection({ data, onChange }: { data: DashboardData; onChange: () =>
   }
 
   return (
-    <section>
-      <div className="mb-2 flex items-center justify-between">
-        <SectionTitle>Hoje</SectionTitle>
+    <SectionCard
+      title="Hoje"
+      icon={Sun}
+      color="#f59e0b"
+      actions={
         <div className="flex gap-1">
           <AddCommitmentDialog onAdded={onChange} />
           <AddBillDialog onAdded={onChange} />
         </div>
-      </div>
+      }
+    >
       {empty ? (
         <p className="text-sm text-muted-foreground">Nada marcado para hoje.</p>
       ) : (
         <ul className="space-y-1.5">
           {commitments.map((c) => (
-            <li key={c.id} className="flex items-center gap-3 text-sm">
+            <li key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
               <span className="w-12 shrink-0 tabular-nums text-muted-foreground">{timeFmt.format(new Date(c.startAt))}</span>
-              <span>{c.title}</span>
+              <span className="font-medium">{c.title}</span>
             </li>
           ))}
           {bills.map((b) => (
-            <li key={b.id} className="flex items-center gap-3 text-sm">
+            <li key={b.id} className="flex items-center gap-3 rounded-lg border border-rose-500/20 bg-rose-500/5 px-3 py-2 text-sm">
               <Checkbox className="shrink-0" onCheckedChange={() => markPaid(b.id)} />
-              <span className="font-bold text-rose-500">!</span>
-              <span>Conta {b.title.toLowerCase()} vence hoje</span>
+              <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500" />
+              <span className="font-medium">Conta {b.title.toLowerCase()} vence hoje</span>
             </li>
           ))}
         </ul>
       )}
-    </section>
+    </SectionCard>
   );
 }
 
 function UpcomingSection({ commitments }: { commitments: Commitment[] }) {
   return (
-    <section>
-      <SectionTitle>Próximos compromissos</SectionTitle>
+    <SectionCard title="Próximos compromissos" icon={CalendarClock} color="#0ea5e9">
       {commitments.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nenhum compromisso futuro marcado.</p>
       ) : (
         <ul className="space-y-1.5">
           {commitments.map((c) => (
-            <li key={c.id} className="flex items-center gap-3 text-sm">
+            <li key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
               <span className="w-28 shrink-0 text-muted-foreground">
                 {dayLabel(c.startAt)} {timeFmt.format(new Date(c.startAt))}
               </span>
-              <span>{c.title}</span>
+              <span className="font-medium">{c.title}</span>
             </li>
           ))}
         </ul>
       )}
-    </section>
+    </SectionCard>
   );
 }
 
 function FinanceSection({ finance }: { finance: DashboardData["finance"] }) {
   return (
-    <section>
-      <SectionTitle>Financeiro</SectionTitle>
-      <div className="space-y-1.5 text-sm">
+    <SectionCard title="Financeiro" icon={Wallet} color={financasColor}>
+      <div className="space-y-2 text-sm">
         <div className="flex items-center justify-between">
-          <span>Disponível de verdade</span>
-          <span className={`font-medium ${finance.free >= 0 ? "text-emerald-600" : "text-rose-500"}`}>{currency(finance.free)}</span>
+          <span className="text-muted-foreground">Disponível de verdade</span>
+          <span className={`text-base font-bold tabular-nums ${finance.free >= 0 ? "text-emerald-600" : "text-rose-500"}`}>{currency(finance.free)}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span>Já comprometido</span>
-          <span className="font-medium text-muted-foreground">{currency(finance.committed)}</span>
+          <span className="text-muted-foreground">Já comprometido</span>
+          <span className="font-medium tabular-nums text-muted-foreground">{currency(finance.committed)}</span>
         </div>
-        <Link href="/app/areas/financas" className="inline-block text-xs font-medium text-muted-foreground hover:text-foreground hover:underline">
-          Abrir financeiro →
+        <Link
+          href="/app/areas/financas"
+          className="mt-1 inline-flex items-center gap-1 text-xs font-medium hover:underline"
+          style={{ color: financasColor }}
+        >
+          Abrir financeiro <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
-    </section>
+    </SectionCard>
   );
 }
 
 function ProjectsSection({
   title,
+  icon,
+  color,
   projects,
   onChange,
   defaultArea,
 }: {
   title: string;
+  icon: React.ComponentProps<typeof SectionCard>["icon"];
+  color: string;
   projects: Project[];
   onChange: () => void;
   defaultArea?: string;
 }) {
   return (
-    <section>
-      <div className="mb-2 flex items-center justify-between">
-        <SectionTitle>{title}</SectionTitle>
-        <AddProjectDialog onAdded={onChange} defaultArea={defaultArea} />
-      </div>
+    <SectionCard title={title} icon={icon} color={color} actions={<AddProjectDialog onAdded={onChange} defaultArea={defaultArea} />}>
       {projects.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nada por aqui ainda.</p>
       ) : (
         <ul className="space-y-2">
           {projects.map((p) => (
-            <li key={p.id} className="text-sm">
+            <li key={p.id} className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
               <p className="font-medium">{p.name}</p>
               {p.statusNote && <p className="text-muted-foreground">→ {p.statusNote}</p>}
             </li>
           ))}
         </ul>
       )}
-    </section>
+    </SectionCard>
   );
 }
 
 function DevSection({ dev }: { dev: DashboardData["dev"] }) {
-  if (dev.needsDecision === 0 && dev.alerts === 0) {
-    return (
-      <section>
-        <SectionTitle>Desenvolvimento</SectionTitle>
-        <p className="text-sm text-muted-foreground">Nada pendente.</p>
-      </section>
-    );
-  }
   return (
-    <section>
-      <SectionTitle>Desenvolvimento</SectionTitle>
-      <ul className="space-y-1 text-sm">
-        {dev.needsDecision > 0 && (
-          <li>
-            {dev.needsDecision} {dev.needsDecision === 1 ? "projeto precisa" : "projetos precisam"} de decisão
-          </li>
-        )}
-        {dev.alerts > 0 && (
-          <li>
-            {dev.alerts} {dev.alerts === 1 ? "deploy com problema" : "deploys com problema"}
-          </li>
-        )}
-      </ul>
-    </section>
+    <SectionCard title="Desenvolvimento" icon={Code2} color={devColor}>
+      {dev.needsDecision === 0 && dev.alerts === 0 ? (
+        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Check className="h-4 w-4 text-emerald-500" /> Nada pendente.
+        </p>
+      ) : (
+        <ul className="space-y-1.5 text-sm">
+          {dev.needsDecision > 0 && (
+            <li className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-400">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              {dev.needsDecision} {dev.needsDecision === 1 ? "projeto precisa" : "projetos precisam"} de decisão
+            </li>
+          )}
+          {dev.alerts > 0 && (
+            <li className="flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-2 text-rose-600 dark:text-rose-400">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              {dev.alerts} {dev.alerts === 1 ? "deploy com problema" : "deploys com problema"}
+            </li>
+          )}
+        </ul>
+      )}
+    </SectionCard>
   );
 }

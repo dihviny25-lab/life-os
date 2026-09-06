@@ -3,13 +3,17 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { Wallet, AlertTriangle, CalendarDays, TrendingUp, PiggyBank } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { SectionTitle } from "@/components/dashboard";
+import { SectionCard } from "@/components/section-card";
 import { AddTransactionDialog, AddEnvelopeDialog } from "@/components/finance-dialogs";
 import { AddBillDialog } from "@/components/entry-dialogs";
 import { notify } from "@/lib/toast";
+import { AREAS } from "@/lib/areas";
 import type { Bill } from "@/lib/types";
+
+const financasColor = AREAS.find((a) => a.key === "financas")!.color;
 
 interface Envelope {
   id: string;
@@ -33,12 +37,12 @@ interface Overview {
 const currency = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const dateFmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
 
-const STATUS_LABEL: Record<string, { label: string; color: string }> = {
-  atrasado: { label: "Atrasado", color: "text-rose-500" },
-  sem_cobertura: { label: "Sem cobertura", color: "text-rose-500" },
-  parcial: { label: "Parcialmente separado", color: "text-amber-500" },
-  separado: { label: "Separado", color: "text-emerald-600" },
-  pago: { label: "Pago", color: "text-emerald-600" },
+const STATUS_LABEL: Record<string, { label: string; color: string; bg: string }> = {
+  atrasado: { label: "Atrasado", color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-500/10 border-rose-500/20" },
+  sem_cobertura: { label: "Sem cobertura", color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-500/10 border-rose-500/20" },
+  parcial: { label: "Parcialmente separado", color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
+  separado: { label: "Separado", color: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
+  pago: { label: "Pago", color: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
 };
 
 export function FinanceView() {
@@ -73,101 +77,109 @@ export function FinanceView() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="mb-8 text-xl font-bold">Financeiro</h1>
+    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+      <h1 className="mb-6 text-2xl font-bold tracking-tight" style={{ color: financasColor }}>
+        Financeiro
+      </h1>
 
-      <div className="space-y-8">
-        <motion.section initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-          <SectionTitle>Situação atual</SectionTitle>
-          <SituacaoAtual situacao={overview.situacao} onChange={load} />
-        </motion.section>
+      <div className="space-y-5">
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
+          <SectionCard title="Situação atual" icon={Wallet} color={financasColor}>
+            <SituacaoAtual situacao={overview.situacao} onChange={load} />
+          </SectionCard>
+        </motion.div>
 
-        <motion.section initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <div className="mb-2 flex items-center justify-between">
-            <SectionTitle>Precisa da sua atenção</SectionTitle>
-            <AddBillDialog onAdded={load} />
-          </div>
-          {overview.atencao.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Tudo coberto.</p>
-          ) : (
-            <ul className="space-y-2">
-              {overview.atencao.map((b) => (
-                <li key={b.id} className="rounded-lg border border-border/60 p-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{b.title}</span>
-                    <span className="font-medium">{currency(b.amount)}</span>
-                  </div>
-                  <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{dateFmt.format(new Date(b.dueDate))}</span>
-                    <span className={STATUS_LABEL[b.status]?.color}>
-                      {STATUS_LABEL[b.status]?.label} {b.separated > 0 && `(${currency(b.separated)} separados)`}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </motion.section>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <SectionCard title="Precisa da sua atenção" icon={AlertTriangle} color="#f43f5e" actions={<AddBillDialog onAdded={load} />}>
+            {overview.atencao.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Tudo coberto.</p>
+            ) : (
+              <ul className="space-y-2">
+                {overview.atencao.map((b) => {
+                  const s = STATUS_LABEL[b.status];
+                  return (
+                    <li key={b.id} className={`rounded-lg border p-3 text-sm ${s?.bg}`}>
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{b.title}</span>
+                        <span className="font-semibold tabular-nums">{currency(b.amount)}</span>
+                      </div>
+                      <div className="mt-1 flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">{dateFmt.format(new Date(b.dueDate))}</span>
+                        <span className={`font-medium ${s?.color}`}>
+                          {s?.label} {b.separated > 0 && `(${currency(b.separated)} separados)`}
+                        </span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </SectionCard>
+        </motion.div>
 
-        <motion.section initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <div className="mb-2 flex items-center justify-between">
-            <SectionTitle>Esta semana</SectionTitle>
-            <div className="flex gap-1">
-              <AddTransactionDialog type="income" onAdded={load} />
-              <AddTransactionDialog type="expense" onAdded={load} />
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <SectionCard
+            title="Esta semana"
+            icon={CalendarDays}
+            color="#0ea5e9"
+            actions={
+              <div className="flex gap-1">
+                <AddTransactionDialog type="income" onAdded={load} />
+                <AddTransactionDialog type="expense" onAdded={load} />
+              </div>
+            }
+          >
+            <div className="space-y-2 text-sm">
+              <Row label="Recebido" value={currency(overview.semana.recebido)} />
+              <Row label="Gastos" value={currency(overview.semana.gasto)} valueClass="text-rose-500" />
+              <Row label="Contas da semana" value={currency(overview.semana.contas)} valueClass="text-rose-500" />
+              <Row
+                label="Livre"
+                value={currency(overview.semana.livre)}
+                valueClass={overview.semana.livre >= 0 ? "text-emerald-600" : "text-rose-500"}
+                bold
+              />
             </div>
-          </div>
-          <div className="space-y-1.5 text-sm">
-            <Row label="Recebido" value={currency(overview.semana.recebido)} />
-            <Row label="Gastos" value={currency(overview.semana.gasto)} valueClass="text-rose-500" />
-            <Row label="Contas da semana" value={currency(overview.semana.contas)} valueClass="text-rose-500" />
-            <Row
-              label="Livre"
-              value={currency(overview.semana.livre)}
-              valueClass={overview.semana.livre >= 0 ? "text-emerald-600" : "text-rose-500"}
-              bold
-            />
-          </div>
-        </motion.section>
+          </SectionCard>
+        </motion.div>
 
-        <motion.section initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <SectionTitle>Próximos 30 dias</SectionTitle>
-          <div className="space-y-1.5 text-sm">
-            <Row label="Entradas (últimos 30 dias)" value={currency(overview.projecao30d.entradas)} />
-            <Row label="Contas previstas" value={currency(overview.projecao30d.contas)} valueClass="text-rose-500" />
-            <Row
-              label="Margem projetada"
-              value={currency(overview.projecao30d.margem)}
-              valueClass={overview.projecao30d.margem >= 0 ? "text-emerald-600" : "text-rose-500"}
-              bold
-            />
-          </div>
-        </motion.section>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <SectionCard title="Próximos 30 dias" icon={TrendingUp} color="#6366f1">
+            <div className="space-y-2 text-sm">
+              <Row label="Entradas (últimos 30 dias)" value={currency(overview.projecao30d.entradas)} />
+              <Row label="Contas previstas" value={currency(overview.projecao30d.contas)} valueClass="text-rose-500" />
+              <Row
+                label="Margem projetada"
+                value={currency(overview.projecao30d.margem)}
+                valueClass={overview.projecao30d.margem >= 0 ? "text-emerald-600" : "text-rose-500"}
+                bold
+              />
+            </div>
+          </SectionCard>
+        </motion.div>
 
-        <motion.section initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <div className="mb-2 flex items-center justify-between">
-            <SectionTitle>Dinheiro separado (envelopes)</SectionTitle>
-            <AddEnvelopeDialog bills={bills} onAdded={load} />
-          </div>
-          {envelopes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nada separado ainda.</p>
-          ) : (
-            <ul className="space-y-1.5">
-              {envelopes.map((e) => {
-                const bill = bills.find((b) => b.id === e.billId);
-                return (
-                  <li key={e.id} className="flex items-center justify-between text-sm">
-                    <span>
-                      {e.name}
-                      {bill && <span className="text-muted-foreground"> → {bill.title}</span>}
-                    </span>
-                    <span className="font-medium">{currency(e.allocated)}</span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </motion.section>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <SectionCard title="Dinheiro separado (envelopes)" icon={PiggyBank} color="#f59e0b" actions={<AddEnvelopeDialog bills={bills} onAdded={load} />}>
+            {envelopes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nada separado ainda.</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {envelopes.map((e) => {
+                  const bill = bills.find((b) => b.id === e.billId);
+                  return (
+                    <li key={e.id} className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-sm">
+                      <span className="font-medium">
+                        {e.name}
+                        {bill && <span className="font-normal text-muted-foreground"> → {bill.title}</span>}
+                      </span>
+                      <span className="font-semibold tabular-nums">{currency(e.allocated)}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </SectionCard>
+        </motion.div>
       </div>
     </div>
   );
@@ -176,8 +188,8 @@ export function FinanceView() {
 function Row({ label, value, valueClass, bold }: { label: string; value: string; valueClass?: string; bold?: boolean }) {
   return (
     <div className="flex items-center justify-between">
-      <span className={bold ? "font-medium" : ""}>{label}</span>
-      <span className={`${bold ? "font-semibold" : "font-medium"} ${valueClass || ""}`}>{value}</span>
+      <span className={bold ? "font-medium" : "text-muted-foreground"}>{label}</span>
+      <span className={`tabular-nums ${bold ? "text-base font-bold" : "font-medium"} ${valueClass || ""}`}>{value}</span>
     </div>
   );
 }
@@ -208,9 +220,9 @@ function SituacaoAtual({
   }
 
   return (
-    <div className="space-y-1.5 text-sm">
+    <div className="space-y-2 text-sm">
       <div className="flex items-center justify-between">
-        <span>Saldo total</span>
+        <span className="text-muted-foreground">Saldo total</span>
         {editing ? (
           <div className="flex items-center gap-1.5">
             <Input
@@ -225,21 +237,26 @@ function SituacaoAtual({
             </Button>
           </div>
         ) : (
-          <button className="font-medium hover:underline" onClick={() => setEditing(true)}>
+          <button className="font-semibold tabular-nums hover:underline" onClick={() => setEditing(true)}>
             {currency(situacao.currentBalance)}
           </button>
         )}
       </div>
       <Row label="Já comprometido" value={`-${currency(situacao.committed)}`} valueClass="text-rose-500" />
+      <div className="my-1 border-t border-border/60" />
       <Row
         label="Disponível de verdade"
         value={currency(situacao.free)}
         valueClass={situacao.free >= 0 ? "text-emerald-600" : "text-rose-500"}
         bold
       />
-      <p className={`pt-1 text-xs font-semibold uppercase tracking-wide ${situacao.status === "atencao" ? "text-rose-500" : "text-emerald-600"}`}>
-        Status: {situacao.status === "atencao" ? "Atenção" : "Ok"}
-      </p>
+      <span
+        className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${
+          situacao.status === "atencao" ? "bg-rose-500/10 text-rose-600 dark:text-rose-400" : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+        }`}
+      >
+        {situacao.status === "atencao" ? "Atenção" : "Ok"}
+      </span>
     </div>
   );
 }

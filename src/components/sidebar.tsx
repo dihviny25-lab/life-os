@@ -31,7 +31,10 @@ const AREA_ICONS: Record<string, typeof Users> = {
   conhecimento: BookOpen,
 };
 
-const NAV_ITEMS = [{ key: "hoje", href: "/app", name: "Hoje", icon: Home }, ...AREAS.map((a) => ({ key: a.key, href: `/app/areas/${a.key}`, name: a.name, icon: AREA_ICONS[a.key] || Home }))];
+const NAV_ITEMS = [
+  { key: "hoje", href: "/app", name: "Hoje", icon: Home, color: "#f59e0b" },
+  ...AREAS.map((a) => ({ key: a.key, href: `/app/areas/${a.key}`, name: a.name, icon: AREA_ICONS[a.key] || Home, color: a.color })),
+];
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -149,7 +152,7 @@ function SidebarContent({
                   active ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon className="h-4 w-4 shrink-0" />
+                <Icon className="h-4 w-4 shrink-0" style={active ? { color: item.color } : undefined} />
                 {item.name}
               </span>
             </Link>
