@@ -22,6 +22,8 @@ model User {
   bills        Bill[]
   projects     Project[]
   finance      Finance?
+  transactions Transaction[]
+  envelopes    Envelope[]
 }
 
 model Commitment {
@@ -38,17 +40,47 @@ model Commitment {
 }
 
 model Bill {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   amount    Float
   dueDate   DateTime
-  paid      Boolean  @default(false)
+  paid      Boolean    @default(false)
+  priority  String     @default("normal") // critico | importante | normal | opcional
   area      String?
-  createdAt DateTime @default(now())
+  createdAt DateTime   @default(now())
+  envelopes Envelope[]
   @@index([userId, dueDate])
   @@index([userId, area])
+}
+
+// Something that happened: money in or out.
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // income | expense
+  title     String
+  amount    Float
+  date      DateTime
+  createdAt DateTime @default(now())
+  @@index([userId, date])
+  @@index([userId, type])
+}
+
+// Money already set aside for a purpose (optionally toward a specific Bill).
+model Envelope {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  allocated Float    @default(0)
+  billId    String?
+  bill      Bill?    @relation(fields: [billId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId])
 }
 
 model Project {
@@ -65,9 +97,11 @@ model Project {
   @@index([userId, area])
 }
 
+// Saldo atual (bancário) — não é o mesmo que dinheiro livre.
+// Livre = currentBalance - soma dos Envelope.allocated.
 model Finance {
-  userId           String   @id
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  availableBalance Float    @default(0)
-  updatedAt        DateTime @updatedAt
+  userId         String   @id
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentBalance Float    @default(0)
+  updatedAt      DateTime @updatedAt
 }

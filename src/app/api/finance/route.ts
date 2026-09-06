@@ -9,8 +9,16 @@ export async function GET(req: NextRequest) {
   const session = await getUserFromRequest(req);
   if (!session) return bad("Unauthorized", 401);
 
-  const finance = await db.finance.findUnique({ where: { userId: session.userId } });
-  return ok({ availableBalance: finance?.availableBalance ?? 0 });
+  const [finance, envelopes] = await Promise.all([
+    db.finance.findUnique({ where: { userId: session.userId } }),
+    db.envelope.findMany({ where: { userId: session.userId } }),
+  ]);
+
+  const currentBalance = finance?.currentBalance ?? 0;
+  const committed = envelopes.reduce((sum, e) => sum + e.allocated, 0);
+  const free = currentBalance - committed;
+
+  return ok({ currentBalance, committed, free });
 }
 
 export async function PUT(req: NextRequest) {
@@ -18,13 +26,13 @@ export async function PUT(req: NextRequest) {
   if (!session) return bad("Unauthorized", 401);
 
   const body = await parseBody(req);
-  const availableBalance = Number(body.availableBalance);
-  if (Number.isNaN(availableBalance)) return bad("availableBalance must be a number");
+  const currentBalance = Number(body.currentBalance);
+  if (Number.isNaN(currentBalance)) return bad("currentBalance must be a number");
 
   const finance = await db.finance.upsert({
     where: { userId: session.userId },
-    update: { availableBalance },
-    create: { userId: session.userId, availableBalance },
+    update: { currentBalance },
+    create: { userId: session.userId, currentBalance },
   });
   return ok(finance);
 }

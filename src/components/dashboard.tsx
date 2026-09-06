@@ -2,16 +2,16 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
-import { notify } from "@/lib/toast";
 import { AddCommitmentDialog, AddBillDialog, AddProjectDialog } from "@/components/entry-dialogs";
 import type { Commitment, Bill, Project } from "@/lib/types";
 
 interface DashboardData {
   today: { commitments: Commitment[]; bills: Bill[] };
   upcomingCommitments: Commitment[];
-  finance: { availableBalance: number; billsUntilSunday: number; projectedAfterCommitments: number };
+  finance: { currentBalance: number; committed: number; free: number };
   projects: Project[];
   church: Project[];
   dev: { needsDecision: number; alerts: number };
@@ -69,7 +69,7 @@ export function Dashboard() {
           <UpcomingSection commitments={data.upcomingCommitments} />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <FinanceSection finance={data.finance} onChange={load} />
+          <FinanceSection finance={data.finance} />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
           <ProjectsSection title="PROJETOS" projects={data.projects} onChange={load} />
@@ -156,60 +156,22 @@ function UpcomingSection({ commitments }: { commitments: Commitment[] }) {
   );
 }
 
-function FinanceSection({ finance, onChange }: { finance: DashboardData["finance"]; onChange: () => void }) {
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(String(finance.availableBalance));
-
-  async function save() {
-    const availableBalance = Number(value.replace(",", "."));
-    if (Number.isNaN(availableBalance)) {
-      notify.error("Valor inválido");
-      return;
-    }
-    await fetch("/api/finance", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ availableBalance }),
-    });
-    setEditing(false);
-    onChange();
-  }
-
+function FinanceSection({ finance }: { finance: DashboardData["finance"] }) {
   return (
     <section>
       <SectionTitle>Financeiro</SectionTitle>
       <div className="space-y-1.5 text-sm">
         <div className="flex items-center justify-between">
-          <span>Disponível esta semana</span>
-          {editing ? (
-            <div className="flex items-center gap-1.5">
-              <input
-                autoFocus
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                className="h-7 w-28 rounded-md border border-input bg-transparent px-2 text-right text-sm"
-                inputMode="decimal"
-              />
-              <button className="rounded-md bg-primary px-2 py-1 text-xs text-primary-foreground" onClick={save}>
-                Salvar
-              </button>
-            </div>
-          ) : (
-            <button className="font-medium hover:underline" onClick={() => setEditing(true)}>
-              {currency(finance.availableBalance)}
-            </button>
-          )}
+          <span>Disponível de verdade</span>
+          <span className={`font-medium ${finance.free >= 0 ? "text-emerald-600" : "text-rose-500"}`}>{currency(finance.free)}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span>Contas até domingo</span>
-          <span className="font-medium text-rose-500">{currency(finance.billsUntilSunday)}</span>
+          <span>Já comprometido</span>
+          <span className="font-medium text-muted-foreground">{currency(finance.committed)}</span>
         </div>
-        <div className="flex items-center justify-between">
-          <span>Previsto após compromissos</span>
-          <span className={`font-medium ${finance.projectedAfterCommitments >= 0 ? "text-emerald-600" : "text-rose-500"}`}>
-            {currency(finance.projectedAfterCommitments)}
-          </span>
-        </div>
+        <Link href="/app/areas/financas" className="inline-block text-xs font-medium text-muted-foreground hover:text-foreground hover:underline">
+          Abrir financeiro →
+        </Link>
       </div>
     </section>
   );

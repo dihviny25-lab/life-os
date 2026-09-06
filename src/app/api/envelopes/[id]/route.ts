@@ -10,20 +10,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!session) return bad("Unauthorized", 401);
   const { id } = await params;
 
-  const existing = await db.bill.findFirst({ where: { id, userId: session.userId } });
+  const existing = await db.envelope.findFirst({ where: { id, userId: session.userId } });
   if (!existing) return bad("Not found", 404);
 
   const body = await parseBody(req);
   const data: Record<string, any> = {};
-  if (typeof body.paid === "boolean") data.paid = body.paid;
-  if (typeof body.title === "string") data.title = body.title;
-  if (body.amount !== undefined) data.amount = Number(body.amount) || 0;
-  if (body.dueDate) data.dueDate = new Date(body.dueDate);
-  if (typeof body.priority === "string") data.priority = body.priority;
-  if (body.area !== undefined) data.area = body.area || null;
+  if (typeof body.name === "string") data.name = body.name;
+  if (body.allocated !== undefined) data.allocated = Number(body.allocated) || 0;
+  if (body.billId !== undefined) data.billId = body.billId || null;
 
-  const bill = await db.bill.update({ where: { id }, data });
-  return ok(bill);
+  const envelope = await db.envelope.update({ where: { id }, data });
+  return ok(envelope);
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -31,9 +28,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (!session) return bad("Unauthorized", 401);
   const { id } = await params;
 
-  const existing = await db.bill.findFirst({ where: { id, userId: session.userId } });
+  const existing = await db.envelope.findFirst({ where: { id, userId: session.userId } });
   if (!existing) return bad("Not found", 404);
 
-  await db.bill.delete({ where: { id } });
+  await db.envelope.delete({ where: { id } });
   return ok({ deleted: true });
 }

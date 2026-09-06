@@ -9,13 +9,11 @@ export async function GET(req: NextRequest) {
   const session = await getUserFromRequest(req);
   if (!session) return bad("Unauthorized", 401);
 
-  const area = req.nextUrl.searchParams.get("area");
-
-  const bills = await db.bill.findMany({
-    where: { userId: session.userId, ...(area ? { area } : {}) },
-    orderBy: { dueDate: "asc" },
+  const envelopes = await db.envelope.findMany({
+    where: { userId: session.userId },
+    orderBy: { createdAt: "asc" },
   });
-  return ok({ bills });
+  return ok({ envelopes });
 }
 
 export async function POST(req: NextRequest) {
@@ -23,18 +21,20 @@ export async function POST(req: NextRequest) {
   if (!session) return bad("Unauthorized", 401);
 
   const body = await parseBody(req);
-  if (!body.title) return bad("title is required");
-  if (!body.dueDate) return bad("dueDate is required");
+  if (!body.name) return bad("name is required");
 
-  const bill = await db.bill.create({
+  if (body.billId) {
+    const bill = await db.bill.findFirst({ where: { id: body.billId, userId: session.userId } });
+    if (!bill) return bad("Invalid bill", 400);
+  }
+
+  const envelope = await db.envelope.create({
     data: {
       userId: session.userId,
-      title: body.title,
-      amount: Number(body.amount) || 0,
-      dueDate: new Date(body.dueDate),
-      area: body.area || null,
-      priority: body.priority || "normal",
+      name: body.name,
+      allocated: Number(body.allocated) || 0,
+      billId: body.billId || null,
     },
   });
-  return ok(bill);
+  return ok(envelope);
 }

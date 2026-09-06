@@ -15,14 +15,6 @@ function endOfDay(d: Date) {
   x.setHours(23, 59, 59, 999);
   return x;
 }
-// The nearest Sunday on or after `from` (today counts if it's already Sunday)
-function upcomingSunday(from: Date) {
-  const d = endOfDay(from);
-  const day = d.getDay();
-  const diff = day === 0 ? 0 : 7 - day;
-  d.setDate(d.getDate() + diff);
-  return d;
-}
 
 export async function GET(req: NextRequest) {
   const session = await getUserFromRequest(req);
@@ -32,20 +24,19 @@ export async function GET(req: NextRequest) {
   const now = new Date();
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
-  const sunday = upcomingSunday(now);
 
-  const [todayCommitments, upcomingCommitments, billsToday, billsUntilSunday, finance, projects] = await Promise.all([
+  const [todayCommitments, upcomingCommitments, billsToday, finance, envelopes, projects] = await Promise.all([
     db.commitment.findMany({ where: { userId, startAt: { gte: todayStart, lte: todayEnd } }, orderBy: { startAt: "asc" } }),
     db.commitment.findMany({ where: { userId, startAt: { gt: todayEnd } }, orderBy: { startAt: "asc" }, take: 10 }),
     db.bill.findMany({ where: { userId, paid: false, dueDate: { gte: todayStart, lte: todayEnd } } }),
-    db.bill.findMany({ where: { userId, paid: false, dueDate: { gte: todayStart, lte: sunday } } }),
     db.finance.findUnique({ where: { userId } }),
+    db.envelope.findMany({ where: { userId } }),
     db.project.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
   ]);
 
-  const availableBalance = finance?.availableBalance ?? 0;
-  const billsUntilSundayTotal = billsUntilSunday.reduce((sum, b) => sum + b.amount, 0);
-  const projectedAfterCommitments = availableBalance - billsUntilSundayTotal;
+  const currentBalance = finance?.currentBalance ?? 0;
+  const committed = envelopes.reduce((sum, e) => sum + e.allocated, 0);
+  const free = currentBalance - committed;
 
   const churchProjects = projects.filter((p) => p.area === "igreja_ministerio");
   const devProjects = projects.filter((p) => p.area === "desenvolvimento");
@@ -55,11 +46,7 @@ export async function GET(req: NextRequest) {
   return ok({
     today: { commitments: todayCommitments, bills: billsToday },
     upcomingCommitments,
-    finance: {
-      availableBalance,
-      billsUntilSunday: billsUntilSundayTotal,
-      projectedAfterCommitments,
-    },
+    finance: { currentBalance, committed, free },
     projects: projects.filter((p) => p.area !== "igreja_ministerio"),
     church: churchProjects,
     dev: { needsDecision: devNeedsDecision, alerts: devAlerts },
