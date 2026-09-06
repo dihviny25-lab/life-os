@@ -1,6 +1,4 @@
 // Central — schema
-// Auth data lives in Postgres (Neon). The app's dashboard data (commitments,
-// bills, projects, finance) lives in Notion — see src/lib/notion.ts.
 
 generator client {
   provider = "prisma-client-js"
@@ -20,4 +18,52 @@ model User {
   totpVerified Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  commitments  Commitment[]
+  bills        Bill[]
+  projects     Project[]
+  finance      Finance?
+}
+
+model Commitment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  startAt   DateTime
+  location  String?
+  createdAt DateTime @default(now())
+  @@index([userId, startAt])
+}
+
+model Bill {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  amount    Float
+  dueDate   DateTime
+  paid      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  @@index([userId, dueDate])
+}
+
+model Project {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  area          String
+  statusNote    String?
+  needsDecision Boolean  @default(false)
+  hasAlert      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  @@index([userId, area])
+}
+
+model Finance {
+  userId           String   @id
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  availableBalance Float    @default(0)
+  updatedAt        DateTime @updatedAt
 }
