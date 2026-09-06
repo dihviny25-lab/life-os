@@ -5,6 +5,8 @@ import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+type TagRelation = { itemId: string; tagId: string };
+
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const session = await getUserFromRequest(req);
   if (!session) return bad("Unauthorized", 401);
@@ -52,7 +54,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (tagNames) {
     await db.tagOnItem.deleteMany({ where: { itemId: id } });
     if (tagNames.length) {
-      const data = [];
+      const data: TagRelation[] = [];
       for (const name of tagNames as string[]) {
         const tag = await db.tag.upsert({
           where: { userId_name: { userId: session.userId, name } },
