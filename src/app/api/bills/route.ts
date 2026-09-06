@@ -9,8 +9,10 @@ export async function GET(req: NextRequest) {
   const session = await getUserFromRequest(req);
   if (!session) return bad("Unauthorized", 401);
 
+  const area = req.nextUrl.searchParams.get("area");
+
   const bills = await db.bill.findMany({
-    where: { userId: session.userId },
+    where: { userId: session.userId, ...(area ? { area } : {}) },
     orderBy: { dueDate: "asc" },
   });
   return ok({ bills });
@@ -30,6 +32,7 @@ export async function POST(req: NextRequest) {
       title: body.title,
       amount: Number(body.amount) || 0,
       dueDate: new Date(body.dueDate),
+      area: body.area || null,
     },
   });
   return ok(bill);

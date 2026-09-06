@@ -2,49 +2,12 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { notify } from "@/lib/toast";
-import { AREAS } from "@/lib/areas";
+import { AddCommitmentDialog, AddBillDialog, AddProjectDialog } from "@/components/entry-dialogs";
+import type { Commitment, Bill, Project } from "@/lib/types";
 
-interface Commitment {
-  id: string;
-  title: string;
-  startAt: string;
-  location: string | null;
-}
-interface Bill {
-  id: string;
-  title: string;
-  amount: number;
-  dueDate: string;
-  paid: boolean;
-}
-interface Project {
-  id: string;
-  name: string;
-  area: string;
-  statusNote: string | null;
-  needsDecision: boolean;
-  hasAlert: boolean;
-}
 interface DashboardData {
   today: { commitments: Commitment[]; bills: Bill[] };
   upcomingCommitments: Commitment[];
@@ -68,7 +31,6 @@ function dayLabel(iso: string) {
 
 export function Dashboard() {
   const router = useRouter();
-  const [email, setEmail] = useState<string | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -84,54 +46,46 @@ export function Dashboard() {
   }, [router]);
 
   useEffect(() => {
-    fetch("/api/auth/session")
-      .then((r) => r.json())
-      .then((d) => {
-        if (!d.authenticated) router.replace("/login");
-        else setEmail(d.email);
-      });
     load();
-  }, [router, load]);
-
-  async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    notify.success("Sessão encerrada");
-    router.replace("/login");
-  }
+  }, [load]);
 
   if (loading || !data) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">
+      <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">
         Carregando…
       </div>
     );
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-2xl bg-background px-4 py-8 text-foreground">
-      <header className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-bold">O que precisa da minha atenção?</h1>
-          {email && <p className="text-xs text-muted-foreground">{email}</p>}
-        </div>
-        <Button variant="ghost" size="sm" onClick={handleLogout}>
-          Sair
-        </Button>
-      </header>
+    <div className="mx-auto max-w-2xl px-4 py-8">
+      <h1 className="mb-8 text-xl font-bold">O que precisa da minha atenção?</h1>
 
       <div className="space-y-8">
-        <TodaySection data={data} onChange={load} />
-        <UpcomingSection commitments={data.upcomingCommitments} />
-        <FinanceSection finance={data.finance} onChange={load} />
-        <ProjectsSection title="PROJETOS" projects={data.projects} onChange={load} />
-        <ProjectsSection title="IGREJA & MINISTÉRIO" projects={data.church} onChange={load} defaultArea="igreja_ministerio" />
-        <DevSection dev={data.dev} />
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
+          <TodaySection data={data} onChange={load} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <UpcomingSection commitments={data.upcomingCommitments} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <FinanceSection finance={data.finance} onChange={load} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <ProjectsSection title="PROJETOS" projects={data.projects} onChange={load} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <ProjectsSection title="IGREJA & MINISTÉRIO" projects={data.church} onChange={load} defaultArea="igreja_ministerio" />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+          <DevSection dev={data.dev} />
+        </motion.div>
       </div>
     </div>
   );
 }
 
-function SectionTitle({ children }: { children: string }) {
+export function SectionTitle({ children }: { children: string }) {
   return <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{children}</h2>;
 }
 
@@ -229,16 +183,16 @@ function FinanceSection({ finance, onChange }: { finance: DashboardData["finance
           <span>Disponível esta semana</span>
           {editing ? (
             <div className="flex items-center gap-1.5">
-              <Input
+              <input
                 autoFocus
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
-                className="h-7 w-28 text-right"
+                className="h-7 w-28 rounded-md border border-input bg-transparent px-2 text-right text-sm"
                 inputMode="decimal"
               />
-              <Button size="sm" className="h-7 px-2" onClick={save}>
+              <button className="rounded-md bg-primary px-2 py-1 text-xs text-primary-foreground" onClick={save}>
                 Salvar
-              </Button>
+              </button>
             </div>
           ) : (
             <button className="font-medium hover:underline" onClick={() => setEditing(true)}>
@@ -319,189 +273,5 @@ function DevSection({ dev }: { dev: DashboardData["dev"] }) {
         )}
       </ul>
     </section>
-  );
-}
-
-function AddCommitmentDialog({ onAdded }: { onAdded: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-
-  async function submit() {
-    if (!title || !date || !time) {
-      notify.error("Preencha título, data e hora");
-      return;
-    }
-    await fetch("/api/commitments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, startAt: new Date(`${date}T${time}`).toISOString() }),
-    });
-    setOpen(false);
-    setTitle("");
-    setDate("");
-    setTime("");
-    onAdded();
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-          + Compromisso
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Novo compromisso</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label>Título</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Reunião com cliente" />
-          </div>
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <Label>Data</Label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </div>
-            <div className="flex-1">
-              <Label>Hora</Label>
-              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button onClick={submit}>Adicionar</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function AddBillDialog({ onAdded }: { onAdded: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [amount, setAmount] = useState("");
-  const [dueDate, setDueDate] = useState("");
-
-  async function submit() {
-    if (!title || !dueDate) {
-      notify.error("Preencha título e vencimento");
-      return;
-    }
-    await fetch("/api/bills", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, amount: Number(amount.replace(",", ".")) || 0, dueDate }),
-    });
-    setOpen(false);
-    setTitle("");
-    setAmount("");
-    setDueDate("");
-    onAdded();
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-          + Conta
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Nova conta</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label>Título</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: energia" />
-          </div>
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <Label>Valor</Label>
-              <Input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" inputMode="decimal" />
-            </div>
-            <div className="flex-1">
-              <Label>Vencimento</Label>
-              <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button onClick={submit}>Adicionar</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function AddProjectDialog({ onAdded, defaultArea }: { onAdded: () => void; defaultArea?: string }) {
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [area, setArea] = useState(defaultArea || AREAS[0].key);
-  const [statusNote, setStatusNote] = useState("");
-
-  async function submit() {
-    if (!name) {
-      notify.error("Preencha o nome do projeto");
-      return;
-    }
-    await fetch("/api/projects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, area, statusNote }),
-    });
-    setOpen(false);
-    setName("");
-    setStatusNote("");
-    onAdded();
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-          + Adicionar
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Novo projeto</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label>Nome</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Central de Comando" />
-          </div>
-          {!defaultArea && (
-            <div>
-              <Label>Área</Label>
-              <Select value={area} onValueChange={setArea}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {AREAS.map((a) => (
-                    <SelectItem key={a.key} value={a.key}>
-                      {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          <div>
-            <Label>Status</Label>
-            <Input value={statusNote} onChange={(e) => setStatusNote(e.target.value)} placeholder="Ex: aguardando validação" />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button onClick={submit}>Adicionar</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

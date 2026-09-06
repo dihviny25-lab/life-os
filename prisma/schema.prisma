@@ -31,8 +31,10 @@ model Commitment {
   title     String
   startAt   DateTime
   location  String?
+  area      String?
   createdAt DateTime @default(now())
   @@index([userId, startAt])
+  @@index([userId, area])
 }
 
 model Bill {
@@ -43,8 +45,10 @@ model Bill {
   amount    Float
   dueDate   DateTime
   paid      Boolean  @default(false)
+  area      String?
   createdAt DateTime @default(now())
   @@index([userId, dueDate])
+  @@index([userId, area])
 }
 
 model Project {
