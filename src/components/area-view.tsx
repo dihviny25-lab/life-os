@@ -3,11 +3,12 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { CalendarClock, Receipt, FolderKanban } from "lucide-react";
+import { CalendarClock, Receipt, FolderKanban, Archive } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionCard } from "@/components/section-card";
 import { AddCommitmentDialog, AddBillDialog, AddProjectDialog } from "@/components/entry-dialogs";
 import { ProjectTasks } from "@/components/project-tasks";
+import { DeleteButton } from "@/components/delete-button";
 import { AREAS } from "@/lib/areas";
 import type { Commitment, Bill, Project } from "@/lib/types";
 
@@ -54,6 +55,30 @@ export function AreaView({ area }: { area: string }) {
     load();
   }
 
+  async function deleteCommitment(id: string) {
+    await fetch(`/api/commitments/${id}`, { method: "DELETE" });
+    load();
+  }
+
+  async function deleteBill(id: string) {
+    await fetch(`/api/bills/${id}`, { method: "DELETE" });
+    load();
+  }
+
+  async function archiveProject(id: string) {
+    await fetch(`/api/projects/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ archived: true }),
+    });
+    load();
+  }
+
+  async function deleteProject(id: string) {
+    await fetch(`/api/projects/${id}`, { method: "DELETE" });
+    load();
+  }
+
   if (loading || !data) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">
@@ -82,7 +107,8 @@ export function AreaView({ area }: { area: string }) {
                     <span className="w-24 shrink-0 text-muted-foreground">
                       {dateFmt.format(new Date(c.startAt))} · {timeFmt.format(new Date(c.startAt))}
                     </span>
-                    <span className="font-medium">{c.title}</span>
+                    <span className="flex-1 font-medium">{c.title}</span>
+                    <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
                   </li>
                 ))}
               </ul>
@@ -102,6 +128,7 @@ export function AreaView({ area }: { area: string }) {
                     <span className="flex-1 font-medium">{b.title}</span>
                     <span className="text-muted-foreground">{dateFmt.format(new Date(b.dueDate))}</span>
                     <span className="font-semibold tabular-nums text-rose-500">{currency(b.amount)}</span>
+                    <DeleteButton label={b.title} onDelete={() => deleteBill(b.id)} />
                   </li>
                 ))}
               </ul>
@@ -117,8 +144,18 @@ export function AreaView({ area }: { area: string }) {
               <ul className="space-y-2">
                 {data.projects.map((p) => (
                   <li key={p.id} className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
-                    <p className="font-medium">{p.name}</p>
-                    {p.statusNote && <p className="text-muted-foreground">→ {p.statusNote}</p>}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium">{p.name}</p>
+                        {p.statusNote && <p className="text-muted-foreground">→ {p.statusNote}</p>}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <button onClick={() => archiveProject(p.id)} className="text-muted-foreground/60 transition-colors hover:text-foreground" aria-label={`Arquivar ${p.name}`}>
+                          <Archive className="h-3.5 w-3.5" />
+                        </button>
+                        <DeleteButton label={p.name} onDelete={() => deleteProject(p.id)} />
+                      </div>
+                    </div>
                     <ProjectTasks projectId={p.id} tasks={p.tasks} onChange={load} />
                   </li>
                 ))}

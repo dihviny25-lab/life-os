@@ -75,7 +75,7 @@ export function Dashboard() {
           <TodaySection data={data} onChange={load} />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <UpcomingSection commitments={data.upcomingCommitments} />
+          <UpcomingSection commitments={data.upcomingCommitments} onChange={load} />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <FinanceSection finance={data.finance} />
@@ -107,6 +107,16 @@ function TodaySection({ data, onChange }: { data: DashboardData; onChange: () =>
     onChange();
   }
 
+  async function deleteCommitment(id: string) {
+    await fetch(`/api/commitments/${id}`, { method: "DELETE" });
+    onChange();
+  }
+
+  async function deleteBill(id: string) {
+    await fetch(`/api/bills/${id}`, { method: "DELETE" });
+    onChange();
+  }
+
   return (
     <SectionCard
       title="Hoje"
@@ -126,14 +136,16 @@ function TodaySection({ data, onChange }: { data: DashboardData; onChange: () =>
           {commitments.map((c) => (
             <li key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
               <span className="w-12 shrink-0 tabular-nums text-muted-foreground">{timeFmt.format(new Date(c.startAt))}</span>
-              <span className="font-medium">{c.title}</span>
+              <span className="flex-1 font-medium">{c.title}</span>
+              <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
             </li>
           ))}
           {bills.map((b) => (
             <li key={b.id} className="flex items-center gap-3 rounded-lg border border-rose-500/20 bg-rose-500/5 px-3 py-2 text-sm">
               <Checkbox className="shrink-0" onCheckedChange={() => markPaid(b.id)} />
               <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500" />
-              <span className="font-medium">Conta {b.title.toLowerCase()} vence hoje</span>
+              <span className="flex-1 font-medium">Conta {b.title.toLowerCase()} vence hoje</span>
+              <DeleteButton label={b.title} onDelete={() => deleteBill(b.id)} />
             </li>
           ))}
         </ul>
@@ -142,7 +154,12 @@ function TodaySection({ data, onChange }: { data: DashboardData; onChange: () =>
   );
 }
 
-function UpcomingSection({ commitments }: { commitments: Commitment[] }) {
+function UpcomingSection({ commitments, onChange }: { commitments: Commitment[]; onChange: () => void }) {
+  async function deleteCommitment(id: string) {
+    await fetch(`/api/commitments/${id}`, { method: "DELETE" });
+    onChange();
+  }
+
   return (
     <SectionCard title="Próximos compromissos" icon={CalendarClock} color="#0ea5e9">
       {commitments.length === 0 ? (
@@ -154,7 +171,8 @@ function UpcomingSection({ commitments }: { commitments: Commitment[] }) {
               <span className="w-28 shrink-0 text-muted-foreground">
                 {dayLabel(c.startAt)} {timeFmt.format(new Date(c.startAt))}
               </span>
-              <span className="font-medium">{c.title}</span>
+              <span className="flex-1 font-medium">{c.title}</span>
+              <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
             </li>
           ))}
         </ul>
@@ -202,6 +220,20 @@ function ProjectsSection({
   onChange: () => void;
   defaultArea?: string;
 }) {
+  async function archive(id: string) {
+    await fetch(`/api/projects/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ archived: true }),
+    });
+    onChange();
+  }
+
+  async function deleteProject(id: string) {
+    await fetch(`/api/projects/${id}`, { method: "DELETE" });
+    onChange();
+  }
+
   return (
     <SectionCard title={title} icon={icon} color={color} actions={<AddProjectDialog onAdded={onChange} defaultArea={defaultArea} />}>
       {projects.length === 0 ? (
@@ -210,8 +242,18 @@ function ProjectsSection({
         <ul className="space-y-2">
           {projects.map((p) => (
             <li key={p.id} className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
-              <p className="font-medium">{p.name}</p>
-              {p.statusNote && <p className="text-muted-foreground">→ {p.statusNote}</p>}
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{p.name}</p>
+                  {p.statusNote && <p className="text-muted-foreground">→ {p.statusNote}</p>}
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <button onClick={() => archive(p.id)} className="text-muted-foreground/60 transition-colors hover:text-foreground" aria-label={`Arquivar ${p.name}`}>
+                    <Archive className="h-3.5 w-3.5" />
+                  </button>
+                  <DeleteButton label={p.name} onDelete={() => deleteProject(p.id)} />
+                </div>
+              </div>
               <ProjectTasks projectId={p.id} tasks={p.tasks} onChange={onChange} />
             </li>
           ))}

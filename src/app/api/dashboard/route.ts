@@ -25,17 +25,19 @@ export async function GET(req: NextRequest) {
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
 
-  const [todayCommitments, upcomingCommitments, billsToday, finance, envelopes, projects] = await Promise.all([
+  const [todayCommitments, upcomingCommitments, billsToday, finance, envelopes, weeklyBudgets, projects] = await Promise.all([
     db.commitment.findMany({ where: { userId, archived: false, startAt: { gte: todayStart, lte: todayEnd } }, orderBy: { startAt: "asc" } }),
     db.commitment.findMany({ where: { userId, archived: false, startAt: { gt: todayEnd } }, orderBy: { startAt: "asc" }, take: 10 }),
     db.bill.findMany({ where: { userId, paid: false, dueDate: { gte: todayStart, lte: todayEnd } } }),
     db.finance.findUnique({ where: { userId } }),
     db.envelope.findMany({ where: { userId } }),
+    db.weeklyBudget.findMany({ where: { userId } }),
     db.project.findMany({ where: { userId, archived: false }, orderBy: { createdAt: "asc" }, include: { tasks: { orderBy: { createdAt: "asc" } } } }),
   ]);
 
   const currentBalance = finance?.currentBalance ?? 0;
-  const committed = envelopes.reduce((sum, e) => sum + e.allocated, 0);
+  const committed =
+    envelopes.reduce((sum, e) => sum + e.allocated, 0) + weeklyBudgets.reduce((sum, w) => sum + w.amount, 0);
   const free = currentBalance - committed;
 
   const churchProjects = projects.filter((p) => p.area === "igreja_ministerio");

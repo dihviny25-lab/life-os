@@ -43,9 +43,10 @@ export async function GET(req: NextRequest) {
   const in30Days = endOfDay(new Date(now.getTime() + 30 * 86400000));
   const last30DaysStart = startOfDay(new Date(now.getTime() - 30 * 86400000));
 
-  const [finance, envelopes, unpaidBills, weekIncome, weekExpense, recentIncome] = await Promise.all([
+  const [finance, envelopes, weeklyBudgets, unpaidBills, weekIncome, weekExpense, recentIncome] = await Promise.all([
     db.finance.findUnique({ where: { userId } }),
     db.envelope.findMany({ where: { userId } }),
+    db.weeklyBudget.findMany({ where: { userId } }),
     db.bill.findMany({ where: { userId, paid: false }, include: { envelopes: true }, orderBy: { dueDate: "asc" } }),
     db.transaction.findMany({ where: { userId, type: "income", date: { gte: weekStart, lte: weekEnd } } }),
     db.transaction.findMany({ where: { userId, type: "expense", date: { gte: weekStart, lte: weekEnd } } }),
@@ -53,7 +54,8 @@ export async function GET(req: NextRequest) {
   ]);
 
   const currentBalance = finance?.currentBalance ?? 0;
-  const committed = envelopes.reduce((sum, e) => sum + e.allocated, 0);
+  const weeklyBudgetTotal = weeklyBudgets.reduce((sum, w) => sum + w.amount, 0);
+  const committed = envelopes.reduce((sum, e) => sum + e.allocated, 0) + weeklyBudgetTotal;
   const free = currentBalance - committed;
 
   const billsWithStatus = unpaidBills.map((b) => {
@@ -81,7 +83,7 @@ export async function GET(req: NextRequest) {
   const contasSemana = unpaidBills
     .filter((b) => b.dueDate >= weekStart && b.dueDate <= weekEnd)
     .reduce((sum, b) => sum + b.amount, 0);
-  const livreSemana = recebidoSemana - gastoSemana - contasSemana;
+  const livreSemana = recebidoSemana - gastoSemana - contasSemana - weeklyBudgetTotal;
 
   const entradas30d = recentIncome.reduce((sum, t) => sum + t.amount, 0);
   const contas30d = unpaidBills.filter((b) => b.dueDate <= in30Days).reduce((sum, b) => sum + b.amount, 0);
@@ -96,6 +98,7 @@ export async function GET(req: NextRequest) {
       recebido: recebidoSemana,
       gasto: gastoSemana,
       contas: contasSemana,
+      orcamentoSemanal: weeklyBudgetTotal,
       livre: livreSemana,
     },
     projecao30d: { entradas: entradas30d, contas: contas30d, margem: margem30d },

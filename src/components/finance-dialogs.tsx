@@ -80,6 +80,57 @@ export function AddTransactionDialog({ type, onAdded }: { type: "income" | "expe
   );
 }
 
+export function AddWeeklyBudgetDialog({ onAdded }: { onAdded: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
+
+  async function submit() {
+    const value = Number(amount.replace(",", "."));
+    if (!name || !value || value <= 0) {
+      notify.error("Preencha nome e um valor válido");
+      return;
+    }
+    await fetch("/api/weekly-budgets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, amount: value }),
+    });
+    setOpen(false);
+    setName("");
+    setAmount("");
+    onAdded();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+          + Custo semanal
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Novo custo semanal</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Nome</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Mercado" />
+          </div>
+          <div>
+            <Label>Valor por semana</Label>
+            <Input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" inputMode="decimal" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={submit}>Adicionar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function AddEnvelopeDialog({ bills, onAdded }: { bills: Bill[]; onAdded: () => void }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");

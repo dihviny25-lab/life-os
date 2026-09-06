@@ -24,6 +24,7 @@ model User {
   finance      Finance?
   transactions Transaction[]
   envelopes    Envelope[]
+  weeklyBudgets WeeklyBudget[]
 }
 
 model Commitment {
@@ -111,6 +112,19 @@ model Task {
   done      Boolean  @default(false)
   createdAt DateTime @default(now())
   @@index([projectId])
+}
+
+// A recurring weekly spending category without a fixed due date
+// (mercado, combustível...) — money that already has a destination,
+// even before it's spent. Counted into "comprometido" alongside envelopes.
+model WeeklyBudget {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  amount    Float
+  createdAt DateTime @default(now())
+  @@index([userId])
 }
 
 // Saldo atual (bancário) — não é o mesmo que dinheiro livre.

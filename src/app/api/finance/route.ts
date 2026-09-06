@@ -9,13 +9,15 @@ export async function GET(req: NextRequest) {
   const session = await getUserFromRequest(req);
   if (!session) return bad("Unauthorized", 401);
 
-  const [finance, envelopes] = await Promise.all([
+  const [finance, envelopes, weeklyBudgets] = await Promise.all([
     db.finance.findUnique({ where: { userId: session.userId } }),
     db.envelope.findMany({ where: { userId: session.userId } }),
+    db.weeklyBudget.findMany({ where: { userId: session.userId } }),
   ]);
 
   const currentBalance = finance?.currentBalance ?? 0;
-  const committed = envelopes.reduce((sum, e) => sum + e.allocated, 0);
+  const committed =
+    envelopes.reduce((sum, e) => sum + e.allocated, 0) + weeklyBudgets.reduce((sum, w) => sum + w.amount, 0);
   const free = currentBalance - committed;
 
   return ok({ currentBalance, committed, free });

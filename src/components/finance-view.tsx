@@ -3,12 +3,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Wallet, AlertTriangle, CalendarDays, TrendingUp, PiggyBank } from "lucide-react";
+import { Wallet, AlertTriangle, CalendarDays, TrendingUp, PiggyBank, Repeat } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/section-card";
-import { AddTransactionDialog, AddEnvelopeDialog } from "@/components/finance-dialogs";
+import { AddTransactionDialog, AddEnvelopeDialog, AddWeeklyBudgetDialog } from "@/components/finance-dialogs";
 import { AddBillDialog } from "@/components/entry-dialogs";
+import { DeleteButton } from "@/components/delete-button";
 import { notify } from "@/lib/toast";
 import { AREAS } from "@/lib/areas";
 import type { Bill } from "@/lib/types";
@@ -21,6 +22,11 @@ interface Envelope {
   allocated: number;
   billId: string | null;
 }
+interface WeeklyBudgetItem {
+  id: string;
+  name: string;
+  amount: number;
+}
 interface BillWithStatus extends Bill {
   separated: number;
   missing: number;
@@ -30,7 +36,7 @@ interface BillWithStatus extends Bill {
 interface Overview {
   situacao: { currentBalance: number; committed: number; free: number; status: "atencao" | "ok" };
   atencao: BillWithStatus[];
-  semana: { recebido: number; gasto: number; contas: number; livre: number };
+  semana: { recebido: number; gasto: number; contas: number; orcamentoSemanal: number; livre: number };
   projecao30d: { entradas: number; contas: number; margem: number };
 }
 
@@ -50,13 +56,15 @@ export function FinanceView() {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [bills, setBills] = useState<Bill[]>([]);
   const [envelopes, setEnvelopes] = useState<Envelope[]>([]);
+  const [weeklyBudgets, setWeeklyBudgets] = useState<WeeklyBudgetItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const [overviewRes, billsRes, envelopesRes] = await Promise.all([
+    const [overviewRes, billsRes, envelopesRes, weeklyBudgetsRes] = await Promise.all([
       fetch("/api/finance/overview"),
       fetch("/api/bills"),
       fetch("/api/envelopes"),
+      fetch("/api/weekly-budgets"),
     ]);
     if (overviewRes.status === 401) {
       router.replace("/login");
@@ -65,6 +73,7 @@ export function FinanceView() {
     setOverview(await overviewRes.json());
     setBills((await billsRes.json()).bills);
     setEnvelopes((await envelopesRes.json()).envelopes);
+    setWeeklyBudgets((await weeklyBudgetsRes.json()).weeklyBudgets);
     setLoading(false);
   }, [router]);
 
@@ -133,6 +142,7 @@ export function FinanceView() {
               <Row label="Recebido" value={currency(overview.semana.recebido)} />
               <Row label="Gastos" value={currency(overview.semana.gasto)} valueClass="text-rose-500" />
               <Row label="Contas da semana" value={currency(overview.semana.contas)} valueClass="text-rose-500" />
+              <Row label="Orçamento semanal" value={currency(overview.semana.orcamentoSemanal)} valueClass="text-rose-500" />
               <Row
                 label="Livre"
                 value={currency(overview.semana.livre)}
@@ -172,10 +182,33 @@ export function FinanceView() {
                         {e.name}
                         {bill && <span className="font-normal text-muted-foreground"> → {bill.title}</span>}
                       </span>
-                      <span className="font-semibold tabular-nums">{currency(e.allocated)}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold tabular-nums">{currency(e.allocated)}</span>
+                        <DeleteButton label={e.name} onDelete={async () => { await fetch(`/api/envelopes/${e.id}`, { method: "DELETE" }); load(); }} />
+                      </div>
                     </li>
                   );
                 })}
+              </ul>
+            )}
+          </SectionCard>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+          <SectionCard title="Custos semanais" icon={Repeat} color="#0ea5e9" actions={<AddWeeklyBudgetDialog onAdded={load} />}>
+            {weeklyBudgets.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum custo semanal cadastrado.</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {weeklyBudgets.map((w) => (
+                  <li key={w.id} className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-sm">
+                    <span className="font-medium">{w.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold tabular-nums">{currency(w.amount)}/semana</span>
+                      <DeleteButton label={w.name} onDelete={async () => { await fetch(`/api/weekly-budgets/${w.id}`, { method: "DELETE" }); load(); }} />
+                    </div>
+                  </li>
+                ))}
               </ul>
             )}
           </SectionCard>
