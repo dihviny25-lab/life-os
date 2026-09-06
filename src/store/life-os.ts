@@ -3,27 +3,9 @@
 import { create } from "zustand";
 
 export type ViewKey =
-  | "dashboard"
-  | "inbox"
-  | "calendar"
-  | "projects"
-  | "reviews"
-  | "all"
-  | "focus"
-  | "insights"
-  | "graph"
-  | "agenda"
-  | "sanctuary"
-  | "journal"
-  | "settings"
-  | "mind_soul"
-  | "time_action"
-  | "health"
-  | "wealth"
-  | "network"
-  | "growth"
-  | "creativity"
-  | "admin";
+  | "dashboard" | "inbox" | "calendar" | "agenda" | "projects" | "goals" | "reviews"
+  | "insights" | "graph" | "central-ai" | "settings" | "all" | "focus" | "sanctuary" | "journal"
+  | "familia" | "financas" | "barbearia" | "desenvolvimento" | "igreja_ministerio" | "pessoal" | "conhecimento";
 
 interface LifeOSState {
   view: ViewKey;
@@ -36,7 +18,6 @@ interface LifeOSState {
   calendarLayers: string[];
   calendarLayerMode: "type" | "domain";
   journalEditId: string | null;
-
   setView: (v: ViewKey) => void;
   openProject: (id: string) => void;
   setQuickCaptureOpen: (v: boolean) => void;
@@ -51,17 +32,7 @@ interface LifeOSState {
 }
 
 export const useLifeOS = create<LifeOSState>((set) => ({
-  view: "dashboard",
-  selectedProjectId: null,
-  quickCaptureOpen: false,
-  itemDetailId: null,
-  itemEditorOpen: false,
-  itemEditorSeed: null,
-  commandOpen: false,
-  calendarLayers: [],
-  calendarLayerMode: "type",
-  journalEditId: null,
-
+  view: "dashboard", selectedProjectId: null, quickCaptureOpen: false, itemDetailId: null, itemEditorOpen: false, itemEditorSeed: null, commandOpen: false, calendarLayers: [], calendarLayerMode: "type", journalEditId: null,
   setView: (v) => set({ view: v, selectedProjectId: null }),
   openProject: (id) => set({ view: "projects", selectedProjectId: id }),
   setQuickCaptureOpen: (v) => set({ quickCaptureOpen: v }),
@@ -70,12 +41,7 @@ export const useLifeOS = create<LifeOSState>((set) => ({
   openItemEditor: (seed = null) => set({ itemEditorOpen: true, itemEditorSeed: seed }),
   closeItemEditor: () => set({ itemEditorOpen: false, itemEditorSeed: null }),
   setCommandOpen: (v) => set({ commandOpen: v }),
-  toggleLayer: (id) =>
-    set((s) => ({
-      calendarLayers: s.calendarLayers.includes(id)
-        ? s.calendarLayers.filter((l) => l !== id)
-        : [...s.calendarLayers, id],
-    })),
+  toggleLayer: (id) => set((s) => ({ calendarLayers: s.calendarLayers.includes(id) ? s.calendarLayers.filter((l) => l !== id) : [...s.calendarLayers, id] })),
   setCalendarLayerMode: (m) => set({ calendarLayerMode: m, calendarLayers: [] }),
   openJournalEditor: (id) => set({ view: "journal", journalEditId: id, itemDetailId: null }),
 }));
