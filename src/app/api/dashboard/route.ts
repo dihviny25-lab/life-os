@@ -1,6 +1,6 @@
-import { db } from "@/lib/db";
 import { ok, bad } from "@/lib/api";
 import { getUserFromRequest } from "@/lib/auth";
+import { notionQuery, DB, plainTitle, plainDate, plainText, plainNumber, plainCheckbox, plainSelect } from "@/lib/notion";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -24,27 +24,73 @@ function upcomingSunday(from: Date) {
   return d;
 }
 
+function toCommitment(page: any) {
+  return {
+    id: page.id,
+    title: plainTitle(page.properties["Título"]),
+    startAt: plainDate(page.properties["Data e hora"]),
+  };
+}
+function toBill(page: any) {
+  return {
+    id: page.id,
+    title: plainTitle(page.properties["Título"]),
+    amount: plainNumber(page.properties["Valor"]),
+    dueDate: plainDate(page.properties["Vencimento"]),
+  };
+}
+function toProject(page: any) {
+  return {
+    id: page.id,
+    name: plainTitle(page.properties["Nome"]),
+    area: plainSelect(page.properties["Área"]),
+    statusNote: plainText(page.properties["Status"]) || null,
+    needsDecision: plainCheckbox(page.properties["Precisa decisão"]),
+    hasAlert: plainCheckbox(page.properties["Tem alerta"]),
+  };
+}
+
 export async function GET(req: NextRequest) {
   const session = await getUserFromRequest(req);
   if (!session) return bad("Unauthorized", 401);
-  const userId = session.userId;
 
   const now = new Date();
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
   const sunday = upcomingSunday(now);
 
-  const [todayCommitments, upcomingCommitments, billsToday, billsUntilSunday, finance, projects] = await Promise.all([
-    db.commitment.findMany({ where: { userId, startAt: { gte: todayStart, lte: todayEnd } }, orderBy: { startAt: "asc" } }),
-    db.commitment.findMany({ where: { userId, startAt: { gt: todayEnd } }, orderBy: { startAt: "asc" }, take: 10 }),
-    db.bill.findMany({ where: { userId, paid: false, dueDate: { gte: todayStart, lte: todayEnd } } }),
-    db.bill.findMany({ where: { userId, paid: false, dueDate: { gte: todayStart, lte: sunday } } }),
-    db.finance.findUnique({ where: { userId } }),
-    db.project.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
+  const [commitmentPages, billPages, projectPages, financePages] = await Promise.all([
+    notionQuery(DB.commitments, { sorts: [{ property: "Data e hora", direction: "ascending" }] }),
+    notionQuery(DB.bills, {
+      filter: { property: "Paga", checkbox: { equals: false } },
+      sorts: [{ property: "Vencimento", direction: "ascending" }],
+    }),
+    notionQuery(DB.projects),
+    notionQuery(DB.finance, { sorts: [{ timestamp: "created_time", direction: "descending" }], page_size: 1 }),
   ]);
 
-  const availableBalance = finance?.availableBalance ?? 0;
+  const commitments = commitmentPages.map(toCommitment).filter((c) => c.startAt);
+  const bills = billPages.map(toBill).filter((b) => b.dueDate);
+  const projects = projectPages.map(toProject);
+
+  const todayCommitments = commitments.filter((c) => {
+    const t = new Date(c.startAt as string);
+    return t >= todayStart && t <= todayEnd;
+  });
+  const upcomingCommitments = commitments
+    .filter((c) => new Date(c.startAt as string) > todayEnd)
+    .slice(0, 10);
+  const billsToday = bills.filter((b) => {
+    const t = new Date(b.dueDate as string);
+    return t >= todayStart && t <= todayEnd;
+  });
+  const billsUntilSunday = bills.filter((b) => {
+    const t = new Date(b.dueDate as string);
+    return t >= todayStart && t <= sunday;
+  });
   const billsUntilSundayTotal = billsUntilSunday.reduce((sum, b) => sum + b.amount, 0);
+
+  const availableBalance = financePages[0] ? plainNumber(financePages[0].properties["Disponível"]) : 0;
   const projectedAfterCommitments = availableBalance - billsUntilSundayTotal;
 
   const churchProjects = projects.filter((p) => p.area === "igreja_ministerio");
