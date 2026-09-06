@@ -11,10 +11,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ area
   const { area } = await params;
 
   const [commitments, bills, projects] = await Promise.all([
-    db.commitment.findMany({ where: { userId: session.userId, area }, orderBy: { startAt: "asc" } }),
+    db.commitment.findMany({ where: { userId: session.userId, area, archived: false }, orderBy: { startAt: "asc" } }),
     db.bill.findMany({ where: { userId: session.userId, area }, orderBy: { dueDate: "asc" } }),
     db.project.findMany({
-      where: { userId: session.userId, area },
+      where: { userId: session.userId, area, archived: false },
       orderBy: { createdAt: "asc" },
       include: { tasks: { orderBy: { createdAt: "asc" } } },
     }),

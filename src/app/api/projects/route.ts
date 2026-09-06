@@ -9,8 +9,10 @@ export async function GET(req: NextRequest) {
   const session = await getUserFromRequest(req);
   if (!session) return bad("Unauthorized", 401);
 
+  const includeArchived = req.nextUrl.searchParams.get("archived") === "true";
+
   const projects = await db.project.findMany({
-    where: { userId: session.userId },
+    where: { userId: session.userId, archived: includeArchived },
     orderBy: { createdAt: "asc" },
     include: { tasks: { orderBy: { createdAt: "asc" } } },
   });
@@ -31,7 +33,7 @@ export async function POST(req: NextRequest) {
       name: body.name,
       area: body.area,
       statusNote: body.statusNote || null,
-      needsDecision: !!body.needsDecision,
+      status: body.status || "em_andamento",
       hasAlert: !!body.hasAlert,
     },
   });

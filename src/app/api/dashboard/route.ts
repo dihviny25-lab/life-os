@@ -26,12 +26,12 @@ export async function GET(req: NextRequest) {
   const todayEnd = endOfDay(now);
 
   const [todayCommitments, upcomingCommitments, billsToday, finance, envelopes, projects] = await Promise.all([
-    db.commitment.findMany({ where: { userId, startAt: { gte: todayStart, lte: todayEnd } }, orderBy: { startAt: "asc" } }),
-    db.commitment.findMany({ where: { userId, startAt: { gt: todayEnd } }, orderBy: { startAt: "asc" }, take: 10 }),
+    db.commitment.findMany({ where: { userId, archived: false, startAt: { gte: todayStart, lte: todayEnd } }, orderBy: { startAt: "asc" } }),
+    db.commitment.findMany({ where: { userId, archived: false, startAt: { gt: todayEnd } }, orderBy: { startAt: "asc" }, take: 10 }),
     db.bill.findMany({ where: { userId, paid: false, dueDate: { gte: todayStart, lte: todayEnd } } }),
     db.finance.findUnique({ where: { userId } }),
     db.envelope.findMany({ where: { userId } }),
-    db.project.findMany({ where: { userId }, orderBy: { createdAt: "asc" }, include: { tasks: { orderBy: { createdAt: "asc" } } } }),
+    db.project.findMany({ where: { userId, archived: false }, orderBy: { createdAt: "asc" }, include: { tasks: { orderBy: { createdAt: "asc" } } } }),
   ]);
 
   const currentBalance = finance?.currentBalance ?? 0;
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
 
   const churchProjects = projects.filter((p) => p.area === "igreja_ministerio");
   const devProjects = projects.filter((p) => p.area === "desenvolvimento");
-  const devNeedsDecision = devProjects.filter((p) => p.needsDecision).length;
+  const devNeedsDecision = devProjects.filter((p) => p.status === "aguardando_decisao").length;
   const devAlerts = devProjects.filter((p) => p.hasAlert).length;
 
   return ok({

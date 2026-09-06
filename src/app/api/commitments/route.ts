@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   const area = req.nextUrl.searchParams.get("area");
 
   const commitments = await db.commitment.findMany({
-    where: { userId: session.userId, ...(area ? { area } : {}) },
+    where: { userId: session.userId, archived: false, ...(area ? { area } : {}) },
     orderBy: { startAt: "asc" },
   });
   return ok({ commitments });

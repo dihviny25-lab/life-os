@@ -4,11 +4,12 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sun, CalendarClock, Wallet, FolderKanban, Church, Code2, AlertTriangle, ArrowRight, Check } from "lucide-react";
+import { Sun, CalendarClock, Wallet, FolderKanban, Church, Code2, AlertTriangle, ArrowRight, Check, Archive } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionCard } from "@/components/section-card";
 import { AddCommitmentDialog, AddBillDialog, AddProjectDialog } from "@/components/entry-dialogs";
 import { ProjectTasks } from "@/components/project-tasks";
+import { DeleteButton } from "@/components/delete-button";
 import { AREAS } from "@/lib/areas";
 import type { Commitment, Bill, Project } from "@/lib/types";
 

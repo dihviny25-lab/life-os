@@ -18,8 +18,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (typeof body.name === "string") data.name = body.name;
   if (typeof body.area === "string") data.area = body.area;
   if (body.statusNote !== undefined) data.statusNote = body.statusNote || null;
-  if (typeof body.needsDecision === "boolean") data.needsDecision = body.needsDecision;
+  if (typeof body.status === "string") data.status = body.status;
   if (typeof body.hasAlert === "boolean") data.hasAlert = body.hasAlert;
+  if (typeof body.archived === "boolean") data.archived = body.archived;
 
   const project = await db.project.update({ where: { id }, data });
   return ok(project);

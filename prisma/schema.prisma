@@ -34,6 +34,7 @@ model Commitment {
   startAt   DateTime
   location  String?
   area      String?
+  archived  Boolean  @default(false)
   createdAt DateTime @default(now())
   @@index([userId, startAt])
   @@index([userId, area])
@@ -84,18 +85,20 @@ model Envelope {
 }
 
 model Project {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name          String
-  area          String
-  statusNote    String?
-  needsDecision Boolean  @default(false)
-  hasAlert      Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  tasks         Task[]
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  area       String
+  statusNote String?
+  status     String   @default("em_andamento") // ideia | em_andamento | aguardando_decisao | concluido
+  hasAlert   Boolean  @default(false)
+  archived   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tasks      Task[]
   @@index([userId, area])
+  @@index([userId, status])
 }
 
 // A step inside a Project — Área → Projeto → Tarefas, per the roadmap.
