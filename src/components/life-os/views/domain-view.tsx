@@ -38,14 +38,13 @@ export function DomainView({ domainKey }: { domainKey: string }) {
 
   // domain-specific quick-add types
   const quickTypes: Record<string, string[]> = {
-    mind_soul: ["journal", "affirmation", "vision", "habit"],
-    time_action: ["task", "habit", "routine", "goal"],
-    health: ["symptom", "medication", "habit", "event", "task"],
-    wealth: ["finance", "task", "goal", "note"],
-    network: ["contact", "event", "task", "note"],
-    growth: ["bookmark", "note", "goal"],
-    creativity: ["idea", "bookmark", "event", "note", "milestone"],
-    admin: ["task", "document", "note"],
+    familia: ["contact", "event", "task", "document"],
+    financas: ["finance", "task", "goal", "note"],
+    barbearia: ["contact", "event", "goal", "note"],
+    desenvolvimento: ["task", "note", "milestone", "bookmark"],
+    igreja_ministerio: ["event", "task", "note", "journal"],
+    pessoal: ["task", "habit", "journal", "goal"],
+    conhecimento: ["note", "bookmark", "idea", "document"],
   };
   const qtypes = quickTypes[domainKey] || ["task", "note"];
 
@@ -98,8 +97,8 @@ export function DomainView({ domainKey }: { domainKey: string }) {
         </div>
       </motion.div>
 
-      {/* Sanctuary call-to-action for Mind & Soul */}
-      {domainKey === "mind_soul" && (
+      {/* Sanctuary call-to-action for Pessoal */}
+      {domainKey === "pessoal" && (
         <motion.button
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -119,18 +118,26 @@ export function DomainView({ domainKey }: { domainKey: string }) {
       )}
 
       {/* Domain-specific widgets */}
-      {domainKey === "time_action" && <TimeActionOverview />}
-      {domainKey === "network" && <FollowUpDue />}
-      {domainKey === "growth" && <ReadingTracker />}
-      {domainKey === "health" && <HealthOverview />}
-      {domainKey === "wealth" && <SubscriptionsOverview />}
-      {domainKey === "creativity" && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <IdeaVault />
+      {domainKey === "pessoal" && (
+        <>
+          <TimeActionOverview />
+          <HealthOverview />
           <BucketList />
-        </div>
+        </>
       )}
-      {domainKey === "admin" && <AdminQuickActions />}
+      {domainKey === "familia" && (
+        <>
+          <FollowUpDue />
+          <AdminQuickActions />
+        </>
+      )}
+      {domainKey === "conhecimento" && (
+        <>
+          <ReadingTracker />
+          <IdeaVault />
+        </>
+      )}
+      {domainKey === "financas" && <SubscriptionsOverview />}
 
       {/* Type filter chips */}
       {types.length > 0 && (

@@ -80,7 +80,7 @@ export function SanctuaryView() {
               <Button variant="outline" size="sm" onClick={() => openJournalEditor(null)} className="gap-1.5 border-violet-500/30 text-violet-600 hover:bg-violet-500/10">
                 <Icon name="PenLine" className="h-3.5 w-3.5" /> Escrever diário
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setView("mind_soul")} className="gap-1.5">
+              <Button variant="outline" size="sm" onClick={() => setView("pessoal")} className="gap-1.5">
                 <Icon name="ArrowLeft" className="h-3.5 w-3.5" /> Voltar
               </Button>
             </div>
@@ -160,7 +160,7 @@ export function SanctuaryView() {
             <Button variant="outline" size="sm" onClick={() => openJournalEditor(null)} className="gap-1.5 border-violet-500/30 text-violet-600 hover:bg-violet-500/10">
               <Icon name="PenLine" className="h-3.5 w-3.5" /> Escrever diário
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setView("mind_soul")} className="gap-1.5">
+            <Button variant="outline" size="sm" onClick={() => setView("pessoal")} className="gap-1.5">
               <Icon name="ArrowLeft" className="h-3.5 w-3.5" /> Voltar
             </Button>
           </div>

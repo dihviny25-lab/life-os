@@ -78,7 +78,7 @@ export function JournalEditorView() {
   const [goalInput, setGoalInput] = useState(() => String(getWritingGoal()));
 
   const domains = domData?.domains || [];
-  const mindSoulDomain = domains.find((d: any) => d.key === "mind_soul");
+  const mindSoulDomain = domains.find((d: any) => d.key === "pessoal");
 
   const handleGoalSave = useCallback(() => {
     const val = parseInt(goalInput, 10);
@@ -167,7 +167,7 @@ export function JournalEditorView() {
         notify.success("Entrada de diário criada");
       }
       setSaved(true);
-      setTimeout(() => setView("mind_soul"), 600);
+      setTimeout(() => setView("pessoal"), 600);
     } catch (e: any) {
       notify.error(e.message || "Falha ao salvar");
     }
@@ -179,7 +179,7 @@ export function JournalEditorView() {
       await del.mutateAsync(journalEditId);
       localStorage.removeItem("lifeos-journal-draft");
       notify.success("Entrada de diário excluída");
-      setView("mind_soul");
+      setView("pessoal");
     } catch (e: any) {
       notify.error(e.message || "Falha ao excluir");
     }
@@ -228,7 +228,7 @@ export function JournalEditorView() {
       {/* Sticky top bar */}
       <div className="sticky top-0 z-20 -mx-4 mb-4 flex items-center justify-between border-b border-border/40 bg-background/80 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6">
         <button
-          onClick={() => setView(journalEditId ? "mind_soul" : "mind_soul")}
+          onClick={() => setView("pessoal")}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <Icon name="ArrowLeft" className="h-4 w-4" />
