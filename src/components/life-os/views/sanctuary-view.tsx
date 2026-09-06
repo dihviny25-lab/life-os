@@ -12,10 +12,10 @@ import { fmtDate } from "@/lib/dates";
 
 type BreathPhase = "inhale" | "hold-in" | "exhale" | "hold-out";
 const BREATH_CYCLE: { phase: BreathPhase; label: string; secs: number }[] = [
-  { phase: "inhale", label: "Breathe in", secs: 4 },
-  { phase: "hold-in", label: "Hold", secs: 4 },
-  { phase: "exhale", label: "Breathe out", secs: 6 },
-  { phase: "hold-out", label: "Rest", secs: 2 },
+  { phase: "inhale", label: "Inspire", secs: 4 },
+  { phase: "hold-in", label: "Segure", secs: 4 },
+  { phase: "exhale", label: "Expire", secs: 6 },
+  { phase: "hold-out", label: "Descanse", secs: 2 },
 ];
 
 export function SanctuaryView() {
@@ -71,17 +71,17 @@ export function SanctuaryView() {
     return (
       <div className="space-y-6">
         <PageHeader
-          title="Sanctuary"
-          subtitle="A quiet space for your mind. Breathe, reflect, reconnect with what matters."
+          title="Santuário"
+          subtitle="Um espaço quieto para sua mente. Respire, reflita, reconecte-se com o que importa."
           icon="Leaf"
           color="#a78bfa"
           actions={
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => openJournalEditor(null)} className="gap-1.5 border-violet-500/30 text-violet-600 hover:bg-violet-500/10">
-                <Icon name="PenLine" className="h-3.5 w-3.5" /> Write journal
+                <Icon name="PenLine" className="h-3.5 w-3.5" /> Escrever diário
               </Button>
               <Button variant="outline" size="sm" onClick={() => setView("mind_soul")} className="gap-1.5">
-                <Icon name="ArrowLeft" className="h-3.5 w-3.5" /> Back
+                <Icon name="ArrowLeft" className="h-3.5 w-3.5" /> Voltar
               </Button>
             </div>
           }
@@ -104,15 +104,15 @@ export function SanctuaryView() {
           {/* Breathing exercise — renders immediately, no skeleton needed */}
           <SectionCard className="overflow-hidden">
             <div className="flex flex-col items-center justify-center py-8">
-              <h3 className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Box Breathing</h3>
-              <p className="mb-8 text-xs text-muted-foreground">4-4-6-2 pattern to calm your nervous system</p>
+              <h3 className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Respiração em Caixa</h3>
+              <p className="mb-8 text-xs text-muted-foreground">Padrão 4-4-6-2 pra acalmar seu sistema nervoso</p>
               <div className="h-40 w-40 skeleton rounded-full bg-muted/30" />
               <div className="mt-8 h-10 w-36 skeleton rounded-lg bg-muted/40" />
             </div>
           </SectionCard>
 
           {/* Vision board skeleton */}
-          <SectionCard title="Your visions" icon="Eye">
+          <SectionCard title="Suas visões" icon="Eye">
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="rounded-xl border border-border/40 bg-gradient-to-br from-violet-500/5 to-transparent p-4">
@@ -130,7 +130,7 @@ export function SanctuaryView() {
         </div>
 
         {/* Recent reflections skeleton */}
-        <SectionCard title="Recent reflections" icon="BookHeart">
+        <SectionCard title="Reflexões recentes" icon="BookHeart">
           <div className="grid gap-3 sm:grid-cols-2">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="rounded-xl border border-border/40 p-4">
@@ -151,17 +151,17 @@ export function SanctuaryView() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Sanctuary"
-        subtitle="A quiet space for your mind. Breathe, reflect, reconnect with what matters."
+        title="Santuário"
+        subtitle="Um espaço quieto para sua mente. Respire, reflita, reconecte-se com o que importa."
         icon="Leaf"
         color="#a78bfa"
         actions={
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => openJournalEditor(null)} className="gap-1.5 border-violet-500/30 text-violet-600 hover:bg-violet-500/10">
-              <Icon name="PenLine" className="h-3.5 w-3.5" /> Write journal
+              <Icon name="PenLine" className="h-3.5 w-3.5" /> Escrever diário
             </Button>
             <Button variant="outline" size="sm" onClick={() => setView("mind_soul")} className="gap-1.5">
-              <Icon name="ArrowLeft" className="h-3.5 w-3.5" /> Back
+              <Icon name="ArrowLeft" className="h-3.5 w-3.5" /> Voltar
             </Button>
           </div>
         }
@@ -177,7 +177,7 @@ export function SanctuaryView() {
           <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-16 -right-16 h-48 w-48 rounded-full bg-fuchsia-500/10 blur-3xl" />
           <div className="relative">
-            <p className="text-xs font-semibold uppercase tracking-widest text-violet-500">Today's affirmation</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-violet-500">Afirmação de hoje</p>
             <motion.blockquote
               key={dailyAffirmation.id}
               initial={{ opacity: 0 }}
@@ -191,10 +191,10 @@ export function SanctuaryView() {
             )}
             <div className="mt-5 flex justify-center gap-2">
               <Button variant="outline" size="sm" onClick={() => openItemDetail(dailyAffirmation.id)} className="gap-1.5">
-                <Icon name="Heart" className="h-3.5 w-3.5" /> Reflect on this
+                <Icon name="Heart" className="h-3.5 w-3.5" /> Refletir sobre isso
               </Button>
               <Button variant="ghost" size="sm" onClick={() => openItemEditor({ type: "affirmation", domainId: dailyAffirmation.domainId })} className="gap-1.5">
-                <Icon name="Plus" className="h-3.5 w-3.5" /> Add affirmation
+                <Icon name="Plus" className="h-3.5 w-3.5" /> Adicionar afirmação
               </Button>
             </div>
           </div>
@@ -207,10 +207,10 @@ export function SanctuaryView() {
           <div className="relative flex flex-col items-center justify-center py-8">
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent" />
             <h3 className="relative mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              {breathing ? `${cycleCount} cycle${cycleCount !== 1 ? "s" : ""} complete` : "Box Breathing"}
+              {breathing ? `${cycleCount} ciclo${cycleCount !== 1 ? "s" : ""} concluído${cycleCount !== 1 ? "s" : ""}` : "Respiração em Caixa"}
             </h3>
             <p className="relative mb-8 text-xs text-muted-foreground">
-              {breathing ? "Follow the circle" : "4-4-6-2 pattern to calm your nervous system"}
+              {breathing ? "Siga o círculo" : "Padrão 4-4-6-2 pra acalmar seu sistema nervoso"}
             </p>
 
             <div className="relative flex h-64 w-64 items-center justify-center">
@@ -253,11 +253,11 @@ export function SanctuaryView() {
             <div className="relative mt-8">
               {!breathing ? (
                 <Button onClick={() => setBreathing(true)} className="gap-2 bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white">
-                  <Icon name="Play" className="h-4 w-4" /> Begin breathing
+                  <Icon name="Play" className="h-4 w-4" /> Começar a respirar
                 </Button>
               ) : (
                 <Button variant="outline" onClick={stopBreathing} className="gap-2">
-                  <Icon name="Square" className="h-4 w-4" /> End session
+                  <Icon name="Square" className="h-4 w-4" /> Encerrar sessão
                 </Button>
               )}
             </div>
@@ -265,17 +265,17 @@ export function SanctuaryView() {
         </SectionCard>
 
         {/* Vision Board */}
-        <SectionCard title="Your visions" icon="Eye" action={
+        <SectionCard title="Suas visões" icon="Eye" action={
           <Button variant="ghost" size="sm" onClick={() => openItemEditor({ type: "vision" })} className="gap-1">
-            <Icon name="Plus" className="h-3.5 w-3.5" /> Add
+            <Icon name="Plus" className="h-3.5 w-3.5" /> Adicionar
           </Button>
         }>
           {visions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
               <Icon name="Eye" className="mb-2 h-8 w-8 text-muted-foreground/40" />
-              <p className="text-sm text-muted-foreground">What do you want your life to look like?</p>
+              <p className="text-sm text-muted-foreground">Como você quer que sua vida seja?</p>
               <Button variant="outline" size="sm" className="mt-3" onClick={() => openItemEditor({ type: "vision" })}>
-                Write a vision
+                Escrever uma visão
               </Button>
             </div>
           ) : (
@@ -309,9 +309,9 @@ export function SanctuaryView() {
       </div>
 
       {/* Recent journal entries */}
-      <SectionCard title="Recent reflections" icon="BookHeart" action={
+      <SectionCard title="Reflexões recentes" icon="BookHeart" action={
         <Button variant="ghost" size="sm" onClick={() => openJournalEditor(null)} className="gap-1 text-violet-600 hover:bg-violet-500/10">
-          <Icon name="PenLine" className="h-3.5 w-3.5" /> Write
+          <Icon name="PenLine" className="h-3.5 w-3.5" /> Escrever
         </Button>
       }>
         {journals.length === 0 ? (
@@ -320,8 +320,8 @@ export function SanctuaryView() {
               <span className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-violet-500/10 text-violet-500 transition-all group-hover:scale-105 group-hover:bg-violet-500/20">
                 <Icon name="PenLine" className="h-6 w-6" />
               </span>
-              <p className="text-sm font-medium">Start your first journal entry</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">A full-page editor with rich text formatting awaits.</p>
+              <p className="text-sm font-medium">Comece sua primeira entrada de diário</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Um editor de página inteira com formatação rich text te espera.</p>
             </button>
           </div>
         ) : (
@@ -337,7 +337,7 @@ export function SanctuaryView() {
               >
                 <div className="mb-1 flex items-center gap-2 text-[11px] text-muted-foreground">
                   <Icon name="Calendar" className="h-3 w-3" />
-                  {fmtDate(j.scheduledAt || j.createdAt, "EEE, MMM d · p")}
+                  {fmtDate(j.scheduledAt || j.createdAt, "EEE, d MMM · p")}
                   {j.project && (
                     <span className="inline-flex items-center gap-1" style={{ color: j.project.color }}>
                       · {j.project.name}

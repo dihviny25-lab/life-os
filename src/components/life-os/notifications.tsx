@@ -26,15 +26,15 @@ export function NotificationManager() {
     if (notified) return;
 
     if (overdue > 0) {
-      new Notification("⚠️ Overdue tasks", {
-        body: `You have ${overdue} overdue task${overdue > 1 ? "s" : ""}. Tap to review.`,
+      new Notification("⚠️ Tarefas atrasadas", {
+        body: `Você tem ${overdue} tarefa${overdue > 1 ? "s" : ""} atrasada${overdue > 1 ? "s" : ""}. Toque para revisar.`,
         icon: "/manifest.json",
         tag: "overdue",
       });
       sessionStorage.setItem("lifeos-notified", "1");
     } else if (dueToday > 0) {
-      new Notification("📋 Tasks due today", {
-        body: `You have ${dueToday} task${dueToday > 1 ? "s" : ""} due today.`,
+      new Notification("📋 Tarefas para hoje", {
+        body: `Você tem ${dueToday} tarefa${dueToday > 1 ? "s" : ""} para hoje.`,
         icon: "/manifest.json",
         tag: "due-today",
       });

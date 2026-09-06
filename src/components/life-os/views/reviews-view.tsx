@@ -31,21 +31,21 @@ export function ReviewsView() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Reviews & Reflections"
-        subtitle="Close the loop. Guided reflections keep your system — and your mind — trustworthy."
+        title="Revisões & Reflexões"
+        subtitle="Feche o ciclo. Reflexões guiadas mantêm seu sistema — e sua mente — confiáveis."
         icon="NotebookPen"
         color="#a78bfa"
         actions={
           <Button onClick={() => setDrafting(true)} className="gap-1.5 bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white">
-            <Icon name="NotebookPen" className="h-4 w-4" /> New reflection
+            <Icon name="NotebookPen" className="h-4 w-4" /> Nova reflexão
           </Button>
         }
       />
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
         <TabsList className="grid w-full max-w-xs grid-cols-2">
-          <TabsTrigger value="daily" className="gap-1.5"><Icon name="Sun" className="h-3.5 w-3.5" /> Daily</TabsTrigger>
-          <TabsTrigger value="weekly" className="gap-1.5"><Icon name="CalendarRange" className="h-3.5 w-3.5" /> Weekly</TabsTrigger>
+          <TabsTrigger value="daily" className="gap-1.5"><Icon name="Sun" className="h-3.5 w-3.5" /> Diária</TabsTrigger>
+          <TabsTrigger value="weekly" className="gap-1.5"><Icon name="CalendarRange" className="h-3.5 w-3.5" /> Semanal</TabsTrigger>
         </TabsList>
 
         <TabsContent value={tab} className="mt-6">
@@ -73,9 +73,9 @@ export function ReviewsView() {
           ) : reviews.length === 0 ? (
             <EmptyState
               icon="NotebookPen"
-              title={`No ${tab} reviews yet`}
-              description={tab === "daily" ? "End each day with a few minutes of reflection. Wins, challenges, gratitude, and a focus for tomorrow." : "Once a week, clear the inbox, check project health, and set priorities for the week ahead."}
-              action={{ label: "Start reflection", onClick: () => setDrafting(true) }}
+              title={`Nenhuma revisão ${tab === "daily" ? "diária" : "semanal"} ainda`}
+              description={tab === "daily" ? "Termine cada dia com alguns minutos de reflexão. Vitórias, desafios, gratidão e um foco para amanhã." : "Uma vez por semana, limpe a caixa de entrada, verifique a saúde dos projetos e defina prioridades para a semana que vem."}
+              action={{ label: "Começar reflexão", onClick: () => setDrafting(true) }}
             />
           ) : (
             <div className="space-y-4">
@@ -120,7 +120,7 @@ function ReviewForm({ type, onDone }: { type: "daily" | "weekly"; onDone: () => 
       priorities: form.priorities.filter((p) => p.trim()),
       mood: form.mood, energy: form.energy,
     });
-    notify.success(`${type === "daily" ? "Daily" : "Weekly"} reflection saved`);
+    notify.success(`Reflexão ${type === "daily" ? "diária" : "semanal"} salva`);
     onDone();
   }
 
@@ -130,15 +130,15 @@ function ReviewForm({ type, onDone }: { type: "daily" | "weekly"; onDone: () => 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       {type === "weekly" && (inboxCount > 0 || openTasks > 0) && (
-        <SectionCard title="Weekly maintenance checklist" icon="ListChecks" className="mb-4 bg-amber-500/5">
+        <SectionCard title="Checklist de manutenção semanal" icon="ListChecks" className="mb-4 bg-amber-500/5">
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="flex items-center gap-2 rounded-lg border border-border/60 p-2.5">
               <Icon name="Inbox" className="h-4 w-4 text-amber-500" />
-              <span className="flex-1 text-sm">{inboxCount} item{inboxCount !== 1 ? "s" : ""} in inbox</span>
+              <span className="flex-1 text-sm">{inboxCount} {inboxCount !== 1 ? "itens" : "item"} na entrada</span>
             </div>
             <div className="flex items-center gap-2 rounded-lg border border-border/60 p-2.5">
               <Icon name="CheckSquare" className="h-4 w-4 text-emerald-500" />
-              <span className="flex-1 text-sm">{openTasks} open task{openTasks !== 1 ? "s" : ""}</span>
+              <span className="flex-1 text-sm">{openTasks} {openTasks !== 1 ? "tarefas abertas" : "tarefa aberta"}</span>
             </div>
           </div>
         </SectionCard>
@@ -149,29 +149,29 @@ function ReviewForm({ type, onDone }: { type: "daily" | "weekly"; onDone: () => 
           {/* Mood + Energy */}
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <Label className="mb-2 block text-xs font-medium text-muted-foreground">Mood</Label>
+              <Label className="mb-2 block text-xs font-medium text-muted-foreground">Humor</Label>
               <div className="flex items-center gap-3">
                 <Slider value={[form.mood]} onValueChange={(v) => set("mood", v[0])} min={1} max={5} step={1} className="flex-1" />
                 <span className="w-16 text-right text-sm font-semibold">
-                  {["", "Low", "Meh", "Okay", "Good", "Great"][form.mood]}
+                  {["", "Baixo", "Mais ou menos", "Ok", "Bom", "Ótimo"][form.mood]}
                 </span>
               </div>
             </div>
             <div>
-              <Label className="mb-2 block text-xs font-medium text-muted-foreground">Energy</Label>
+              <Label className="mb-2 block text-xs font-medium text-muted-foreground">Energia</Label>
               <div className="flex items-center gap-3">
                 <Slider value={[form.energy]} onValueChange={(v) => set("energy", v[0])} min={1} max={5} step={1} className="flex-1" />
                 <span className="w-16 text-right text-sm font-semibold">
-                  {["", "Drained", "Low", "Steady", "Strong", "Charged"][form.energy]}
+                  {["", "Esgotado", "Baixa", "Estável", "Forte", "Cheia"][form.energy]}
                 </span>
               </div>
             </div>
           </div>
 
-          <ReviewField label={prompts.wins} icon="Trophy" color="#f59e0b" value={form.wins} onChange={(v) => set("wins", v)} placeholder="Even small wins count…" />
-          <ReviewField label={prompts.challenges} icon="AlertCircle" color="#f43f5e" value={form.challenges} onChange={(v) => set("challenges", v)} placeholder="What got in the way?" />
-          <ReviewField label={prompts.learnings} icon="Lightbulb" color="#3b82f6" value={form.learnings} onChange={(v) => set("learnings", v)} placeholder="A lesson, an insight…" />
-          <ReviewField label={prompts.gratitude} icon="Heart" color="#ec4899" value={form.gratitude} onChange={(v) => set("gratitude", v)} placeholder="Who or what are you thankful for?" />
+          <ReviewField label={prompts.wins} icon="Trophy" color="#f59e0b" value={form.wins} onChange={(v) => set("wins", v)} placeholder="Até pequenas vitórias contam…" />
+          <ReviewField label={prompts.challenges} icon="AlertCircle" color="#f43f5e" value={form.challenges} onChange={(v) => set("challenges", v)} placeholder="O que atrapalhou?" />
+          <ReviewField label={prompts.learnings} icon="Lightbulb" color="#3b82f6" value={form.learnings} onChange={(v) => set("learnings", v)} placeholder="Uma lição, um insight…" />
+          <ReviewField label={prompts.gratitude} icon="Heart" color="#ec4899" value={form.gratitude} onChange={(v) => set("gratitude", v)} placeholder="Por quem ou pelo que você é grato?" />
 
           {/* Priorities */}
           <div>
@@ -183,18 +183,18 @@ function ReviewForm({ type, onDone }: { type: "daily" | "weekly"; onDone: () => 
               {form.priorities.map((p, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-xs font-bold text-emerald-600">{i + 1}</span>
-                  <Input value={p} onChange={(e) => setPriority(i, e.target.value)} placeholder={`Priority ${i + 1}`} />
+                  <Input value={p} onChange={(e) => setPriority(i, e.target.value)} placeholder={`Prioridade ${i + 1}`} />
                 </div>
               ))}
             </div>
           </div>
 
-          <ReviewField label="Anything else?" icon="PenLine" color="#71717a" value={form.notes} onChange={(v) => set("notes", v)} placeholder="Free-form notes…" />
+          <ReviewField label="Mais alguma coisa?" icon="PenLine" color="#71717a" value={form.notes} onChange={(v) => set("notes", v)} placeholder="Notas livres…" />
 
           <div className="flex justify-end gap-2 border-t border-border/60 pt-4">
-            <Button variant="ghost" onClick={onDone}>Cancel</Button>
+            <Button variant="ghost" onClick={onDone}>Cancelar</Button>
             <Button onClick={save} disabled={create.isPending} className="gap-1.5">
-              <Icon name="Save" className="h-4 w-4" /> Save reflection
+              <Icon name="Save" className="h-4 w-4" /> Salvar reflexão
             </Button>
           </div>
         </div>
@@ -231,8 +231,8 @@ function ReviewCard({ review, onOpenItem }: { review: any; onOpenItem: (id: stri
           </span>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold capitalize">{review.type} reflection</h3>
-              <Badge variant="secondary" className="text-[10px]">{fmtDate(date, "EEE, MMM d")}</Badge>
+              <h3 className="text-sm font-semibold">Reflexão {review.type === "daily" ? "diária" : "semanal"}</h3>
+              <Badge variant="secondary" className="text-[10px]">{fmtDate(date, "EEE, d MMM")}</Badge>
             </div>
             {review.wins && <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{review.wins}</p>}
           </div>
@@ -248,27 +248,27 @@ function ReviewCard({ review, onOpenItem }: { review: any; onOpenItem: (id: stri
               className="overflow-hidden"
             >
               <div className="mt-4 space-y-3 border-t border-border/60 pt-4">
-                {review.wins && <ReviewBlock label="Wins" icon="Trophy" color="#f59e0b" text={review.wins} />}
-                {review.challenges && <ReviewBlock label="Challenges" icon="AlertCircle" color="#f43f5e" text={review.challenges} />}
-                {review.learnings && <ReviewBlock label="Learnings" icon="Lightbulb" color="#3b82f6" text={review.learnings} />}
-                {review.gratitude && <ReviewBlock label="Gratitude" icon="Heart" color="#ec4899" text={review.gratitude} />}
+                {review.wins && <ReviewBlock label="Vitórias" icon="Trophy" color="#f59e0b" text={review.wins} />}
+                {review.challenges && <ReviewBlock label="Desafios" icon="AlertCircle" color="#f43f5e" text={review.challenges} />}
+                {review.learnings && <ReviewBlock label="Aprendizados" icon="Lightbulb" color="#3b82f6" text={review.learnings} />}
+                {review.gratitude && <ReviewBlock label="Gratidão" icon="Heart" color="#ec4899" text={review.gratitude} />}
                 {review.priorities?.length > 0 && (
                   <div>
                     <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      <Icon name="Target" className="h-3 w-3 text-emerald-500" /> Priorities
+                      <Icon name="Target" className="h-3 w-3 text-emerald-500" /> Prioridades
                     </p>
                     <ol className="ml-4 list-decimal space-y-1 text-sm">
                       {review.priorities.map((p: string, i: number) => <li key={i}>{p}</li>)}
                     </ol>
                   </div>
                 )}
-                {review.notes && <ReviewBlock label="Notes" icon="PenLine" color="#71717a" text={review.notes} />}
+                {review.notes && <ReviewBlock label="Notas" icon="PenLine" color="#71717a" text={review.notes} />}
                 <div className="flex items-center justify-between pt-2">
                   <div className="flex gap-3 text-xs text-muted-foreground">
-                    {review.mood && <span>Mood {["", "Low", "Meh", "Okay", "Good", "Great"][review.mood]}</span>}
-                    {review.energy && <span>Energy {["", "Drained", "Low", "Steady", "Strong", "Charged"][review.energy]}</span>}
+                    {review.mood && <span>Humor {["", "Baixo", "Mais ou menos", "Ok", "Bom", "Ótimo"][review.mood]}</span>}
+                    {review.energy && <span>Energia {["", "Esgotado", "Baixa", "Estável", "Forte", "Cheia"][review.energy]}</span>}
                   </div>
-                  <Button variant="ghost" size="sm" className="text-rose-500 hover:text-rose-600" onClick={() => { del.mutate(review.id); notify.success("Deleted"); }}>
+                  <Button variant="ghost" size="sm" className="text-rose-500 hover:text-rose-600" onClick={() => { del.mutate(review.id); notify.success("Excluída"); }}>
                     <Icon name="Trash2" className="h-3.5 w-3.5" />
                   </Button>
                 </div>

@@ -89,10 +89,10 @@ export function DomainView({ domainKey }: { domainKey: string }) {
             ))
           ) : (
             <>
-              <Stat label="Total items" value={items.length} />
-              <Stat label="Done" value={items.filter((i) => i.status === "done").length} />
-              <Stat label="Active" value={items.filter((i) => i.status === "active").length} />
-              <Stat label="Types" value={types.length} />
+              <Stat label="Total de itens" value={items.length} />
+              <Stat label="Concluídos" value={items.filter((i) => i.status === "done").length} />
+              <Stat label="Ativos" value={items.filter((i) => i.status === "active").length} />
+              <Stat label="Tipos" value={types.length} />
             </>
           )}
         </div>
@@ -111,8 +111,8 @@ export function DomainView({ domainKey }: { domainKey: string }) {
             <Icon name="Leaf" className="h-6 w-6" />
           </span>
           <div className="relative flex-1">
-            <h3 className="text-sm font-semibold">Enter the Sanctuary</h3>
-            <p className="text-xs text-muted-foreground">A guided breathing exercise, your daily affirmation, and your life visions in one calm space.</p>
+            <h3 className="text-sm font-semibold">Entrar no Santuário</h3>
+            <p className="text-xs text-muted-foreground">Um exercício de respiração guiado, sua afirmação diária e suas visões de vida em um espaço calmo.</p>
           </div>
           <Icon name="ArrowRight" className="relative h-4 w-4 text-violet-500 transition-transform group-hover:translate-x-1" />
         </motion.button>
@@ -139,7 +139,7 @@ export function DomainView({ domainKey }: { domainKey: string }) {
             onClick={() => setTypeFilter(null)}
             className={cn("rounded-full px-3 py-1 text-xs font-medium transition-all", !typeFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70")}
           >
-            All ({items.length})
+            Todos ({items.length})
           </button>
           {types.map((t) => {
             const m = ITEM_TYPE_MAP[t] || { name: t, color: "#71717a", icon: "Circle" };
@@ -164,9 +164,9 @@ export function DomainView({ domainKey }: { domainKey: string }) {
       ) : filteredItems.length === 0 ? (
         <EmptyState
           icon={domainMeta.icon}
-          title={`Nothing in ${domainMeta.short} yet`}
-          description={`Start capturing ${domainMeta.name.toLowerCase()} items. They'll appear here and connect to your projects.`}
-          action={{ label: "Add item", onClick: () => openItemEditor({ type: qtypes[0], domainId: domainRecord?.id }) }}
+          title={`Nada em ${domainMeta.short} ainda`}
+          description={`Comece a capturar itens de ${domainMeta.name.toLowerCase()}. Eles vão aparecer aqui e se conectar aos seus projetos.`}
+          action={{ label: "Adicionar item", onClick: () => openItemEditor({ type: qtypes[0], domainId: domainRecord?.id }) }}
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">

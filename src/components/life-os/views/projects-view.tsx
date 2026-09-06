@@ -23,6 +23,8 @@ import { motion } from "framer-motion";
 
 const COLORS = ["#ec4899", "#10b981", "#f59e0b", "#06b6d4", "#a78bfa", "#f43f5e", "#3b82f6", "#71717a"];
 const ICONS = ["FolderKanban", "Plane", "Rocket", "HeartPulse", "BookOpen", "TrendingUp", "Target", "Palette", "Home", "GraduationCap"];
+const FILTER_LABELS: Record<string, string> = { active: "Ativos", all: "Todos" };
+const STATUS_LABELS: Record<string, string> = { active: "Ativo", paused: "Pausado", completed: "Concluído", archived: "Arquivado" };
 
 export function ProjectsView() {
   const { selectedProjectId, openProject, setView } = useLifeOS();
@@ -39,8 +41,8 @@ export function ProjectsView() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Projects & Threads"
-        subtitle="Unified dashboards that weave together every related task, note, journal, and deadline."
+        title="Projetos & Threads"
+        subtitle="Painéis unificados que entrelaçam cada tarefa, nota, diário e prazo relacionados."
         icon="FolderKanban"
         color="#06b6d4"
         actions={
@@ -50,14 +52,14 @@ export function ProjectsView() {
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={cn("rounded-md px-3 py-1 text-xs font-medium capitalize transition-all", filter === f ? "bg-background shadow-sm" : "text-muted-foreground")}
+                  className={cn("rounded-md px-3 py-1 text-xs font-medium transition-all", filter === f ? "bg-background shadow-sm" : "text-muted-foreground")}
                 >
-                  {f}
+                  {FILTER_LABELS[f]}
                 </button>
               ))}
             </div>
             <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
-              <Icon name="Plus" className="h-4 w-4" /> New
+              <Icon name="Plus" className="h-4 w-4" /> Novo
             </Button>
           </div>
         }
@@ -91,9 +93,9 @@ export function ProjectsView() {
       ) : projects.length === 0 ? (
         <EmptyState
           icon="FolderPlus"
-          title="No projects yet"
-          description="Create a thread to unify related tasks, notes, journal entries, and deadlines."
-          action={{ label: "Create project", onClick: () => setCreateOpen(true) }}
+          title="Nenhum projeto ainda"
+          description="Crie uma thread pra unificar tarefas, notas, entradas de diário e prazos relacionados."
+          action={{ label: "Criar projeto", onClick: () => setCreateOpen(true) }}
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -118,17 +120,17 @@ export function ProjectsView() {
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate text-base font-semibold">{p.name}</h3>
                   {p.targetDate && (
-                    <p className="text-[11px] text-muted-foreground">Target {smartDate(p.targetDate)}</p>
+                    <p className="text-[11px] text-muted-foreground">Meta {smartDate(p.targetDate)}</p>
                   )}
                 </div>
                 {p.status !== "active" && (
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium capitalize text-muted-foreground">{p.status}</span>
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{STATUS_LABELS[p.status] || p.status}</span>
                 )}
               </div>
-              <p className="mb-4 line-clamp-2 flex-1 text-sm text-muted-foreground">{p.description || "No description"}</p>
+              <p className="mb-4 line-clamp-2 flex-1 text-sm text-muted-foreground">{p.description || "Sem descrição"}</p>
               <div>
                 <div className="mb-1.5 flex items-center justify-between text-[11px]">
-                  <span className="text-muted-foreground">{p.taskDone}/{p.taskTotal || p.itemCount} tasks · {p.itemCount} items</span>
+                  <span className="text-muted-foreground">{p.taskDone}/{p.taskTotal || p.itemCount} tarefas · {p.itemCount} itens</span>
                   <span className="font-semibold" style={{ color: p.color }}>{p.progress}%</span>
                 </div>
                 <Progress value={p.progress} className="h-1.5" />
@@ -182,14 +184,14 @@ function ProjectDetail({ id }: { id: string }) {
               <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
               {project.description && <p className="mt-1 max-w-xl text-sm text-muted-foreground">{project.description}</p>}
               <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-1"><Icon name="ListChecks" className="h-3 w-3" />{stats.tasksDone}/{stats.tasksActive + stats.tasksDone} tasks</span>
-                {project.targetDate && <span className="inline-flex items-center gap-1"><Icon name="CalendarClock" className="h-3 w-3" />Target {smartDate(project.targetDate)}</span>}
-                <span className="inline-flex items-center gap-1"><Icon name="Layers" className="h-3 w-3" />{stats.total} items</span>
+                <span className="inline-flex items-center gap-1"><Icon name="ListChecks" className="h-3 w-3" />{stats.tasksDone}/{stats.tasksActive + stats.tasksDone} tarefas</span>
+                {project.targetDate && <span className="inline-flex items-center gap-1"><Icon name="CalendarClock" className="h-3 w-3" />Meta {smartDate(project.targetDate)}</span>}
+                <span className="inline-flex items-center gap-1"><Icon name="Layers" className="h-3 w-3" />{stats.total} itens</span>
               </div>
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={() => openItemEditor({ type: "task", projectId: id })} className="gap-1.5">
-            <Icon name="Plus" className="h-3.5 w-3.5" /> Add item
+            <Icon name="Plus" className="h-3.5 w-3.5" /> Adicionar item
           </Button>
         </div>
         <div className="relative mt-4">
@@ -200,29 +202,29 @@ function ProjectDetail({ id }: { id: string }) {
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-xl border border-border/60 bg-card/40 p-3">
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Tasks done</p>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Tarefas concluídas</p>
           <p className="mt-1 text-xl font-bold">{stats.tasksDone}</p>
         </div>
         <div className="rounded-xl border border-border/60 bg-card/40 p-3">
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Active tasks</p>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Tarefas ativas</p>
           <p className="mt-1 text-xl font-bold">{stats.tasksActive}</p>
         </div>
         <div className="rounded-xl border border-border/60 bg-card/40 p-3">
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Income</p>
-          <p className="mt-1 text-xl font-bold text-emerald-500">${stats.income.toLocaleString()}</p>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Receita</p>
+          <p className="mt-1 text-xl font-bold text-emerald-500">R${stats.income.toLocaleString()}</p>
         </div>
         <div className="rounded-xl border border-border/60 bg-card/40 p-3">
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Expense</p>
-          <p className="mt-1 text-xl font-bold text-rose-500">${stats.expense.toLocaleString()}</p>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Despesa</p>
+          <p className="mt-1 text-xl font-bold text-rose-500">R${stats.expense.toLocaleString()}</p>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Tasks */}
         <div className="space-y-6 lg:col-span-2">
-          <SectionCard title="Tasks" icon="CheckSquare" action={<Button variant="ghost" size="sm" onClick={() => openItemEditor({ type: "task", projectId: id })}><Icon name="Plus" className="mr-1 h-3.5 w-3.5" />Add</Button>}>
+          <SectionCard title="Tarefas" icon="CheckSquare" action={<Button variant="ghost" size="sm" onClick={() => openItemEditor({ type: "task", projectId: id })}><Icon name="Plus" className="mr-1 h-3.5 w-3.5" />Adicionar</Button>}>
             {tasks.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">No tasks yet.</p>
+              <p className="py-6 text-center text-sm text-muted-foreground">Nenhuma tarefa ainda.</p>
             ) : (
               <div className="space-y-2">
                 {tasks.map((t) => <ItemCard key={t.id} item={t} onClick={() => openItemDetail(t.id)} />)}
@@ -231,7 +233,7 @@ function ProjectDetail({ id }: { id: string }) {
           </SectionCard>
 
           {notes.length > 0 && (
-            <SectionCard title="Notes" icon="StickyNote">
+            <SectionCard title="Notas" icon="StickyNote">
               <div className="space-y-2">
                 {notes.map((n) => <ItemCard key={n.id} item={n} onClick={() => openItemDetail(n.id)} />)}
               </div>
@@ -239,7 +241,7 @@ function ProjectDetail({ id }: { id: string }) {
           )}
 
           {others.length > 0 && (
-            <SectionCard title="More" icon="Layers">
+            <SectionCard title="Mais" icon="Layers">
               <div className="space-y-2">
                 {others.map((o) => <ItemCard key={o.id} item={o} onClick={() => openItemDetail(o.id)} />)}
               </div>
@@ -250,11 +252,11 @@ function ProjectDetail({ id }: { id: string }) {
         {/* Right column */}
         <div className="space-y-6">
           {finances.length > 0 && (
-            <SectionCard title="Budget" icon="Wallet">
+            <SectionCard title="Orçamento" icon="Wallet">
               <div className="mb-3 flex items-center justify-between rounded-lg bg-muted/40 p-2.5">
-                <span className="text-xs text-muted-foreground">Net</span>
+                <span className="text-xs text-muted-foreground">Saldo</span>
                 <span className="font-bold" style={{ color: stats.net >= 0 ? "#10b981" : "#f43f5e" }}>
-                  {stats.net >= 0 ? "+" : "−"}${Math.abs(stats.net).toLocaleString()}
+                  {stats.net >= 0 ? "+" : "−"}R${Math.abs(stats.net).toLocaleString()}
                 </span>
               </div>
               <div className="space-y-2">
@@ -264,11 +266,11 @@ function ProjectDetail({ id }: { id: string }) {
           )}
 
           {journals.length > 0 && (
-            <SectionCard title="Journal" icon="BookHeart">
+            <SectionCard title="Diário" icon="BookHeart">
               <div className="max-h-80 space-y-2 overflow-y-auto">
                 {journals.map((j) => (
                   <button key={j.id} onClick={() => openItemDetail(j.id)} className="w-full rounded-lg border border-border/60 p-3 text-left hover:bg-muted/40">
-                    <p className="text-[11px] text-muted-foreground">{fmtDate(j.scheduledAt || j.createdAt, "MMM d, p")}</p>
+                    <p className="text-[11px] text-muted-foreground">{fmtDate(j.scheduledAt || j.createdAt, "d MMM, p")}</p>
                     <p className="mt-0.5 text-sm font-medium">{j.title}</p>
                     {j.content && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{j.content}</p>}
                   </button>
@@ -278,7 +280,7 @@ function ProjectDetail({ id }: { id: string }) {
           )}
 
           {habits.length > 0 && (
-            <SectionCard title="Habits" icon="Repeat">
+            <SectionCard title="Hábitos" icon="Repeat">
               <div className="space-y-2">
                 {habits.map((h) => <ItemCard key={h.id} item={h} compact onClick={() => openItemDetail(h.id)} />)}
               </div>
@@ -297,7 +299,7 @@ function CreateProjectDialog({ open, onOpenChange }: { open: boolean; onOpenChan
   const [form, setForm] = useState({ name: "", description: "", color: COLORS[0], icon: ICONS[0], domainId: "", targetDate: "" });
 
   async function save() {
-    if (!form.name.trim()) { notify.error("Name required"); return; }
+    if (!form.name.trim()) { notify.error("Nome é obrigatório"); return; }
     await create.mutateAsync({
       name: form.name.trim(),
       description: form.description,
@@ -306,7 +308,7 @@ function CreateProjectDialog({ open, onOpenChange }: { open: boolean; onOpenChan
       domainId: form.domainId || null,
       targetDate: form.targetDate ? new Date(form.targetDate).toISOString() : null,
     });
-    notify.success("Project created");
+    notify.success("Projeto criado");
     setForm({ name: "", description: "", color: COLORS[0], icon: ICONS[0], domainId: "", targetDate: "" });
     onOpenChange(false);
   }
@@ -315,27 +317,27 @@ function CreateProjectDialog({ open, onOpenChange }: { open: boolean; onOpenChan
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>New project / thread</DialogTitle>
-          <DialogDescription>A thread unifies related items across domains into one dashboard.</DialogDescription>
+          <DialogTitle>Novo projeto / thread</DialogTitle>
+          <DialogDescription>Uma thread unifica itens relacionados de diferentes domínios em um único painel.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-2">
           <div>
-            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Name</Label>
-            <Input autoFocus value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Japan Trip 2025" />
+            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Nome</Label>
+            <Input autoFocus value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="ex: Viagem ao Japão 2025" />
           </div>
           <div>
-            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Description</Label>
+            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Descrição</Label>
             <Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Life domain</Label>
+              <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Domínio de vida</Label>
               <Select value={form.domainId || "none"} onValueChange={(value) => setForm({ ...form, domainId: value === "none" ? "" : value })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="No domain" />
+                  <SelectValue placeholder="Sem domínio" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No domain</SelectItem>
+                  <SelectItem value="none">Sem domínio</SelectItem>
                   {domains.map((domain: any) => (
                     <SelectItem key={domain.id} value={domain.id}>
                       <span className="inline-flex items-center gap-2">
@@ -348,12 +350,12 @@ function CreateProjectDialog({ open, onOpenChange }: { open: boolean; onOpenChan
               </Select>
             </div>
             <div>
-              <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Target date</Label>
+              <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Data alvo</Label>
               <Input type="date" value={form.targetDate} onChange={(e) => setForm({ ...form, targetDate: e.target.value })} />
             </div>
           </div>
           <div>
-            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Color</Label>
+            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Cor</Label>
             <div className="flex flex-wrap gap-2">
               {COLORS.map((c) => (
                 <button
@@ -366,7 +368,7 @@ function CreateProjectDialog({ open, onOpenChange }: { open: boolean; onOpenChan
             </div>
           </div>
           <div>
-            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Icon</Label>
+            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Ícone</Label>
             <div className="flex flex-wrap gap-2">
               {ICONS.map((ic) => (
                 <button
@@ -382,8 +384,8 @@ function CreateProjectDialog({ open, onOpenChange }: { open: boolean; onOpenChan
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={save} disabled={create.isPending}>Create</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={save} disabled={create.isPending}>Criar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -23,7 +23,7 @@ export function DashboardView() {
   const { data: reviewData, isLoading: reviewsLoading } = useReviews();
 
   const today = new Date();
-  const greeting = today.getHours() < 12 ? "Good morning" : today.getHours() < 18 ? "Good afternoon" : "Good evening";
+  const greeting = today.getHours() < 12 ? "Bom dia" : today.getHours() < 18 ? "Boa tarde" : "Boa noite";
 
   const tasks = todayData?.items || [];
   const tasksToday = tasks.filter((t) => {
@@ -43,7 +43,7 @@ export function DashboardView() {
 
   if (isLoading || tasksLoading || projectsLoading || reviewsLoading) {
     return (
-      <div className="space-y-6" aria-busy="true" aria-label="Loading dashboard">
+      <div className="space-y-6" aria-busy="true" aria-label="Carregando painel">
         {/* Hero skeleton */}
         <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent p-6">
           <div className="space-y-2">
@@ -184,14 +184,14 @@ export function DashboardView() {
           <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">{greeting}.</p>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">
             {tasksToday.length > 0
-              ? `You have ${tasksToday.length} task${tasksToday.length > 1 ? "s" : ""} due today.`
+              ? `Você tem ${tasksToday.length} tarefa${tasksToday.length > 1 ? "s" : ""} para hoje.`
               : overdue.length > 0
-                ? `${overdue.length} task${overdue.length > 1 ? "s" : ""} overdue.`
-                : "Your day is open. What matters most?"}
+                ? `${overdue.length} tarefa${overdue.length > 1 ? "s" : ""} atrasada${overdue.length > 1 ? "s" : ""}.`
+                : "Seu dia está livre. O que importa mais?"}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {today.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
-            {stats?.completedToday ? ` · ${stats.completedToday} completed today` : ""}
+            {today.toLocaleDateString("pt-BR", { weekday: "long", month: "long", day: "numeric" })}
+            {stats?.completedToday ? ` · ${stats.completedToday} concluídas hoje` : ""}
           </p>
         </div>
         <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
@@ -201,16 +201,16 @@ export function DashboardView() {
       {/* Stat pills */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <button onClick={() => setView("inbox")} className="text-left">
-          <StatPill label="In inbox" value={stats?.inboxCount ?? "—"} color="#f59e0b" icon="Inbox" />
+          <StatPill label="Na entrada" value={stats?.inboxCount ?? "—"} color="#f59e0b" icon="Inbox" />
         </button>
         <button onClick={() => setView("calendar")} className="text-left">
-          <StatPill label="Due today" value={stats?.tasksToday ?? "—"} color="#10b981" icon="CalendarClock" />
+          <StatPill label="Para hoje" value={stats?.tasksToday ?? "—"} color="#10b981" icon="CalendarClock" />
         </button>
         <button onClick={() => setView("calendar")} className="text-left">
-          <StatPill label="Overdue" value={stats?.tasksOverdue ?? "—"} color="#f43f5e" icon="AlertTriangle" />
+          <StatPill label="Atrasadas" value={stats?.tasksOverdue ?? "—"} color="#f43f5e" icon="AlertTriangle" />
         </button>
         <button onClick={() => setView("projects")} className="text-left">
-          <StatPill label="Active projects" value={stats?.activeProjects ?? "—"} color="#06b6d4" icon="FolderKanban" />
+          <StatPill label="Projetos ativos" value={stats?.activeProjects ?? "—"} color="#06b6d4" icon="FolderKanban" />
         </button>
       </div>
 
@@ -218,26 +218,26 @@ export function DashboardView() {
         {/* Today's focus — main column */}
         <div className="space-y-6 lg:col-span-2">
           <SectionCard
-            title="Today's focus"
+            title="Foco de hoje"
             icon="Target"
             action={
               <Button variant="ghost" size="sm" onClick={() => openItemEditor({ type: "task" })}>
-                <Icon name="Plus" className="mr-1 h-3.5 w-3.5" /> Add task
+                <Icon name="Plus" className="mr-1 h-3.5 w-3.5" /> Adicionar tarefa
               </Button>
             }
           >
             {tasksToday.length === 0 && overdue.length === 0 && upcoming.length === 0 ? (
               <EmptyState
                 icon="Coffee"
-                title="Nothing scheduled today"
-                description="A clear calendar is a gift. Capture a thought or plan something meaningful."
-                action={{ label: "Quick Capture", onClick: () => setQuickCaptureOpen(true) }}
+                title="Nada agendado para hoje"
+                description="Uma agenda livre é um presente. Capture um pensamento ou planeje algo significativo."
+                action={{ label: "Captura Rápida", onClick: () => setQuickCaptureOpen(true) }}
               />
             ) : (
               <div className="space-y-4">
                 {overdue.length > 0 && (
                   <div>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-rose-500">Overdue</p>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-rose-500">Atrasadas</p>
                     <div className="space-y-2">
                       {overdue.slice(0, 4).map((t) => (
                         <ItemCard key={t.id} item={t} showProject onClick={() => openItemDetail(t.id)} />
@@ -247,7 +247,7 @@ export function DashboardView() {
                 )}
                 {tasksToday.length > 0 && (
                   <div>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-500">Today</p>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-500">Hoje</p>
                     <div className="space-y-2">
                       {tasksToday.map((t) => (
                         <ItemCard key={t.id} item={t} showProject onClick={() => openItemDetail(t.id)} />
@@ -257,7 +257,7 @@ export function DashboardView() {
                 )}
                 {upcoming.length > 0 && (
                   <div>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Coming up</p>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Em breve</p>
                     <div className="space-y-2">
                       {upcoming.map((t) => (
                         <ItemCard key={t.id} item={t} showProject onClick={() => openItemDetail(t.id)} />
@@ -271,12 +271,12 @@ export function DashboardView() {
 
           {/* Active projects */}
           <SectionCard
-            title="Active threads"
+            title="Threads ativas"
             icon="FolderKanban"
-            action={<Button variant="ghost" size="sm" onClick={() => setView("projects")}>View all</Button>}
+            action={<Button variant="ghost" size="sm" onClick={() => setView("projects")}>Ver todas</Button>}
           >
             {projects.length === 0 ? (
-              <EmptyState icon="FolderPlus" title="No active projects" description="Create a thread to unify related tasks, notes, and journal entries." />
+              <EmptyState icon="FolderPlus" title="Nenhum projeto ativo" description="Crie uma thread pra unificar tarefas, notas e entradas de diário relacionadas." />
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 {projects.map((p) => (
@@ -290,10 +290,10 @@ export function DashboardView() {
                       <span className="flex-1 truncate text-sm font-semibold">{p.name}</span>
                       <Icon name="ArrowUpRight" className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                     </div>
-                    <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{p.description || "No description"}</p>
+                    <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{p.description || "Sem descrição"}</p>
                     <div className="mt-3">
                       <div className="mb-1 flex items-center justify-between text-[11px] text-muted-foreground">
-                        <span>{p.taskDone}/{p.taskTotal || p.itemCount} done</span>
+                        <span>{p.taskDone}/{p.taskTotal || p.itemCount} concluídas</span>
                         <span>{p.progress}%</span>
                       </div>
                       <Progress value={p.progress} className="h-1.5" />
@@ -308,7 +308,7 @@ export function DashboardView() {
           <div className="grid gap-4 sm:grid-cols-2">
             {/* Habits */}
             {stats?.habitStats && stats.habitStats.length > 0 && (
-              <SectionCard title="Habits this week" icon="Repeat">
+              <SectionCard title="Hábitos da semana" icon="Repeat">
                 <div className="space-y-2.5">
                   {stats.habitStats.slice(0, 4).map((h: any) => (
                     <div key={h.id}>
@@ -332,7 +332,7 @@ export function DashboardView() {
             )}
 
             {/* Life balance */}
-            <SectionCard title="Life balance" icon="Scale">
+            <SectionCard title="Equilíbrio de vida" icon="Scale">
               <div className="space-y-1.5">
                 {DOMAINS.map((d) => {
                   const count = stats?.byDomain?.find((b: any) => b.domain === d.key)?.count || 0;
@@ -361,21 +361,21 @@ export function DashboardView() {
           <MoodCheckIn />
 
           {/* Review prompt */}
-          <SectionCard title="Reflection" icon="NotebookPen" className="bg-gradient-to-br from-violet-500/10 to-fuchsia-500/5">
+          <SectionCard title="Reflexão" icon="NotebookPen" className="bg-gradient-to-br from-violet-500/10 to-fuchsia-500/5">
             {reviewAge > 1 ? (
               <div>
                 <p className="text-sm">
                   {reviewAge > 7
-                    ? "It's been a while since you reflected. Take a moment to close the loop on your week."
-                    : `Your last ${lastReview?.type || "daily"} review was ${reviewAge} days ago.`}
+                    ? "Já faz um tempo desde sua última reflexão. Tire um momento pra fechar o ciclo da sua semana."
+                    : `Sua última revisão ${lastReview?.type === "weekly" ? "semanal" : "diária"} foi há ${reviewAge} dias.`}
                 </p>
                 <Button size="sm" className="mt-3" onClick={() => setView("reviews")}>
-                  <Icon name="NotebookPen" className="mr-1 h-3.5 w-3.5" /> Start reflection
+                  <Icon name="NotebookPen" className="mr-1 h-3.5 w-3.5" /> Começar reflexão
                 </Button>
               </div>
             ) : (
               <div>
-                <p className="text-sm">You reflected {reviewAge === 0 ? "today" : "yesterday"}. Beautiful.</p>
+                <p className="text-sm">Você refletiu {reviewAge === 0 ? "hoje" : "ontem"}. Lindo.</p>
                 {lastReview?.wins && (
                   <p className="mt-2 rounded-lg bg-background/60 p-2 text-xs italic text-muted-foreground">
                     “{lastReview.wins}”
@@ -387,15 +387,15 @@ export function DashboardView() {
 
           {/* Week finance */}
           {stats?.week && (stats.week.income > 0 || stats.week.expense > 0) && (
-            <SectionCard title="This week" icon="Wallet">
+            <SectionCard title="Esta semana" icon="Wallet">
               <div className="grid grid-cols-2 gap-2 text-center">
                 <div className="rounded-lg bg-emerald-500/10 p-2.5">
-                  <p className="text-[9px] uppercase tracking-wide text-emerald-600">Income</p>
-                  <p className="mt-0.5 text-base font-bold text-emerald-600">${stats.week.income.toLocaleString()}</p>
+                  <p className="text-[9px] uppercase tracking-wide text-emerald-600">Receita</p>
+                  <p className="mt-0.5 text-base font-bold text-emerald-600">R${stats.week.income.toLocaleString()}</p>
                 </div>
                 <div className="rounded-lg bg-rose-500/10 p-2.5">
-                  <p className="text-[9px] uppercase tracking-wide text-rose-500">Expenses</p>
-                  <p className="mt-0.5 text-base font-bold text-rose-500">${stats.week.expense.toLocaleString()}</p>
+                  <p className="text-[9px] uppercase tracking-wide text-rose-500">Despesas</p>
+                  <p className="mt-0.5 text-base font-bold text-rose-500">R${stats.week.expense.toLocaleString()}</p>
                 </div>
               </div>
             </SectionCard>

@@ -25,18 +25,18 @@ import { DOMAINS, ITEM_TYPE_MAP } from "@/lib/constants";
 import { smartDate } from "@/lib/dates";
 
 const NAV_ITEMS: { key: ViewKey; name: string; icon: string; group: string }[] = [
-  { key: "dashboard", name: "Dashboard", icon: "LayoutDashboard", group: "Navigate" },
-  { key: "inbox", name: "Inbox", icon: "Inbox", group: "Navigate" },
-  { key: "calendar", name: "Master Calendar", icon: "CalendarDays", group: "Navigate" },
-  { key: "agenda", name: "Weekly Agenda", icon: "CalendarRange", group: "Navigate" },
-  { key: "focus", name: "Focus", icon: "Brain", group: "Navigate" },
-  { key: "projects", name: "Projects & Threads", icon: "FolderKanban", group: "Navigate" },
-  { key: "graph", name: "Brain Graph", icon: "Network", group: "Navigate" },
-  { key: "sanctuary", name: "Sanctuary", icon: "Leaf", group: "Navigate" },
-  { key: "journal", name: "Journal Editor", icon: "PenLine", group: "Navigate" },
-  { key: "reviews", name: "Reviews & Reflections", icon: "NotebookPen", group: "Navigate" },
-  { key: "insights", name: "Insights", icon: "TrendingUp", group: "Navigate" },
-  { key: "all", name: "All Items", icon: "Layers", group: "Navigate" },
+  { key: "dashboard", name: "Painel", icon: "LayoutDashboard", group: "Navegar" },
+  { key: "inbox", name: "Entrada", icon: "Inbox", group: "Navegar" },
+  { key: "calendar", name: "Calendário Mestre", icon: "CalendarDays", group: "Navegar" },
+  { key: "agenda", name: "Agenda Semanal", icon: "CalendarRange", group: "Navegar" },
+  { key: "focus", name: "Foco", icon: "Brain", group: "Navegar" },
+  { key: "projects", name: "Projetos & Threads", icon: "FolderKanban", group: "Navegar" },
+  { key: "graph", name: "Grafo Mental", icon: "Network", group: "Navegar" },
+  { key: "sanctuary", name: "Santuário", icon: "Leaf", group: "Navegar" },
+  { key: "journal", name: "Editor de Diário", icon: "PenLine", group: "Navegar" },
+  { key: "reviews", name: "Revisões & Reflexões", icon: "NotebookPen", group: "Navegar" },
+  { key: "insights", name: "Insights", icon: "TrendingUp", group: "Navegar" },
+  { key: "all", name: "Todos os Itens", icon: "Layers", group: "Navegar" },
 ];
 
 export function CommandPalette() {
@@ -96,47 +96,47 @@ export function CommandPalette() {
     <Dialog open={commandOpen} onOpenChange={(o) => { setCommandOpen(o); if (!o) setQ(""); }}>
       <DialogContent className="overflow-hidden p-0 sm:max-w-[560px]">
         <DialogHeader className="sr-only">
-          <DialogTitle>Command Palette</DialogTitle>
-          <DialogDescription>Search and run commands across your Life OS.</DialogDescription>
+          <DialogTitle>Paleta de Comandos</DialogTitle>
+          <DialogDescription>Pesquise e execute comandos no seu Life OS.</DialogDescription>
         </DialogHeader>
         <Command shouldFilter={false} className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
-          <CommandInput placeholder="Type a command, search, or jump to…" value={q} onValueChange={setQ} />
+          <CommandInput placeholder="Digite um comando, pesquise ou vá para…" value={q} onValueChange={setQ} />
           <CommandList className="max-h-[460px]">
-            {!hasResults && <CommandEmpty>No results found.</CommandEmpty>}
+            {!hasResults && <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>}
 
         {/* Quick actions */}
         {(!ql || matches("quick capture", "create", "new", "task", "note", "journal", "idea")) && (
-        <CommandGroup heading="Actions">
+        <CommandGroup heading="Ações">
           {(!ql || matches("quick", "capture", "inbox")) && (
           <CommandItem value="quick capture inbox" onSelect={run(() => setQuickCaptureOpen(true))} className="gap-2">
             <Icon name="Zap" className="h-4 w-4 text-amber-500" />
-            <span>Quick Capture to inbox</span>
+            <span>Captura rápida para a entrada</span>
             <CommandShortcut>⌘K</CommandShortcut>
           </CommandItem>
           )}
           {(!ql || matches("create", "new", "task")) && (
           <CommandItem value="create new task" onSelect={run(() => openItemEditor({ type: "task" }))} className="gap-2">
             <Icon name="Plus" className="h-4 w-4 text-emerald-500" />
-            <span>Create new task</span>
+            <span>Criar nova tarefa</span>
           </CommandItem>
           )}
           {(!ql || matches("create", "new", "note")) && (
           <CommandItem value="create new note" onSelect={run(() => openItemEditor({ type: "note" }))} className="gap-2">
             <Icon name="StickyNote" className="h-4 w-4 text-yellow-500" />
-            <span>Create new note</span>
+            <span>Criar nova nota</span>
           </CommandItem>
           )}
           {(!ql || matches("capture", "idea")) && (
           <CommandItem value="capture an idea" onSelect={run(() => openItemEditor({ type: "idea" }))} className="gap-2">
             <Icon name="Lightbulb" className="h-4 w-4 text-pink-500" />
-            <span>Capture an idea</span>
+            <span>Capturar uma ideia</span>
           </CommandItem>
           )}
           {(!ql || matches("write", "journal", "entry")) && (
           <CommandItem value="write journal entry full editor" onSelect={run(() => useLifeOS.getState().openJournalEditor(null))} className="gap-2">
             <Icon name="PenLine" className="h-4 w-4 text-violet-500" />
-            <span>Write journal entry</span>
-            <CommandShortcut>Full editor</CommandShortcut>
+            <span>Escrever entrada de diário</span>
+            <CommandShortcut>Editor completo</CommandShortcut>
           </CommandItem>
           )}
         </CommandGroup>
@@ -146,7 +146,7 @@ export function CommandPalette() {
         <>
         <CommandSeparator />
         {/* Navigation */}
-        <CommandGroup heading="Navigate">
+        <CommandGroup heading="Navegar">
           {filteredNav.map((n) => (
             <CommandItem key={n.key} value={`go to ${n.name}`} onSelect={run(() => setView(n.key))} className="gap-2">
               <Icon name={n.icon} className="h-4 w-4 text-muted-foreground" />
@@ -158,7 +158,7 @@ export function CommandPalette() {
               <span className="flex h-4 w-4 items-center justify-center">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ background: d.color }} />
               </span>
-              <span>Domain: {d.name}</span>
+              <span>Domínio: {d.name}</span>
             </CommandItem>
           ))}
         </CommandGroup>
@@ -169,7 +169,7 @@ export function CommandPalette() {
         {filteredProjects.length > 0 && (
           <>
             <CommandSeparator />
-            <CommandGroup heading="Projects">
+            <CommandGroup heading="Projetos">
               {filteredProjects.slice(0, 8).map((p: any) => (
                 <CommandItem key={p.id} value={`project ${p.name}`} onSelect={run(() => openProject(p.id))} className="gap-2">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ background: p.color }} />
@@ -185,7 +185,7 @@ export function CommandPalette() {
         {filteredUpcoming.length > 0 && !q && (
           <>
             <CommandSeparator />
-            <CommandGroup heading="Upcoming tasks">
+            <CommandGroup heading="Tarefas futuras">
               {filteredUpcoming.map((t) => (
                 <CommandItem key={t.id} value={`task ${t.title}`} onSelect={run(() => openItemDetail(t.id))} className="gap-2">
                   <Icon name="CheckSquare" className="h-4 w-4 text-amber-500" />
@@ -201,7 +201,7 @@ export function CommandPalette() {
         {q && (searchProjects.length > 0 || searchItems.length > 0) && (
           <>
             {searchProjects.length > 0 && (
-              <CommandGroup heading={`Projects matching "${q}"`}>
+              <CommandGroup heading={`Projetos correspondentes a "${q}"`}>
                 {searchProjects.map((p: any) => (
                   <CommandItem key={p.id} value={`search project ${p.name}`} onSelect={run(() => openProject(p.id))} className="gap-2">
                     <Icon name="FolderKanban" className="h-4 w-4" style={{ color: p.color }} />
@@ -211,7 +211,7 @@ export function CommandPalette() {
               </CommandGroup>
             )}
             {searchItems.length > 0 && (
-              <CommandGroup heading={`Items matching "${q}"`}>
+              <CommandGroup heading={`Itens correspondentes a "${q}"`}>
                 {searchItems.map((i: any) => {
                   const m = ITEM_TYPE_MAP[i.type] || { icon: "Circle", color: "#71717a" };
                   return (

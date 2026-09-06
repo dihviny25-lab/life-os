@@ -9,19 +9,19 @@ import { cn } from "@/lib/utils";
 import { fmtDate } from "@/lib/dates";
 
 const MOODS = [
-  { value: 1, icon: "Frown", label: "Low", color: "#f43f5e" },
-  { value: 2, icon: "Meh", label: "Meh", color: "#f59e0b" },
-  { value: 3, icon: "Smile", label: "Okay", color: "#eab308" },
-  { value: 4, icon: "SmilePlus", label: "Good", color: "#10b981" },
-  { value: 5, icon: "Laugh", label: "Great", color: "#06b6d4" },
+  { value: 1, icon: "Frown", label: "Baixo", color: "#f43f5e" },
+  { value: 2, icon: "Meh", label: "Mais ou menos", color: "#f59e0b" },
+  { value: 3, icon: "Smile", label: "Ok", color: "#eab308" },
+  { value: 4, icon: "SmilePlus", label: "Bom", color: "#10b981" },
+  { value: 5, icon: "Laugh", label: "Ótimo", color: "#06b6d4" },
 ];
 
 const ENERGY = [
-  { value: 1, label: "Drained", color: "#6366f1" },
-  { value: 2, label: "Low", color: "#8b5cf6" },
-  { value: 3, label: "Steady", color: "#06b6d4" },
-  { value: 4, label: "Strong", color: "#10b981" },
-  { value: 5, label: "Charged", color: "#f59e0b" },
+  { value: 1, label: "Esgotado", color: "#6366f1" },
+  { value: 2, label: "Baixa", color: "#8b5cf6" },
+  { value: 3, label: "Estável", color: "#06b6d4" },
+  { value: 4, label: "Forte", color: "#10b981" },
+  { value: 5, label: "Cheia", color: "#f59e0b" },
 ];
 
 export function MoodCheckIn() {
@@ -45,9 +45,9 @@ export function MoodCheckIn() {
             <Icon name={MOODS.find((m) => m.value === todayReview.mood)?.icon || "Smile"} className="h-5 w-5" />
           </span>
           <div className="flex-1">
-            <p className="text-sm font-semibold">Checked in today</p>
+            <p className="text-sm font-semibold">Check-in feito hoje</p>
             <p className="text-xs text-muted-foreground">
-              Mood {MOODS.find((m) => m.value === todayReview.mood)?.label} · Energy {ENERGY.find((e) => e.value === todayReview.energy)?.label}
+              Humor {MOODS.find((m) => m.value === todayReview.mood)?.label} · Energia {ENERGY.find((e) => e.value === todayReview.energy)?.label}
             </p>
           </div>
         </div>
@@ -70,15 +70,15 @@ export function MoodCheckIn() {
         >
           <Icon name="Check" className="h-5 w-5" strokeWidth={3} />
         </motion.div>
-        <p className="text-sm font-semibold">Thanks for checking in</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">Your reflection is saved.</p>
+        <p className="text-sm font-semibold">Obrigado por fazer o check-in</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">Sua reflexão foi salva.</p>
       </motion.div>
     );
   }
 
   async function save() {
     if (mood == null && energy == null) {
-      notify.error("Pick a mood or energy level first");
+      notify.error("Escolha um humor ou nível de energia primeiro");
       return;
     }
     await create.mutateAsync({
@@ -88,22 +88,22 @@ export function MoodCheckIn() {
       mood: mood || 3,
       energy: energy || 3,
       wins: "",
-      notes: "Quick check-in from dashboard",
+      notes: "Check-in rápido do painel",
     });
     setSaved(true);
-    notify.success("Check-in saved");
+    notify.success("Check-in salvo");
   }
 
   return (
     <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-violet-500/5 to-transparent p-4">
       <div className="mb-3 flex items-center gap-2">
         <Icon name="Smile" className="h-4 w-4 text-violet-500" />
-        <h3 className="text-sm font-semibold">How are you feeling?</h3>
+        <h3 className="text-sm font-semibold">Como você está se sentindo?</h3>
       </div>
 
       {/* Mood selector */}
       <div className="mb-3">
-        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Mood</p>
+        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Humor</p>
         <div className="flex justify-between gap-1">
           {MOODS.map((m) => (
             <motion.button
@@ -127,7 +127,7 @@ export function MoodCheckIn() {
 
       {/* Energy selector */}
       <div className="mb-4">
-        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Energy</p>
+        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Energia</p>
         <div className="flex gap-1">
           {ENERGY.map((e) => (
             <motion.button
@@ -152,7 +152,7 @@ export function MoodCheckIn() {
         disabled={create.isPending}
         className="w-full rounded-lg bg-gradient-to-r from-violet-500 to-fuchsia-600 py-2 text-xs font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
       >
-        {create.isPending ? "Saving…" : "Save check-in"}
+        {create.isPending ? "Salvando…" : "Salvar check-in"}
       </button>
     </div>
   );

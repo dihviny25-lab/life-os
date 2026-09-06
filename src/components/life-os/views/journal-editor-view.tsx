@@ -85,7 +85,7 @@ export function JournalEditorView() {
     if (val > 0) {
       setDailyGoal(val);
       localStorage.setItem(GOAL_STORAGE_KEY, String(val));
-      notify.success(`Daily goal set to ${val} words`);
+      notify.success(`Meta diária definida para ${val} palavras`);
     }
     setShowGoalInput(false);
   }, [goalInput]);
@@ -140,7 +140,7 @@ export function JournalEditorView() {
 
   async function save() {
     if (!title.trim()) {
-      notify.error("Add a title first");
+      notify.error("Adicione um título primeiro");
       return;
     }
     try {
@@ -152,7 +152,7 @@ export function JournalEditorView() {
           domainId: domainId || null,
           projectId: projectId || null,
         });
-        notify.success("Entry saved");
+        notify.success("Entrada salva");
       } else {
         await create.mutateAsync({
           type: "journal",
@@ -164,12 +164,12 @@ export function JournalEditorView() {
           scheduledAt: new Date().toISOString(),
         });
         localStorage.removeItem("lifeos-journal-draft");
-        notify.success("Journal entry created");
+        notify.success("Entrada de diário criada");
       }
       setSaved(true);
       setTimeout(() => setView("mind_soul"), 600);
     } catch (e: any) {
-      notify.error(e.message || "Failed to save");
+      notify.error(e.message || "Falha ao salvar");
     }
   }
 
@@ -178,16 +178,16 @@ export function JournalEditorView() {
     try {
       await del.mutateAsync(journalEditId);
       localStorage.removeItem("lifeos-journal-draft");
-      notify.success("Journal entry deleted");
+      notify.success("Entrada de diário excluída");
       setView("mind_soul");
     } catch (e: any) {
-      notify.error(e.message || "Failed to delete");
+      notify.error(e.message || "Falha ao excluir");
     }
   }
 
   if (journalEditId && isLoading) {
     return (
-      <div aria-busy="true" aria-label="Loading journal entry">
+      <div aria-busy="true" aria-label="Carregando entrada de diário">
         <div className="sticky top-0 z-20 -mx-4 mb-4 flex items-center justify-between border-b border-border/40 bg-background/80 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6">
           <div className="skeleton h-4 w-14 rounded" />
           <div className="flex items-center gap-2">
@@ -232,11 +232,11 @@ export function JournalEditorView() {
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <Icon name="ArrowLeft" className="h-4 w-4" />
-          Back
+          Voltar
         </button>
         <div className="flex items-center gap-2">
           <span className="hidden text-[11px] text-muted-foreground sm:inline">
-            {stats.words} words · {stats.readTime} min
+            {stats.words} palavras · {stats.readTime} min
           </span>
           {/* Delete button with confirmation — only for existing entries */}
           {journalEditId && (
@@ -248,15 +248,15 @@ export function JournalEditorView() {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete this journal entry?</AlertDialogTitle>
+                  <AlertDialogTitle>Excluir esta entrada de diário?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently remove &ldquo;{title || "Untitled entry"}&rdquo; and all its data. This action cannot be undone.
+                    Isso vai remover permanentemente &ldquo;{title || "Entrada sem título"}&rdquo; e todos os seus dados. Essa ação não pode ser desfeita.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
                   <AlertDialogAction onClick={handleDelete} className="bg-rose-500 hover:bg-rose-600">
-                    Delete
+                    Excluir
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -269,7 +269,7 @@ export function JournalEditorView() {
             className="gap-1.5"
           >
             <Icon name={showPreview ? "Pencil" : "Eye"} className="h-3.5 w-3.5" />
-            {showPreview ? "Edit" : "Preview"}
+            {showPreview ? "Editar" : "Pré-visualizar"}
           </Button>
           <Button
             size="sm"
@@ -279,7 +279,7 @@ export function JournalEditorView() {
             style={{ background: ACCENT }}
           >
             <Icon name={saved ? "Check" : "Save"} className="h-3.5 w-3.5" />
-            {saved ? "Saved" : journalEditId ? "Save" : "Publish"}
+            {saved ? "Salvo" : journalEditId ? "Salvar" : "Publicar"}
           </Button>
         </div>
       </div>
@@ -295,10 +295,10 @@ export function JournalEditorView() {
         <div className="flex items-center justify-between border-b border-border/40 bg-muted/20 px-5 py-2.5">
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
             <Icon name="Calendar" className="h-3 w-3" style={{ color: ACCENT }} />
-            {fmtDate(new Date(), "EEEE, MMMM d · p")}
+            {fmtDate(new Date(), "EEEE, d 'de' MMMM · p")}
           </div>
           <div className="flex items-center gap-1">
-            <span className="mr-1 text-[10px] text-muted-foreground">Mood:</span>
+            <span className="mr-1 text-[10px] text-muted-foreground">Humor:</span>
             {[
               { v: 1, e: "Frown", c: "#f43f5e" },
               { v: 2, e: "Meh", c: "#f59e0b" },
@@ -325,7 +325,7 @@ export function JournalEditorView() {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Give your entry a title…"
+            placeholder="Dê um título à sua entrada…"
             className="w-full border-0 bg-transparent text-2xl font-bold tracking-tight outline-none placeholder:text-muted-foreground/40"
             autoFocus={!journalEditId}
           />
@@ -340,14 +340,14 @@ export function JournalEditorView() {
                   <ReactMarkdown>{content}</ReactMarkdown>
                 </div>
               ) : (
-                <p className="text-muted-foreground/50">Nothing to preview yet.</p>
+                <p className="text-muted-foreground/50">Nada pra pré-visualizar ainda.</p>
               )}
             </div>
           ) : (
             <RichTextEditor
               value={content}
               onChange={setContent}
-              placeholder="Start writing… Express yourself freely. This is your space."
+              placeholder="Comece a escrever… Se expresse livremente. Esse é o seu espaço."
             />
           )}
         </div>
@@ -356,11 +356,11 @@ export function JournalEditorView() {
         <div className="border-t border-border/40 bg-muted/20 px-5 py-3">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Domain</span>
+              <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Domínio</span>
               <Select value={domainId || "none"} onValueChange={(v) => setDomainId(v === "none" ? "" : v)}>
-                <SelectTrigger className="h-7 w-36 text-xs"><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectTrigger className="h-7 w-36 text-xs"><SelectValue placeholder="Nenhum" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="none">Nenhum</SelectItem>
                   {domains.map((d: any) => (
                     <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                   ))}
@@ -382,18 +382,18 @@ export function JournalEditorView() {
                       min={1}
                       autoFocus
                     />
-                    <span className="text-[10px] text-muted-foreground">words</span>
-                    <button onClick={handleGoalSave} className="text-[10px] text-violet-500 hover:underline">Set</button>
-                    <button onClick={() => setShowGoalInput(false)} className="text-[10px] text-muted-foreground hover:underline">Cancel</button>
+                    <span className="text-[10px] text-muted-foreground">palavras</span>
+                    <button onClick={handleGoalSave} className="text-[10px] text-violet-500 hover:underline">Definir</button>
+                    <button onClick={() => setShowGoalInput(false)} className="text-[10px] text-muted-foreground hover:underline">Cancelar</button>
                   </div>
                 ) : (
                   <button
                     onClick={() => setShowGoalInput(true)}
                     className="group flex items-center gap-1.5 text-[10px] text-muted-foreground transition-colors hover:text-foreground"
-                    title="Click to change daily writing goal"
+                    title="Clique pra mudar a meta diária de escrita"
                   >
                     <Icon name="Target" className="h-3 w-3" />
-                    <span>{dailyGoal} word goal</span>
+                    <span>meta de {dailyGoal} palavras</span>
                   </button>
                 )}
               </div>
@@ -425,18 +425,18 @@ export function JournalEditorView() {
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <Icon name="Type" className="h-2.5 w-2.5" />
-              {stats.words} words
+              {stats.words} palavras
             </span>
             <span>·</span>
-            <span>{stats.chars} chars</span>
+            <span>{stats.chars} caracteres</span>
             <span>·</span>
-            <span>{stats.sentences} sentences</span>
+            <span>{stats.sentences} frases</span>
             <span>·</span>
-            <span>{stats.paragraphs} paragraphs</span>
+            <span>{stats.paragraphs} parágrafos</span>
             <span>·</span>
             <span className="inline-flex items-center gap-1">
               <Icon name="Clock" className="h-2.5 w-2.5" />
-              {stats.readTime} min read
+              {stats.readTime} min de leitura
             </span>
           </div>
         </div>
@@ -446,10 +446,10 @@ export function JournalEditorView() {
       <div className="mt-4 flex items-center gap-2 text-[11px] text-muted-foreground">
         <Icon name="Keyboard" className="h-3.5 w-3.5" />
         <span>
-          The editor shows formatted text as you type — no raw markdown visible.
-          Use the toolbar for bold, italic, headings, and lists. Type markdown shortcuts
-          like <kbd className="rounded border border-border bg-muted px-1">#</kbd> for headings or
-          <kbd className="ml-1 rounded border border-border bg-muted px-1">-</kbd> for lists.
+          O editor mostra o texto formatado enquanto você digita — sem markdown bruto visível.
+          Use a barra de ferramentas pra negrito, itálico, títulos e listas. Digite atalhos de markdown
+          como <kbd className="rounded border border-border bg-muted px-1">#</kbd> pra títulos ou
+          <kbd className="ml-1 rounded border border-border bg-muted px-1">-</kbd> pra listas.
         </span>
       </div>
     </div>

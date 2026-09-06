@@ -27,7 +27,7 @@ export function ItemCard({ item, onClick, compact, showProject, className }: Ite
 
   function toggleDone(e: React.MouseEvent) {
     e.stopPropagation();
-    update.mutate({ id: item.id, status: done ? "active" : "done" }); notify.success(done ? "Reopened" : "Completed");
+    update.mutate({ id: item.id, status: done ? "active" : "done" }); notify.success(done ? "Reaberto" : "Concluído");
   }
 
   return (
@@ -50,7 +50,7 @@ export function ItemCard({ item, onClick, compact, showProject, className }: Ite
       {/* checkbox or type icon */}
       <div className="ml-1.5 flex-shrink-0 pt-0.5">
         {completable ? (
-          <button onClick={toggleDone} className="flex h-5 w-5 items-center justify-center" aria-label="toggle complete">
+          <button onClick={toggleDone} className="flex h-5 w-5 items-center justify-center" aria-label="alternar conclusão">
             <div
               className={cn(
                 "flex h-[18px] w-[18px] items-center justify-center rounded-md border-2 transition-all",
@@ -129,7 +129,7 @@ export function ItemCard({ item, onClick, compact, showProject, className }: Ite
             ))}
           {item.metadata?.amount != null && (
             <span className="text-[11px] font-semibold" style={{ color: item.metadata.kind === "income" ? "#10b981" : "#f43f5e" }}>
-              {item.metadata.kind === "income" ? "+" : "−"}${Number(item.metadata.amount).toLocaleString()}
+              {item.metadata.kind === "income" ? "+" : "−"}R${Number(item.metadata.amount).toLocaleString()}
             </span>
           )}
           {item.metadata?.rating && (

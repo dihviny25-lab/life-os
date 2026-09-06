@@ -22,7 +22,7 @@ export function InsightsView() {
   if (isLoading) {
     return (
       <div className="space-y-6" aria-busy="true" aria-label="Loading insights">
-        <PageHeader title="Insights" subtitle="Patterns and trends across your life — mood, habits, activity, and finances." icon="TrendingUp" color="#10b981" />
+        <PageHeader title="Insights" subtitle="Padrões e tendências na sua vida — humor, hábitos, atividade e finanças." icon="TrendingUp" color="#10b981" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-card/40 px-3 py-2.5">
@@ -52,7 +52,7 @@ export function InsightsView() {
   if (!data) return null;
 
   const moodData = data.moodTrend.map((m: any) => ({
-    date: fmtDate(m.date, "MMM d"),
+    date: fmtDate(m.date, "d MMM"),
     mood: m.mood,
     energy: m.energy,
   }));
@@ -67,7 +67,7 @@ export function InsightsView() {
     <div className="space-y-6">
       <PageHeader
         title="Insights"
-        subtitle="Patterns and trends across your life — mood, habits, activity, and finances."
+        subtitle="Padrões e tendências na sua vida — humor, hábitos, atividade e finanças."
         icon="TrendingUp"
         color="#10b981"
         actions={
@@ -75,22 +75,22 @@ export function InsightsView() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => { runScheduler.mutate(); notify.info("Running scheduler…"); }}
+              onClick={() => { runScheduler.mutate(); notify.info("Rodando agendador…"); }}
               disabled={runScheduler.isPending}
               className="gap-1.5"
-              title="Advance recurring items and reset stale habit streaks"
+              title="Avançar itens recorrentes e resetar sequências de hábitos vencidas"
             >
               <Icon name={runScheduler.isPending ? "Loader2" : "RefreshCw"} className={`h-3.5 w-3.5 ${runScheduler.isPending ? "animate-spin" : ""}`} />
-              <span className="hidden sm:inline">{runScheduler.isPending ? "Running…" : "Sync"}</span>
+              <span className="hidden sm:inline">{runScheduler.isPending ? "Rodando…" : "Sincronizar"}</span>
             </Button>
             <Button variant="outline" size="sm" onClick={() => downloadCSV("finance")} className="gap-1.5">
-              <Icon name="Download" className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Finances</span>
+              <Icon name="Download" className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Finanças</span>
             </Button>
             <Button variant="outline" size="sm" onClick={() => downloadCSV("reviews")} className="gap-1.5">
-              <Icon name="Download" className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Reviews</span>
+              <Icon name="Download" className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Revisões</span>
             </Button>
             <Button variant="outline" size="sm" onClick={() => downloadCSV("items")} className="gap-1.5">
-              <Icon name="Download" className="h-3.5 w-3.5" /> <span className="hidden sm:inline">All items</span>
+              <Icon name="Download" className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Todos os itens</span>
             </Button>
           </div>
         }
@@ -98,17 +98,17 @@ export function InsightsView() {
 
       {/* Top stat row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile label="Reviews (30d)" value={data.reviewCount} icon="NotebookPen" color="#a78bfa" />
-        <StatTile label="Avg consistency" value={`${Math.round(data.habitMatrix.reduce((s: number, h: any) => s + h.consistency, 0) / (data.habitMatrix.length || 1))}%`} icon="Repeat" color="#10b981" />
-        <StatTile label="Monthly net" value={`$${data.finance.net.toLocaleString()}`} icon="Wallet" color={data.finance.net >= 0 ? "#10b981" : "#f43f5e"} />
-        <StatTile label="Active projects" value={data.projectHealth.length} icon="FolderKanban" color="#06b6d4" />
+        <StatTile label="Revisões (30d)" value={data.reviewCount} icon="NotebookPen" color="#a78bfa" />
+        <StatTile label="Consistência média" value={`${Math.round(data.habitMatrix.reduce((s: number, h: any) => s + h.consistency, 0) / (data.habitMatrix.length || 1))}%`} icon="Repeat" color="#10b981" />
+        <StatTile label="Saldo mensal" value={`R$${data.finance.net.toLocaleString()}`} icon="Wallet" color={data.finance.net >= 0 ? "#10b981" : "#f43f5e"} />
+        <StatTile label="Projetos ativos" value={data.projectHealth.length} icon="FolderKanban" color="#06b6d4" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Mood & Energy trend */}
-        <SectionCard title="Mood & Energy trend" icon="Heart">
+        <SectionCard title="Tendência de humor & energia" icon="Heart">
           {moodData.length === 0 ? (
-            <EmptyChart message="Log a daily reflection to see your mood trend." />
+            <EmptyChart message="Registre uma reflexão diária pra ver sua tendência de humor." />
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={moodData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
@@ -126,13 +126,13 @@ export function InsightsView() {
             </ResponsiveContainer>
           )}
           <div className="mt-2 flex justify-center gap-4 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1"><span className="h-2 w-3 rounded-full bg-pink-500" /> Mood</span>
-            <span className="inline-flex items-center gap-1"><span className="h-2 w-3 rounded-full bg-amber-500" /> Energy</span>
+            <span className="inline-flex items-center gap-1"><span className="h-2 w-3 rounded-full bg-pink-500" /> Humor</span>
+            <span className="inline-flex items-center gap-1"><span className="h-2 w-3 rounded-full bg-amber-500" /> Energia</span>
           </div>
         </SectionCard>
 
         {/* Activity (created vs completed) */}
-        <SectionCard title="Activity (30 days)" icon="Activity">
+        <SectionCard title="Atividade (30 dias)" icon="Activity">
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={activityData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
               <defs>
@@ -158,15 +158,15 @@ export function InsightsView() {
             </AreaChart>
           </ResponsiveContainer>
           <div className="mt-2 flex justify-center gap-4 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1"><span className="h-2 w-3 rounded-full bg-cyan-500" /> Created</span>
-            <span className="inline-flex items-center gap-1"><span className="h-2 w-3 rounded-full bg-emerald-500" /> Completed</span>
+            <span className="inline-flex items-center gap-1"><span className="h-2 w-3 rounded-full bg-cyan-500" /> Criados</span>
+            <span className="inline-flex items-center gap-1"><span className="h-2 w-3 rounded-full bg-emerald-500" /> Concluídos</span>
           </div>
         </SectionCard>
 
         {/* Habit consistency heatmap */}
-        <SectionCard title="Habit consistency (14 days)" icon="Repeat">
+        <SectionCard title="Consistência de hábitos (14 dias)" icon="Repeat">
           {data.habitMatrix.length === 0 ? (
-            <EmptyChart message="No active habits yet. Create one in Time & Action." />
+            <EmptyChart message="Nenhum hábito ativo ainda. Crie um em Tempo & Ação." />
           ) : (
             <div className="space-y-3">
               {data.habitMatrix.map((h: any) => (
@@ -180,7 +180,7 @@ export function InsightsView() {
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: i * 0.02 }}
                         className="h-6 flex-1 rounded-sm"
-                        title={`${fmtDate(d.date, "MMM d")}: ${d.done ? "done" : "—"}`}
+                        title={`${fmtDate(d.date, "d MMM")}: ${d.done ? "concluído" : "—"}`}
                         style={{
                           background: d.done ? "#10b981" : "var(--muted)",
                           opacity: d.done ? 1 : 0.4,
@@ -192,46 +192,46 @@ export function InsightsView() {
                 </div>
               ))}
               <div className="flex justify-end gap-1 pt-1 text-[10px] text-muted-foreground">
-                <span>14 days ago</span><span>→</span><span>today</span>
+                <span>14 dias atrás</span><span>→</span><span>hoje</span>
               </div>
             </div>
           )}
         </SectionCard>
 
         {/* Finance breakdown */}
-        <SectionCard title="Monthly finances" icon="Wallet">
+        <SectionCard title="Finanças mensais" icon="Wallet">
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="rounded-xl bg-emerald-500/10 p-3">
-              <div className="text-[10px] uppercase tracking-wide text-emerald-600">Income</div>
-              <div className="mt-1 text-xl font-bold text-emerald-600">${data.finance.income.toLocaleString()}</div>
+              <div className="text-[10px] uppercase tracking-wide text-emerald-600">Receita</div>
+              <div className="mt-1 text-xl font-bold text-emerald-600">R${data.finance.income.toLocaleString()}</div>
             </div>
             <div className="rounded-xl bg-rose-500/10 p-3">
-              <div className="text-[10px] uppercase tracking-wide text-rose-500">Expenses</div>
-              <div className="mt-1 text-xl font-bold text-rose-500">${data.finance.expenses.toLocaleString()}</div>
+              <div className="text-[10px] uppercase tracking-wide text-rose-500">Despesas</div>
+              <div className="mt-1 text-xl font-bold text-rose-500">R${data.finance.expenses.toLocaleString()}</div>
             </div>
             <div className="rounded-xl bg-muted p-3">
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Net</div>
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Saldo</div>
               <div className={`mt-1 text-xl font-bold ${data.finance.net >= 0 ? "text-emerald-600" : "text-rose-500"}`}>
-                {data.finance.net >= 0 ? "+" : "−"}${Math.abs(data.finance.net).toLocaleString()}
+                {data.finance.net >= 0 ? "+" : "−"}R${Math.abs(data.finance.net).toLocaleString()}
               </div>
             </div>
           </div>
           {data.finance.subscriptions > 0 && (
             <div className="mt-3 flex items-center justify-between rounded-lg bg-amber-500/10 px-3 py-2 text-sm">
               <span className="inline-flex items-center gap-1.5 text-amber-600">
-                <Icon name="Repeat" className="h-3.5 w-3.5" /> Monthly subscriptions
+                <Icon name="Repeat" className="h-3.5 w-3.5" /> Assinaturas mensais
               </span>
-              <span className="font-semibold">${data.finance.subscriptions.toLocaleString()}/mo</span>
+              <span className="font-semibold">R${data.finance.subscriptions.toLocaleString()}/mês</span>
             </div>
           )}
           {data.finance.savingsGoals.length > 0 && (
             <div className="mt-3 space-y-2">
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Savings goals</div>
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Metas de economia</div>
               {data.finance.savingsGoals.map((g: any, i: number) => (
                 <div key={i}>
                   <div className="mb-1 flex items-center justify-between text-xs">
                     <span className="font-medium">{g.title}</span>
-                    <span className="text-muted-foreground">${g.current.toLocaleString()} / ${g.target.toLocaleString()}</span>
+                    <span className="text-muted-foreground">R${g.current.toLocaleString()} / R${g.target.toLocaleString()}</span>
                   </div>
                   <Progress value={(g.current / g.target) * 100} className="h-1.5" />
                 </div>
@@ -243,7 +243,7 @@ export function InsightsView() {
 
       {/* Project health */}
       {data.projectHealth.length > 0 && (
-        <SectionCard title="Project health" icon="FolderKanban">
+        <SectionCard title="Saúde dos projetos" icon="FolderKanban">
           <div className="grid gap-3 sm:grid-cols-2">
             {data.projectHealth.map((p: any) => (
               <motion.button
@@ -258,16 +258,16 @@ export function InsightsView() {
                   <span className="h-3 w-3 rounded-full" style={{ background: p.color }} />
                   <span className="flex-1 truncate text-sm font-semibold">{p.name}</span>
                   {p.overdue > 0 && (
-                    <span className="rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-bold text-rose-500">{p.overdue} overdue</span>
+                    <span className="rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-bold text-rose-500">{p.overdue} atrasada{p.overdue > 1 ? "s" : ""}</span>
                   )}
                 </div>
                 <div className="mb-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span>{p.done}/{p.total} tasks</span>
+                  <span>{p.done}/{p.total} tarefas</span>
                   <span className="font-semibold" style={{ color: p.color }}>{p.progress}%</span>
                 </div>
                 <Progress value={p.progress} className="h-1.5" />
                 {p.targetDate && (
-                  <p className="mt-2 text-[10px] text-muted-foreground">Target: {smartDate(p.targetDate)}</p>
+                  <p className="mt-2 text-[10px] text-muted-foreground">Meta: {smartDate(p.targetDate)}</p>
                 )}
               </motion.button>
             ))}

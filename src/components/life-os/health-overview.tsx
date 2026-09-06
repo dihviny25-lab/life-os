@@ -31,14 +31,14 @@ export function HealthOverview() {
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-500/15 text-rose-500">
             <Icon name="HeartPulse" className="h-3.5 w-3.5" />
           </span>
-          <h3 className="text-sm font-semibold">Health snapshot</h3>
+          <h3 className="text-sm font-semibold">Panorama de saúde</h3>
         </div>
-        <p className="text-xs text-muted-foreground">Track symptoms, medications, and upcoming appointments in one place.</p>
+        <p className="text-xs text-muted-foreground">Acompanhe sintomas, medicamentos e próximas consultas em um só lugar.</p>
         <button
           onClick={() => openItemEditor({ type: "symptom" })}
           className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-rose-500 hover:underline"
         >
-          <Icon name="Plus" className="h-3 w-3" /> Log a symptom
+          <Icon name="Plus" className="h-3 w-3" /> Registrar um sintoma
         </button>
       </motion.div>
     );
@@ -55,9 +55,9 @@ export function HealthOverview() {
           <Icon name="HeartPulse" className="h-3.5 w-3.5" />
         </span>
         <div>
-          <h3 className="text-sm font-semibold">Health snapshot</h3>
+          <h3 className="text-sm font-semibold">Panorama de saúde</h3>
           <p className="text-[10px] text-muted-foreground">
-            {medications.length} med{medications.length !== 1 ? "s" : ""} · {symptoms.length} symptom{symptoms.length !== 1 ? "s" : ""} · {appointments.length} upcoming
+            {medications.length} medicamento{medications.length !== 1 ? "s" : ""} · {symptoms.length} sintoma{symptoms.length !== 1 ? "s" : ""} · {appointments.length} próxima{appointments.length !== 1 ? "s" : ""}
           </p>
         </div>
       </div>
@@ -66,7 +66,7 @@ export function HealthOverview() {
         {/* Upcoming appointments */}
         {appointments.length > 0 && (
           <div>
-            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Upcoming</p>
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Próximas</p>
             <div className="space-y-1">
               {appointments.slice(0, 2).map((a: any, i: number) => (
                 <motion.button
@@ -93,7 +93,7 @@ export function HealthOverview() {
         {/* Active medications */}
         {medications.length > 0 && (
           <div>
-            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Medications</p>
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Medicamentos</p>
             <div className="flex flex-wrap gap-1.5">
               {medications.map((m: any) => (
                 <button
@@ -113,7 +113,7 @@ export function HealthOverview() {
         {/* Health habits */}
         {healthHabits.length > 0 && (
           <div>
-            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Health habits</p>
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Hábitos de saúde</p>
             <div className="space-y-1">
               {healthHabits.slice(0, 3).map((h: any, i: number) => {
                 const streak = h.metadata?.streak || 0;
@@ -145,7 +145,7 @@ export function HealthOverview() {
         {/* Recent symptoms */}
         {symptoms.length > 0 && (
           <div>
-            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Recent symptoms</p>
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Sintomas recentes</p>
             <div className="space-y-1">
               {symptoms.slice(0, 3).map((s: any, i: number) => {
                 const sev = s.metadata?.severity || 1;
@@ -159,7 +159,7 @@ export function HealthOverview() {
                     onClick={() => openItemDetail(s.id)}
                     className="group flex w-full items-center gap-2 rounded-lg border border-border/40 bg-background/40 p-2 text-left transition-all hover:bg-background"
                   >
-                    <div className="flex gap-0.5" title={`Severity ${sev}/5`}>
+                    <div className="flex gap-0.5" title={`Gravidade ${sev}/5`}>
                       {Array.from({ length: 5 }).map((_, idx) => (
                         <div
                           key={idx}

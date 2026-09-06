@@ -1,8 +1,8 @@
 export const siteConfig = {
   name: "Life OS",
-  title: "Life OS - Open-Source Digital Brain and Personal Operating System",
+  title: "Life OS - Cérebro Digital de Código Aberto e Sistema Operacional Pessoal",
   description:
-    "Life OS is an open-source, self-hostable second brain, habit tracker, journal app, task manager, calendar planner, finance tracker, and personal knowledge management system.",
+    "Life OS é um segundo cérebro de código aberto e auto-hospedável, com rastreador de hábitos, app de diário, gerenciador de tarefas, planejador de calendário, controle financeiro e sistema de gestão do conhecimento pessoal.",
   author: "karim-coder",
   repositoryUrl: "https://github.com/karim-coder/life-os",
   ogImage:

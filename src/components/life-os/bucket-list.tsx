@@ -36,9 +36,9 @@ export function BucketList() {
             <Icon name="ListChecks" className="h-3.5 w-3.5" />
           </span>
           <div>
-            <h3 className="text-sm font-semibold">Bucket list</h3>
+            <h3 className="text-sm font-semibold">Lista de desejos</h3>
             <p className="text-[10px] text-muted-foreground">
-              {completed.length} done · {active.length} to go
+              {completed.length} concluídos · {active.length} pra fazer
             </p>
           </div>
         </div>
@@ -71,10 +71,10 @@ export function BucketList() {
                 onClick={(e) => {
                   e.stopPropagation();
                   update.mutate({ id: item.id, status: "done" });
-                  notify.success("Achieved!");
+                  notify.success("Conquistado!");
                 }}
                 className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 border-purple-400/50 transition-all hover:border-purple-500 hover:bg-purple-500/10"
-                title="Mark as done"
+                title="Marcar como concluído"
               >
                 <Icon name="Check" className="h-3 w-3 text-transparent transition-colors group-hover:text-purple-500" />
               </button>
@@ -102,7 +102,7 @@ export function BucketList() {
         {completed.length > 0 && (
           <div className="mt-2 border-t border-border/30 pt-2">
             <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-500">
-              Achieved ({completed.length})
+              Conquistados ({completed.length})
             </p>
             <div className="space-y-0.5">
               {completed.slice(0, 3).map((item: any, i: number) => (
@@ -132,7 +132,7 @@ export function BucketList() {
         className="mt-2 flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-border/40 py-1.5 text-[11px] font-medium text-muted-foreground transition-all hover:border-purple-500/40 hover:text-purple-500"
       >
         <Icon name="Plus" className="h-3 w-3" />
-        Add to bucket list
+        Adicionar à lista de desejos
       </button>
     </motion.div>
   );

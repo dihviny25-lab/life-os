@@ -19,34 +19,34 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
   {
     title: "Global",
     shortcuts: [
-      { keys: ["⌘", "K"], desc: "Quick Capture to inbox", icon: "Zap" },
-      { keys: ["⌘", "P"], desc: "Open Command Palette", icon: "Command" },
-      { keys: ["/"], desc: "Focus the search bar", icon: "Search" },
-      { keys: ["?"], desc: "Show this shortcuts cheat sheet", icon: "Keyboard" },
+      { keys: ["⌘", "K"], desc: "Captura rápida para a entrada", icon: "Zap" },
+      { keys: ["⌘", "P"], desc: "Abrir Paleta de Comandos", icon: "Command" },
+      { keys: ["/"], desc: "Focar a barra de pesquisa", icon: "Search" },
+      { keys: ["?"], desc: "Mostrar essa folha de atalhos", icon: "Keyboard" },
     ],
   },
   {
-    title: "Quick Capture",
+    title: "Captura Rápida",
     shortcuts: [
-      { keys: ["Enter"], desc: "Capture to inbox", icon: "Inbox" },
-      { keys: ["⌘", "Enter"], desc: "Create as active item", icon: "PlusCircle" },
-      { keys: ["Shift", "Enter"], desc: "New line in text", icon: "CornerDownLeft" },
-      { keys: ["Esc"], desc: "Close dialog", icon: "X" },
-      { keys: ["1–6"], desc: "Switch item type", icon: "ListFilter" },
+      { keys: ["Enter"], desc: "Capturar para a entrada", icon: "Inbox" },
+      { keys: ["⌘", "Enter"], desc: "Criar como item ativo", icon: "PlusCircle" },
+      { keys: ["Shift", "Enter"], desc: "Nova linha no texto", icon: "CornerDownLeft" },
+      { keys: ["Esc"], desc: "Fechar diálogo", icon: "X" },
+      { keys: ["1–6"], desc: "Mudar tipo de item", icon: "ListFilter" },
     ],
   },
   {
-    title: "Navigation",
+    title: "Navegação",
     shortcuts: [
-      { keys: ["G", "D"], desc: "Go to Dashboard", icon: "LayoutDashboard" },
-      { keys: ["G", "I"], desc: "Go to Inbox", icon: "Inbox" },
-      { keys: ["G", "C"], desc: "Go to Calendar", icon: "CalendarDays" },
-      { keys: ["G", "A"], desc: "Go to Agenda", icon: "CalendarRange" },
-      { keys: ["G", "F"], desc: "Go to Focus timer", icon: "Brain" },
-      { keys: ["G", "P"], desc: "Go to Projects", icon: "FolderKanban" },
-      { keys: ["G", "G"], desc: "Go to Brain Graph", icon: "Network" },
-      { keys: ["G", "R"], desc: "Go to Reviews", icon: "NotebookPen" },
-      { keys: ["G", "S"], desc: "Go to Insights", icon: "TrendingUp" },
+      { keys: ["G", "D"], desc: "Ir para o Painel", icon: "LayoutDashboard" },
+      { keys: ["G", "I"], desc: "Ir para a Entrada", icon: "Inbox" },
+      { keys: ["G", "C"], desc: "Ir para o Calendário", icon: "CalendarDays" },
+      { keys: ["G", "A"], desc: "Ir para a Agenda", icon: "CalendarRange" },
+      { keys: ["G", "F"], desc: "Ir para o timer de Foco", icon: "Brain" },
+      { keys: ["G", "P"], desc: "Ir para Projetos", icon: "FolderKanban" },
+      { keys: ["G", "G"], desc: "Ir para o Grafo Mental", icon: "Network" },
+      { keys: ["G", "R"], desc: "Ir para Revisões", icon: "NotebookPen" },
+      { keys: ["G", "S"], desc: "Ir para Insights", icon: "TrendingUp" },
     ],
   },
 ];
@@ -73,9 +73,9 @@ export function ShortcutsHelp() {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Icon name="Keyboard" className="h-5 w-5 text-violet-500" />
-            Keyboard Shortcuts
+            Atalhos de Teclado
           </DialogTitle>
-          <DialogDescription>Navigate your Life OS at the speed of thought.</DialogDescription>
+          <DialogDescription>Navegue pelo seu Life OS na velocidade do pensamento.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
           {SHORTCUT_GROUPS.map((group) => (

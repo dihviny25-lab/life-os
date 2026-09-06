@@ -6,6 +6,8 @@ import { Icon } from "./icon";
 import { motion } from "framer-motion";
 import { fmtDate, smartDate } from "@/lib/dates";
 
+const RECURRING_LABELS: Record<string, string> = { "one-time": "única vez", monthly: "mensal", weekly: "semanal", yearly: "anual" };
+
 export function SubscriptionsOverview() {
   const { data } = useItems({ type: "finance", status: "active,done" });
   const { openItemDetail, openItemEditor } = useLifeOS();
@@ -33,14 +35,14 @@ export function SubscriptionsOverview() {
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600">
             <Icon name="Wallet" className="h-3.5 w-3.5" />
           </span>
-          <h3 className="text-sm font-semibold">Wealth overview</h3>
+          <h3 className="text-sm font-semibold">Panorama financeiro</h3>
         </div>
-        <p className="text-xs text-muted-foreground">Track income, expenses, subscriptions, and savings goals.</p>
+        <p className="text-xs text-muted-foreground">Acompanhe receitas, despesas, assinaturas e metas de economia.</p>
         <button
           onClick={() => openItemEditor({ type: "finance" })}
           className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-emerald-600 hover:underline"
         >
-          <Icon name="Plus" className="h-3 w-3" /> Add a transaction
+          <Icon name="Plus" className="h-3 w-3" /> Adicionar transação
         </button>
       </motion.div>
     );
@@ -59,24 +61,24 @@ export function SubscriptionsOverview() {
             <Icon name="TrendingUp" className="h-3.5 w-3.5" />
           </span>
           <div>
-            <h3 className="text-sm font-semibold">Monthly cashflow</h3>
-            <p className="text-[10px] text-muted-foreground">Income minus expenses & subscriptions</p>
+            <h3 className="text-sm font-semibold">Fluxo de caixa mensal</h3>
+            <p className="text-[10px] text-muted-foreground">Receita menos despesas e assinaturas</p>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2">
           <div className="rounded-lg bg-emerald-500/10 p-2.5 text-center">
-            <p className="text-[9px] font-semibold uppercase tracking-wide text-emerald-600">Income</p>
-            <p className="mt-0.5 text-base font-bold tabular-nums text-emerald-600">${monthlyIncome.toLocaleString()}</p>
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-emerald-600">Receita</p>
+            <p className="mt-0.5 text-base font-bold tabular-nums text-emerald-600">R${monthlyIncome.toLocaleString()}</p>
           </div>
           <div className="rounded-lg bg-rose-500/10 p-2.5 text-center">
-            <p className="text-[9px] font-semibold uppercase tracking-wide text-rose-500">Expenses</p>
-            <p className="mt-0.5 text-base font-bold tabular-nums text-rose-500">${(monthlyExpenses + monthlySubTotal).toLocaleString()}</p>
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-rose-500">Despesas</p>
+            <p className="mt-0.5 text-base font-bold tabular-nums text-rose-500">R${(monthlyExpenses + monthlySubTotal).toLocaleString()}</p>
           </div>
           <div className="rounded-lg bg-muted p-2.5 text-center">
-            <p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Net</p>
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Saldo</p>
             <p className={`mt-0.5 text-base font-bold tabular-nums ${net >= 0 ? "text-emerald-600" : "text-rose-500"}`}>
-              {net >= 0 ? "+" : "−"}${Math.abs(net).toLocaleString()}
+              {net >= 0 ? "+" : "−"}R${Math.abs(net).toLocaleString()}
             </p>
           </div>
         </div>
@@ -91,9 +93,9 @@ export function SubscriptionsOverview() {
                 <Icon name="Repeat" className="h-3.5 w-3.5" />
               </span>
               <div>
-                <h3 className="text-sm font-semibold">Subscriptions</h3>
+                <h3 className="text-sm font-semibold">Assinaturas</h3>
                 <p className="text-[10px] text-muted-foreground">
-                  ${monthlySubTotal.toFixed(2)}/mo · ${yearlySubTotal.toFixed(0)}/yr
+                  R${monthlySubTotal.toFixed(2)}/mês · R${yearlySubTotal.toFixed(0)}/ano
                 </p>
               </div>
             </div>
@@ -115,11 +117,11 @@ export function SubscriptionsOverview() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-medium">{s.title}</p>
                   <p className="text-[10px] text-muted-foreground">
-                    {s.metadata?.recurring} · next {smartDate(s.dueDate)}
+                    {RECURRING_LABELS[s.metadata?.recurring] || s.metadata?.recurring} · próxima {smartDate(s.dueDate)}
                   </p>
                 </div>
                 <span className="text-xs font-bold tabular-nums text-rose-500">
-                  ${Number(s.metadata?.amount).toFixed(2)}
+                  R${Number(s.metadata?.amount).toFixed(2)}
                 </span>
               </motion.button>
             ))}
@@ -134,7 +136,7 @@ export function SubscriptionsOverview() {
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/15 text-blue-500">
               <Icon name="Target" className="h-3.5 w-3.5" />
             </span>
-            <h3 className="text-sm font-semibold">Savings goals</h3>
+            <h3 className="text-sm font-semibold">Metas de economia</h3>
           </div>
           <div className="space-y-2">
             {goals.map((g: any, i: number) => {
@@ -153,7 +155,7 @@ export function SubscriptionsOverview() {
                   <div className="mb-1 flex items-center justify-between text-xs">
                     <span className="font-medium">{g.title}</span>
                     <span className="text-muted-foreground">
-                      ${current.toLocaleString()} / ${target.toLocaleString()}
+                      R${current.toLocaleString()} / R${target.toLocaleString()}
                     </span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-muted">

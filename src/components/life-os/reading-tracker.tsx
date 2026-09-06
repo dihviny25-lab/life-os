@@ -27,14 +27,14 @@ export function ReadingTracker() {
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/15 text-blue-500">
             <Icon name="BookOpen" className="h-3.5 w-3.5" />
           </span>
-          <h3 className="text-sm font-semibold">Reading list</h3>
+          <h3 className="text-sm font-semibold">Lista de leitura</h3>
         </div>
-        <p className="text-xs text-muted-foreground">Track books you're reading, queue what's next, and rate what you finish.</p>
+        <p className="text-xs text-muted-foreground">Acompanhe livros que você está lendo, coloque o próximo na fila e avalie o que terminar.</p>
         <button
           onClick={() => openItemEditor({ type: "bookmark" })}
           className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-blue-500 hover:underline"
         >
-          <Icon name="Plus" className="h-3 w-3" /> Add a book
+          <Icon name="Plus" className="h-3 w-3" /> Adicionar livro
         </button>
       </motion.div>
     );
@@ -54,9 +54,9 @@ export function ReadingTracker() {
             <Icon name="BookOpen" className="h-3.5 w-3.5" />
           </span>
           <div>
-            <h3 className="text-sm font-semibold">Reading list</h3>
+            <h3 className="text-sm font-semibold">Lista de leitura</h3>
             <p className="text-[10px] text-muted-foreground">
-              {finished.length} finished · {reading.length} reading · {queued.length} queued
+              {finished.length} concluídos · {reading.length} lendo · {queued.length} na fila
             </p>
           </div>
         </div>
@@ -69,7 +69,7 @@ export function ReadingTracker() {
         {/* Currently reading */}
         {reading.length > 0 && (
           <div>
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-blue-500">Currently reading</p>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-blue-500">Lendo agora</p>
             {reading.map((b: any, i: number) => (
               <motion.button
                 key={b.id}
@@ -92,7 +92,7 @@ export function ReadingTracker() {
         {/* Up next */}
         {queued.length > 0 && (
           <div>
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Up next</p>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">A seguir</p>
             {queued.slice(0, 3).map((b: any, i: number) => (
               <motion.button
                 key={b.id}
@@ -115,7 +115,7 @@ export function ReadingTracker() {
         {/* Recently finished */}
         {finished.length > 0 && (
           <div>
-            <p className="mb-1 mt-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-500">Finished</p>
+            <p className="mb-1 mt-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-500">Concluídos</p>
             {finished.slice(0, 2).map((b: any, i: number) => (
               <motion.button
                 key={b.id}

@@ -65,7 +65,7 @@ export function SettingsView() {
     });
     const data = await res.json();
     setPrefs(data);
-    notify.success("Settings saved");
+    notify.success("Configurações salvas");
   }
 
   async function toggle2FA(enabled: boolean) {
@@ -79,11 +79,11 @@ export function SettingsView() {
         const qr = await QRCode.toDataURL(data.otpauthUrl, { width: 200, margin: 1, color: { dark: "#0f172a", light: "#ffffff" } });
         setQr2faUrl(qr);
         setManualEntry(data.manualEntry);
-      } catch { notify.error("Failed to set up 2FA"); }
+      } catch { notify.error("Falha ao configurar a 2FA"); }
       finally { setLoading(false); }
     } else {
       const res = await fetch("/api/auth/disable-2fa", { method: "POST" });
-      if (res.ok) { setTwoFAEnabled(false); notify.success("2FA disabled"); }
+      if (res.ok) { setTwoFAEnabled(false); notify.success("2FA desativada"); }
     }
   }
 
@@ -94,14 +94,15 @@ export function SettingsView() {
       const data = await res.json();
       if (!res.ok) { notify.error(data.error); return; }
       setTwoFAEnabled(true); setShow2FASetup(false); setVerifyCode("");
-      notify.success("2FA enabled");
-    } catch { notify.error("Failed to verify"); }
+      notify.success("2FA ativada");
+    } catch { notify.error("Falha ao verificar"); }
     finally { setLoading(false); }
   }
 
+  const THEME_LABELS: Record<string, string> = { light: "Claro", dark: "Escuro", system: "Sistema" };
   function applyTheme(t: "light" | "dark" | "system") {
     setTheme(t);
-    notify.success(`Theme: ${t}`);
+    notify.success(`Tema: ${THEME_LABELS[t] || t}`);
   }
 
   async function startQrLogin() {
@@ -113,13 +114,13 @@ export function SettingsView() {
         body: JSON.stringify({ email, password: "" }), // password not needed — already authenticated
       });
       const data = await res.json();
-      if (!res.ok) { notify.error(data.error || "Failed"); return; }
+      if (!res.ok) { notify.error(data.error || "Falhou"); return; }
       const qr = await QRCode.toDataURL(data.qrUrl, { width: 280, margin: 1, color: { dark: "#0f172a", light: "#ffffff" } });
       setQrLoginUrl(qr);
       setQrLoginToken(data.token);
       setQrDialogOpen(true);
       pollQrStatus(data.token);
-    } catch { notify.error("Failed to generate QR"); }
+    } catch { notify.error("Falha ao gerar QR"); }
     finally { setQrLoading(false); }
   }
 
@@ -130,11 +131,11 @@ export function SettingsView() {
         const data = await res.json();
         if (data.confirmed) {
           setQrDialogOpen(false);
-          notify.success("Login confirmed on another device!");
+          notify.success("Login confirmado em outro dispositivo!");
           return;
         }
         if (data.expired) {
-          notify.error("QR expired");
+          notify.error("QR expirado");
           setQrDialogOpen(false);
           return;
         }
@@ -147,13 +148,13 @@ export function SettingsView() {
   async function seedData() {
     const res = await fetch("/api/seed", { method: "POST" });
     const data = await res.json();
-    if (res.ok) { notify.success("Seed data created!"); setTimeout(() => window.location.reload(), 1500); }
-    else notify.error(data.error || "Seeding failed");
+    if (res.ok) { notify.success("Dados de exemplo criados!"); setTimeout(() => window.location.reload(), 1500); }
+    else notify.error(data.error || "Falha ao criar dados de exemplo");
   }
 
   if (loading) return (
-    <div className="space-y-6" aria-busy="true" aria-label="Loading settings">
-      <PageHeader title="Settings" subtitle="Manage your account, security, AI, and preferences." icon="Settings" color="#71717a" />
+    <div className="space-y-6" aria-busy="true" aria-label="Carregando configurações">
+      <PageHeader title="Configurações" subtitle="Gerencie sua conta, segurança, IA e preferências." icon="Settings" color="#71717a" />
 
       {/* Profile section skeleton */}
       <div className="space-y-3 rounded-2xl border border-border/60 bg-card/50 p-4">
@@ -197,13 +198,13 @@ export function SettingsView() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Settings" subtitle="Manage your account, security, AI, and preferences." icon="Settings" color="#71717a" />
+      <PageHeader title="Configurações" subtitle="Gerencie sua conta, segurança, IA e preferências." icon="Settings" color="#71717a" />
 
       {/* Profile */}
-      <SectionCard title="Profile" icon="User">
+      <SectionCard title="Perfil" icon="User">
         <div className="space-y-3">
           <div>
-            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Name</Label>
+            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Nome</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} className="h-9" />
           </div>
           <div>
@@ -212,26 +213,26 @@ export function SettingsView() {
           </div>
           <Button size="sm" onClick={async () => {
             const res = await fetch("/api/auth/profile", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
-            if (res.ok) notify.success("Profile updated");
-          }} className="gap-1.5"><Icon name="Save" className="h-3.5 w-3.5" /> Save profile</Button>
+            if (res.ok) notify.success("Perfil atualizado");
+          }} className="gap-1.5"><Icon name="Save" className="h-3.5 w-3.5" /> Salvar perfil</Button>
         </div>
       </SectionCard>
 
       {/* Security */}
-      <SectionCard title="Security" icon="Shield">
+      <SectionCard title="Segurança" icon="Shield">
         <div className="space-y-4">
-          <ToggleRow icon="Smartphone" color="#10b981" title="Two-factor authentication" desc={twoFAEnabled ? "Enabled — requires code on login" : "Off — password only"} checked={twoFAEnabled} onChange={toggle2FA} />
+          <ToggleRow icon="Smartphone" color="#10b981" title="Autenticação de dois fatores" desc={twoFAEnabled ? "Ativada — exige código no login" : "Desativada — só senha"} checked={twoFAEnabled} onChange={toggle2FA} />
           {show2FASetup && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="overflow-hidden">
               <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-4">
-                <h4 className="mb-3 text-sm font-semibold text-violet-600">Set up 2FA</h4>
-                {qr2faUrl && <div className="mb-3 flex justify-center"><img src={qr2faUrl} alt="2FA QR" className="rounded-lg border-2 border-border" width={180} height={180} /></div>}
-                <p className="mb-2 text-[11px] text-muted-foreground">Scan with Google Authenticator, Authy, etc.:</p>
+                <h4 className="mb-3 text-sm font-semibold text-violet-600">Configurar 2FA</h4>
+                {qr2faUrl && <div className="mb-3 flex justify-center"><img src={qr2faUrl} alt="QR da 2FA" className="rounded-lg border-2 border-border" width={180} height={180} /></div>}
+                <p className="mb-2 text-[11px] text-muted-foreground">Escaneie com Google Authenticator, Authy, etc.:</p>
                 <p className="mb-3 break-all rounded bg-muted/50 p-2 font-mono text-[10px]">{manualEntry}</p>
                 <div className="flex gap-2">
                   <Input value={verifyCode} onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" className="h-9 text-center text-lg font-bold tracking-widest" />
-                  <Button size="sm" onClick={confirm2FA} disabled={loading || verifyCode.length !== 6} className="gap-1.5">{loading ? <Icon name="Loader2" className="h-3.5 w-3.5 animate-spin" /> : "Confirm"}</Button>
-                  <Button size="sm" variant="ghost" onClick={() => { setShow2FASetup(false); setVerifyCode(""); }}>Cancel</Button>
+                  <Button size="sm" onClick={confirm2FA} disabled={loading || verifyCode.length !== 6} className="gap-1.5">{loading ? <Icon name="Loader2" className="h-3.5 w-3.5 animate-spin" /> : "Confirmar"}</Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setShow2FASetup(false); setVerifyCode(""); }}>Cancelar</Button>
                 </div>
               </div>
             </motion.div>
@@ -240,10 +241,10 @@ export function SettingsView() {
           <div className="flex items-center justify-between rounded-xl border border-border/40 p-3">
             <div className="flex items-center gap-3">
               <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/10 text-violet-500"><Icon name="QrCode" className="h-4 w-4" /></span>
-              <div><p className="text-sm font-medium">Login on another device</p><p className="text-[11px] text-muted-foreground">Generate a QR code to sign in on your phone</p></div>
+              <div><p className="text-sm font-medium">Login em outro dispositivo</p><p className="text-[11px] text-muted-foreground">Gere um QR code pra entrar no seu celular</p></div>
             </div>
             <Button size="sm" variant="outline" onClick={startQrLogin} disabled={qrLoading} className="gap-1.5">
-              <Icon name={qrLoading ? "Loader2" : "QrCode"} className={`h-3.5 w-3.5 ${qrLoading ? "animate-spin" : ""}`} /> Generate QR
+              <Icon name={qrLoading ? "Loader2" : "QrCode"} className={`h-3.5 w-3.5 ${qrLoading ? "animate-spin" : ""}`} /> Gerar QR
             </Button>
           </div>
         </div>
@@ -253,63 +254,63 @@ export function SettingsView() {
       <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
         <DialogContent className="max-w-sm p-0">
           <DialogHeader className="sr-only">
-            <DialogTitle>Login on another device</DialogTitle>
-            <DialogDescription>Scan this QR code on your phone.</DialogDescription>
+            <DialogTitle>Login em outro dispositivo</DialogTitle>
+            <DialogDescription>Escaneie esse QR code no seu celular.</DialogDescription>
           </DialogHeader>
           <div className="p-6 text-center">
-            <h3 className="mb-1 text-lg font-semibold">Login on another device</h3>
-            <p className="mb-4 text-xs text-muted-foreground">Open your phone's camera and scan this code</p>
-            {qrLoginUrl && <img src={qrLoginUrl} alt="Login QR Code" className="mx-auto rounded-xl border-2 border-border" width={240} height={240} />}
+            <h3 className="mb-1 text-lg font-semibold">Login em outro dispositivo</h3>
+            <p className="mb-4 text-xs text-muted-foreground">Abra a câmera do seu celular e escaneie esse código</p>
+            {qrLoginUrl && <img src={qrLoginUrl} alt="QR Code de Login" className="mx-auto rounded-xl border-2 border-border" width={240} height={240} />}
             <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Icon name="Loader2" className="h-4 w-4 animate-spin" />
-              <span>Waiting for scan…</span>
+              <span>Aguardando leitura…</span>
             </div>
-            <p className="mt-2 text-[10px] text-muted-foreground">Expires in 5 minutes</p>
+            <p className="mt-2 text-[10px] text-muted-foreground">Expira em 5 minutos</p>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* AI Features */}
-      <SectionCard title="AI Features" icon="Bot">
+      <SectionCard title="Recursos de IA" icon="Bot">
         <div className="space-y-4">
-          <ToggleRow icon="Bot" color="#a78bfa" title="Enable AI features" desc="Master toggle for all AI-powered features" checked={prefs?.aiEnabled ?? true} onChange={(v) => updatePrefs({ aiEnabled: v })} />
+          <ToggleRow icon="Bot" color="#a78bfa" title="Ativar recursos de IA" desc="Chave geral para todos os recursos com IA" checked={prefs?.aiEnabled ?? true} onChange={(v) => updatePrefs({ aiEnabled: v })} />
 
           {prefs?.aiEnabled && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-              <ToggleRow icon="Inbox" color="#f59e0b" title="Smart Inbox Processing" desc="AI suggests type, domain & project for inbox items" checked={prefs?.aiSmartInbox ?? true} onChange={(v) => updatePrefs({ aiSmartInbox: v })} />
+              <ToggleRow icon="Inbox" color="#f59e0b" title="Processamento inteligente da entrada" desc="A IA sugere tipo, domínio e projeto pros itens da entrada" checked={prefs?.aiSmartInbox ?? true} onChange={(v) => updatePrefs({ aiSmartInbox: v })} />
 
               <div>
-                <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">AI Provider</Label>
+                <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Provedor de IA</Label>
                 <Select value={prefs?.aiProvider || "z-ai-sdk"} onValueChange={(v) => updatePrefs({ aiProvider: v })}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="z-ai-sdk">Z.AI SDK (default, free)</SelectItem>
-                    <SelectItem value="openai-compatible">OpenAI-compatible (OpenAI, Groq, Together, etc.)</SelectItem>
-                    <SelectItem value="custom">Custom endpoint</SelectItem>
+                    <SelectItem value="z-ai-sdk">Z.AI SDK (padrão, gratuito)</SelectItem>
+                    <SelectItem value="openai-compatible">Compatível com OpenAI (OpenAI, Groq, Together, etc.)</SelectItem>
+                    <SelectItem value="custom">Endpoint personalizado</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="mt-1 text-[10px] text-muted-foreground">
-                  {prefs?.aiProvider === "z-ai-sdk" && "Uses the built-in z-ai-web-dev-sdk. No configuration needed."}
-                  {prefs?.aiProvider === "openai-compatible" && "Works with any OpenAI-compatible API. Enter your API key and base URL below."}
-                  {prefs?.aiProvider === "custom" && "Enter a custom API endpoint, key, and model name."}
+                  {prefs?.aiProvider === "z-ai-sdk" && "Usa o z-ai-web-dev-sdk integrado. Nenhuma configuração necessária."}
+                  {prefs?.aiProvider === "openai-compatible" && "Funciona com qualquer API compatível com OpenAI. Digite sua chave de API e URL base abaixo."}
+                  {prefs?.aiProvider === "custom" && "Digite um endpoint, chave e nome de modelo personalizados."}
                 </p>
               </div>
 
               {(prefs?.aiProvider === "openai-compatible" || prefs?.aiProvider === "custom") && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 rounded-lg border border-border/40 p-3">
                   <div>
-                    <Label className="mb-1 block text-[11px] font-medium text-muted-foreground">API Key {prefs?.hasApiKey && "(saved)"}</Label>
-                    <Input type="password" placeholder={prefs?.hasApiKey ? "•••••••• (saved)" : "sk-..."} onChange={(e) => { if (e.target.value) updatePrefs({ aiApiKey: e.target.value }); }} className="h-9" />
+                    <Label className="mb-1 block text-[11px] font-medium text-muted-foreground">Chave de API {prefs?.hasApiKey && "(salva)"}</Label>
+                    <Input type="password" placeholder={prefs?.hasApiKey ? "•••••••• (salva)" : "sk-..."} onChange={(e) => { if (e.target.value) updatePrefs({ aiApiKey: e.target.value }); }} className="h-9" />
                   </div>
                   <div>
-                    <Label className="mb-1 block text-[11px] font-medium text-muted-foreground">Base URL</Label>
+                    <Label className="mb-1 block text-[11px] font-medium text-muted-foreground">URL base</Label>
                     <Input value={prefs?.aiBaseUrl || ""} onChange={(e) => updatePrefs({ aiBaseUrl: e.target.value })} placeholder="https://api.openai.com/v1" className="h-9" />
                   </div>
                   <div>
-                    <Label className="mb-1 block text-[11px] font-medium text-muted-foreground">Model</Label>
+                    <Label className="mb-1 block text-[11px] font-medium text-muted-foreground">Modelo</Label>
                     <Input value={prefs?.aiModel || ""} onChange={(e) => updatePrefs({ aiModel: e.target.value })} placeholder="gpt-4o-mini" className="h-9" />
                   </div>
-                  <p className="text-[10px] text-muted-foreground">Works with: OpenAI, Groq, Together AI, Anyscale, Ollama, LM Studio, and any OpenAI-compatible API.</p>
+                  <p className="text-[10px] text-muted-foreground">Funciona com: OpenAI, Groq, Together AI, Anyscale, Ollama, LM Studio e qualquer API compatível com OpenAI.</p>
                 </motion.div>
               )}
             </motion.div>
@@ -318,88 +319,87 @@ export function SettingsView() {
       </SectionCard>
 
       {/* Appearance & Notifications */}
-      <SectionCard title="Appearance & Notifications" icon="Palette">
+      <SectionCard title="Aparência & Notificações" icon="Palette">
         <div className="space-y-3">
           <div>
-            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Theme</Label>
+            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Tema</Label>
             <Select value={theme} onValueChange={(v) => applyTheme(v as any)}>
               <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="light">Light</SelectItem><SelectItem value="dark">Dark</SelectItem><SelectItem value="system">System</SelectItem></SelectContent>
+              <SelectContent><SelectItem value="light">Claro</SelectItem><SelectItem value="dark">Escuro</SelectItem><SelectItem value="system">Sistema</SelectItem></SelectContent>
             </Select>
           </div>
           <div className="flex items-center justify-between rounded-xl border border-border/40 p-3">
             <div className="flex items-center gap-3">
               <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600"><Icon name="Bell" className="h-4 w-4" /></span>
-              <div><p className="text-sm font-medium">Browser notifications</p><p className="text-[11px] text-muted-foreground">Overdue & due task alerts</p></div>
+              <div><p className="text-sm font-medium">Notificações do navegador</p><p className="text-[11px] text-muted-foreground">Alertas de tarefas atrasadas e a vencer</p></div>
             </div>
-            <Button size="sm" variant="outline" onClick={async () => { const g = await requestNotificationPermission(); if (g) { notify.success("Notifications enabled"); sendNotification("Life OS", "Enabled!"); } else notify.error("Permission denied"); }}>Enable</Button>
+            <Button size="sm" variant="outline" onClick={async () => { const g = await requestNotificationPermission(); if (g) { notify.success("Notificações ativadas"); sendNotification("Life OS", "Ativado!"); } else notify.error("Permissão negada"); }}>Ativar</Button>
           </div>
         </div>
       </SectionCard>
 
       {/* Database */}
-      <SectionCard title="Database" icon="Database">
+      <SectionCard title="Banco de dados" icon="Database">
         <div className="space-y-3">
           <div className="flex items-center gap-2 rounded-lg border border-border/40 p-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600"><Icon name="HardDrive" className="h-4 w-4" /></span>
             <div className="flex-1">
-              <p className="text-sm font-medium">SQLite (local file)</p>
-              <p className="text-[11px] text-muted-foreground">Current database — stored at <code className="rounded bg-muted px-1 text-[10px]">db/custom.db</code></p>
+              <p className="text-sm font-medium">PostgreSQL (Neon)</p>
+              <p className="text-[11px] text-muted-foreground">Banco de dados atual — configurado via <code className="rounded bg-muted px-1 text-[10px]">DATABASE_URL</code></p>
             </div>
           </div>
 
           <div className="rounded-lg border border-border/40 p-3">
-            <p className="mb-2 text-xs font-medium">Want to use a cloud database?</p>
-            <p className="text-[11px] text-muted-foreground">Life OS supports any PostgreSQL database. To switch:</p>
+            <p className="mb-2 text-xs font-medium">Quer trocar de banco de dados?</p>
+            <p className="text-[11px] text-muted-foreground">O Life OS suporta qualquer banco PostgreSQL. Pra trocar:</p>
             <ol className="mt-1.5 space-y-1 text-[11px] text-muted-foreground">
-              <li>1. Create a free database on <a href="https://neon.tech" target="_blank" className="text-blue-500 hover:underline">Neon</a> or <a href="https://supabase.com" target="_blank" className="text-blue-500 hover:underline">Supabase</a></li>
-              <li>2. Set <code className="rounded bg-muted px-1">DATABASE_URL</code> in your <code className="rounded bg-muted px-1">.env</code> file</li>
-              <li>3. Change Prisma provider from <code className="rounded bg-muted px-1">sqlite</code> to <code className="rounded bg-muted px-1">postgresql</code></li>
-              <li>4. Run <code className="rounded bg-muted px-1">bun run db:push</code></li>
+              <li>1. Crie um banco gratuito na <a href="https://neon.tech" target="_blank" className="text-blue-500 hover:underline">Neon</a> ou no <a href="https://supabase.com" target="_blank" className="text-blue-500 hover:underline">Supabase</a></li>
+              <li>2. Defina <code className="rounded bg-muted px-1">DATABASE_URL</code> no seu arquivo <code className="rounded bg-muted px-1">.env</code></li>
+              <li>3. Rode <code className="rounded bg-muted px-1">bun run db:push</code></li>
             </ol>
-            <p className="mt-2 text-[10px] text-muted-foreground">PostgreSQL connection string format: <code className="rounded bg-muted px-1">postgresql://user:pass@host/dbname</code></p>
+            <p className="mt-2 text-[10px] text-muted-foreground">Formato da connection string do PostgreSQL: <code className="rounded bg-muted px-1">postgresql://user:senha@host/banco</code></p>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" className="gap-1.5" onClick={seedData}>
-              <Icon name="Sprout" className="h-3.5 w-3.5" /> Seed test data
+              <Icon name="Sprout" className="h-3.5 w-3.5" /> Gerar dados de teste
             </Button>
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600">
-                <Icon name="Trash2" className="h-3.5 w-3.5" /> Reset database
+                <Icon name="Trash2" className="h-3.5 w-3.5" /> Redefinir banco de dados
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Reset all data?</AlertDialogTitle>
-                <AlertDialogDescription>This will permanently delete ALL items, projects, domains, reviews, and tags. Your user account will be preserved. This cannot be undone. Consider downloading a backup first.</AlertDialogDescription>
+                <AlertDialogTitle>Redefinir todos os dados?</AlertDialogTitle>
+                <AlertDialogDescription>Isso vai excluir permanentemente TODOS os itens, projetos, domínios, revisões e tags. Sua conta de usuário será preservada. Essa ação não pode ser desfeita. Considere baixar um backup primeiro.</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
                 <AlertDialogAction onClick={async () => {
                   const res = await fetch("/api/reset-db", { method: "POST" });
                   const data = await res.json();
-                  if (res.ok) { notify.success("Database reset. Reloading…"); setTimeout(() => window.location.reload(), 1500); }
-                  else notify.error(data.error || "Reset failed");
-                }} className="bg-rose-500 hover:bg-rose-600">Reset everything</AlertDialogAction>
+                  if (res.ok) { notify.success("Banco de dados redefinido. Recarregando…"); setTimeout(() => window.location.reload(), 1500); }
+                  else notify.error(data.error || "Falha ao redefinir");
+                }} className="bg-rose-500 hover:bg-rose-600">Redefinir tudo</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
           </div>
         </div>
       </SectionCard>
-      <SectionCard title="Data & Backup" icon="Archive">
+      <SectionCard title="Dados & Backup" icon="Archive">
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open("/api/export?type=items", "_blank")}><Icon name="Download" className="h-3.5 w-3.5" /> Export CSV</Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open("/api/export?type=items", "_blank")}><Icon name="Download" className="h-3.5 w-3.5" /> Exportar CSV</Button>
           <Button variant="outline" size="sm" className="gap-1.5" onClick={async () => {
             const res = await fetch("/api/backup"); const data = await res.json();
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob); const a = document.createElement("a");
             a.href = url; a.download = `lifeos-backup-${new Date().toISOString().slice(0, 10)}.json`; a.click();
-            URL.revokeObjectURL(url); notify.success("Backup downloaded");
-          }}><Icon name="Download" className="h-3.5 w-3.5" /> Full backup (JSON)</Button>
+            URL.revokeObjectURL(url); notify.success("Backup baixado");
+          }}><Icon name="Download" className="h-3.5 w-3.5" /> Backup completo (JSON)</Button>
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
             const input = document.createElement("input"); input.type = "file"; input.accept = ".json";
             input.onchange = async (e) => {
@@ -408,21 +408,21 @@ export function SettingsView() {
               try {
                 const data = JSON.parse(text);
                 const res = await fetch("/api/backup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-                if (res.ok) { notify.success("Backup restored"); setTimeout(() => window.location.reload(), 1000); }
-                else notify.error("Restore failed");
-              } catch { notify.error("Invalid file"); }
+                if (res.ok) { notify.success("Backup restaurado"); setTimeout(() => window.location.reload(), 1000); }
+                else notify.error("Falha ao restaurar");
+              } catch { notify.error("Arquivo inválido"); }
             };
             input.click();
-          }}><Icon name="Upload" className="h-3.5 w-3.5" /> Restore backup</Button>
+          }}><Icon name="Upload" className="h-3.5 w-3.5" /> Restaurar backup</Button>
         </div>
       </SectionCard>
 
       {/* Account */}
-      <SectionCard title="Account" icon="UserCog">
+      <SectionCard title="Conta" icon="UserCog">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">Sign out of your account</p>
+          <p className="text-sm text-muted-foreground">Sair da sua conta</p>
           <Button variant="outline" size="sm" className="gap-1.5 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600" onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/login"; }}>
-            <Icon name="LogOut" className="h-3.5 w-3.5" /> Sign out
+            <Icon name="LogOut" className="h-3.5 w-3.5" /> Sair
           </Button>
         </div>
       </SectionCard>

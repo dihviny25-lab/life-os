@@ -14,10 +14,10 @@ import { motion } from "framer-motion";
 
 type Mode = "focus" | "short" | "long" | "custom";
 const PRESETS: Record<Mode, { label: string; mins: number; color: string; icon: string }> = {
-  focus: { label: "Deep Focus", mins: 25, color: "#f59e0b", icon: "Brain" },
-  short: { label: "Short Break", mins: 5, color: "#10b981", icon: "Coffee" },
-  long: { label: "Long Break", mins: 15, color: "#06b6d4", icon: "Leaf" },
-  custom: { label: "Custom", mins: 20, color: "#a78bfa", icon: "Timer" },
+  focus: { label: "Foco Profundo", mins: 25, color: "#f59e0b", icon: "Brain" },
+  short: { label: "Pausa Curta", mins: 5, color: "#10b981", icon: "Coffee" },
+  long: { label: "Pausa Longa", mins: 15, color: "#06b6d4", icon: "Leaf" },
+  custom: { label: "Personalizado", mins: 20, color: "#a78bfa", icon: "Timer" },
 };
 
 // Play a pleasant chime using Web Audio API
@@ -141,19 +141,19 @@ export function FocusView() {
               toggleHabit.mutate({ id: selectedItemId, date: todayKey });
               const habitName = habits.find((h) => h.id === selectedItemId)?.title;
               notify.success(
-                `Focus complete! ${elapsedMins} min`,
-                `✓ ${habitName} logged for today. Take a break!`,
+                `Foco concluído! ${elapsedMins} min`,
+                `✓ ${habitName} registrado hoje. Faça uma pausa!`,
               );
             } else if (selectedItemType === "task" && selectedItemId) {
-              notify.success(`Focus complete! ${elapsedMins} min`, "Great work. Take a short break.");
+              notify.success(`Foco concluído! ${elapsedMins} min`, "Ótimo trabalho. Faça uma pausa curta.");
             } else {
-              notify.success(`Focus complete! ${elapsedMins} min`, "Take a short break.");
+              notify.success(`Foco concluído! ${elapsedMins} min`, "Faça uma pausa curta.");
             }
 
             // auto-suggest break
             setTimeout(() => switchMode(newSessions % 4 === 0 ? "long" : "short"), 800);
           } else {
-            notify.success("Break over — back to focus!", "You've got this.");
+            notify.success("Pausa terminada — de volta ao foco!", "Você consegue.");
             setTimeout(() => switchMode("focus"), 800);
           }
           return 0;
@@ -196,8 +196,8 @@ export function FocusView() {
     return (
       <div className="space-y-6">
         <PageHeader
-          title="Focus & Deep Work"
-          subtitle="Protect your attention. Run a pomodoro, connect it to a habit, and watch your practice grow."
+          title="Foco & Trabalho Profundo"
+          subtitle="Proteja sua atenção. Rode um pomodoro, conecte a um hábito e veja sua prática crescer."
           icon="Brain"
           color="#f59e0b"
         />
@@ -255,14 +255,14 @@ export function FocusView() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Focus & Deep Work"
-        subtitle="Protect your attention. Run a pomodoro, connect it to a habit, and watch your practice grow."
+        title="Foco & Trabalho Profundo"
+        subtitle="Proteja sua atenção. Rode um pomodoro, conecte a um hábito e veja sua prática crescer."
         icon="Brain"
         color="#f59e0b"
         actions={
           <Button variant="outline" size="sm" onClick={toggleSound} className="gap-1.5">
             <Icon name={soundEnabled ? "Volume2" : "VolumeX"} className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{soundEnabled ? "Sound on" : "Sound off"}</span>
+            <span className="hidden sm:inline">{soundEnabled ? "Som ligado" : "Som desligado"}</span>
           </Button>
         }
       />
@@ -299,7 +299,7 @@ export function FocusView() {
                 onChange={(e) => applyCustomMins(Number(e.target.value) || 1)}
                 className="h-9 w-20 text-center text-lg font-bold"
               />
-              <span className="text-sm text-muted-foreground">minutes</span>
+              <span className="text-sm text-muted-foreground">minutos</span>
               {[10, 20, 30, 45, 60].map((m) => (
                 <button
                   key={m}
@@ -340,7 +340,7 @@ export function FocusView() {
                 {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
               </div>
               <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
-                {running ? "in progress" : remaining === 0 ? "complete" : "ready"}
+                {running ? "em andamento" : remaining === 0 ? "concluído" : "pronto"}
               </div>
               {selectedItem && (
                 <div className="mt-2 max-w-[200px] truncate text-[11px] font-medium" style={{ color: preset.color }}>
@@ -360,14 +360,14 @@ export function FocusView() {
               style={{ background: running ? "var(--destructive)" : preset.color, color: "white" }}
             >
               <Icon name={running ? "Pause" : "Play"} className="h-5 w-5" />
-              {running ? "Pause" : remaining === 0 ? "Done" : "Start"}
+              {running ? "Pausar" : remaining === 0 ? "Concluído" : "Iniciar"}
             </Button>
             <Button
               size="lg"
               variant="outline"
               className="h-12 w-12 p-0"
               onClick={() => { setRunning(false); setRemaining(duration); }}
-              title="Reset"
+              title="Reiniciar"
             >
               <Icon name="RotateCcw" className="h-5 w-5" />
             </Button>
@@ -376,7 +376,7 @@ export function FocusView() {
               variant="ghost"
               className="h-12 px-4"
               onClick={() => switchMode(mode)}
-              title="Skip"
+              title="Pular"
             >
               <Icon name="SkipForward" className="h-5 w-5" />
             </Button>
@@ -386,15 +386,15 @@ export function FocusView() {
         {/* Right column */}
         <div className="space-y-6">
           {/* Today's stats */}
-          <SectionCard title="Today" icon="Flame">
+          <SectionCard title="Hoje" icon="Flame">
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-xl bg-amber-500/10 p-4 text-center">
                 <div className="text-3xl font-bold text-amber-500">{completedSessions}</div>
-                <div className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">sessions</div>
+                <div className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">sessões</div>
               </div>
               <div className="rounded-xl bg-emerald-500/10 p-4 text-center">
                 <div className="text-3xl font-bold text-emerald-500">{todayMinutes}</div>
-                <div className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">focus minutes</div>
+                <div className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">minutos de foco</div>
               </div>
             </div>
             {completedSessions > 0 && (
@@ -416,14 +416,14 @@ export function FocusView() {
           </SectionCard>
 
           {/* Task / Habit selector */}
-          <SectionCard title="Focus on" icon="Target">
+          <SectionCard title="Focar em" icon="Target">
             {tasks.length > 0 && (
               <div className="mb-3">
-                <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-amber-500">Tasks</p>
+                <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-amber-500">Tarefas</p>
                 <Select value={selectedItemType === "task" ? selectedItemId : "none"} onValueChange={(v) => selectItem(v, "task")}>
-                  <SelectTrigger className="h-9"><SelectValue placeholder="Pick a task…" /></SelectTrigger>
+                  <SelectTrigger className="h-9"><SelectValue placeholder="Escolha uma tarefa…" /></SelectTrigger>
                   <SelectContent className="max-h-60">
-                    <SelectItem value="none">No task</SelectItem>
+                    <SelectItem value="none">Nenhuma tarefa</SelectItem>
                     {tasks.map((t) => (
                       <SelectItem key={t.id} value={t.id}>
                         <span className="line-clamp-1">{t.title}</span>
@@ -436,11 +436,11 @@ export function FocusView() {
 
             {habits.length > 0 && (
               <div className="mb-3">
-                <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-500">Habits</p>
+                <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-500">Hábitos</p>
                 <Select value={selectedItemType === "habit" ? selectedItemId : "none"} onValueChange={(v) => selectItem(v, "habit")}>
-                  <SelectTrigger className="h-9"><SelectValue placeholder="Pick a habit…" /></SelectTrigger>
+                  <SelectTrigger className="h-9"><SelectValue placeholder="Escolha um hábito…" /></SelectTrigger>
                   <SelectContent className="max-h-60">
-                    <SelectItem value="none">No habit</SelectItem>
+                    <SelectItem value="none">Nenhum hábito</SelectItem>
                     {habits.map((h) => (
                       <SelectItem key={h.id} value={h.id}>
                         <span className="line-clamp-1">Leaf {h.title}</span>
@@ -452,12 +452,12 @@ export function FocusView() {
             )}
 
             <Button variant="outline" size="sm" className="w-full gap-1.5" onClick={() => openItemEditor({ type: "task" })}>
-              <Icon name="Plus" className="h-3.5 w-3.5" /> New task
+              <Icon name="Plus" className="h-3.5 w-3.5" /> Nova tarefa
             </Button>
             <p className="mt-3 text-[11px] text-muted-foreground">
               {selectedItemType === "habit"
-                ? "When the timer ends, this habit will be automatically logged for today. 🌿"
-                : "Pick a habit to auto-log it when the timer completes. Pick a task to anchor your focus."}
+                ? "Quando o timer terminar, esse hábito será registrado automaticamente para hoje. 🌿"
+                : "Escolha um hábito pra registrá-lo automaticamente quando o timer terminar. Escolha uma tarefa pra ancorar seu foco."}
             </p>
           </SectionCard>
         </div>

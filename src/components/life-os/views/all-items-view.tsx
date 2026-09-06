@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ITEM_TYPES, ITEM_TYPE_MAP, DOMAINS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
+const STATUS_FILTER_LABELS: Record<string, string> = { active: "Ativos", done: "Concluídos", inbox: "Entrada", archived: "Arquivados", all: "Todos" };
+
 export function AllItemsView() {
   const { openItemDetail, openItemEditor } = useLifeOS();
   const [q, setQ] = useState("");
@@ -32,13 +34,13 @@ export function AllItemsView() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="All Items"
-        subtitle="The full stream of your digital brain — every task, note, journal, habit, and idea."
+        title="Todos os Itens"
+        subtitle="O fluxo completo do seu cérebro digital — cada tarefa, nota, diário, hábito e ideia."
         icon="Layers"
         color="#71717a"
         actions={
           <Button onClick={() => openItemEditor()} className="gap-1.5">
-            <Icon name="Plus" className="h-4 w-4" /> New item
+            <Icon name="Plus" className="h-4 w-4" /> Novo item
           </Button>
         }
       />
@@ -47,7 +49,7 @@ export function AllItemsView() {
       <div className="space-y-3">
         <div className="relative">
           <Icon name="Search" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search title or content…" className="pl-9" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Pesquisar título ou conteúdo…" className="pl-9" />
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -56,22 +58,22 @@ export function AllItemsView() {
               <button
                 key={s}
                 onClick={() => setStatusFilter(s === "all" ? "active,done,archived,inbox,snoozed" : s)}
-                className={cn("rounded-md px-2.5 py-1 text-xs font-medium capitalize transition-all", statusFilter === s || (s === "all" && statusFilter.includes(",")) ? "bg-background shadow-sm" : "text-muted-foreground")}
+                className={cn("rounded-md px-2.5 py-1 text-xs font-medium transition-all", statusFilter === s || (s === "all" && statusFilter.includes(",")) ? "bg-background shadow-sm" : "text-muted-foreground")}
               >
-                {s}
+                {STATUS_FILTER_LABELS[s]}
               </button>
             ))}
           </div>
           <Select value={sort} onValueChange={setSort}>
-            <SelectTrigger className="h-9 w-[170px]" aria-label="Sort items">
+            <SelectTrigger className="h-9 w-[170px]" aria-label="Ordenar itens">
               <Icon name="ArrowUpDown" className="h-3.5 w-3.5 text-muted-foreground" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent align="end">
-              <SelectItem value="updatedAt:desc">Recently updated</SelectItem>
-              <SelectItem value="createdAt:desc">Recently created</SelectItem>
-              <SelectItem value="dueDate:asc">Due date</SelectItem>
-              <SelectItem value="title:asc">Title A–Z</SelectItem>
+              <SelectItem value="updatedAt:desc">Atualizados recentemente</SelectItem>
+              <SelectItem value="createdAt:desc">Criados recentemente</SelectItem>
+              <SelectItem value="dueDate:asc">Data de vencimento</SelectItem>
+              <SelectItem value="title:asc">Título A–Z</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -81,7 +83,7 @@ export function AllItemsView() {
             onClick={() => setTypeFilter(null)}
             className={cn("rounded-full px-2.5 py-1 text-xs font-medium transition-all", !typeFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70")}
           >
-            All types
+            Todos os tipos
           </button>
           {ITEM_TYPES.map((t) => {
             const on = typeFilter === t.type;
@@ -103,10 +105,10 @@ export function AllItemsView() {
       {isLoading ? (
         <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-16 skeleton rounded-xl bg-muted/40" />)}</div>
       ) : items.length === 0 ? (
-        <EmptyState icon="Layers" title="No items match" description="Try clearing filters or capturing something new." />
+        <EmptyState icon="Layers" title="Nenhum item encontrado" description="Tente limpar os filtros ou capturar algo novo." />
       ) : (
         <>
-          <p className="text-xs text-muted-foreground">{items.length} item{items.length !== 1 ? "s" : ""}</p>
+          <p className="text-xs text-muted-foreground">{items.length} {items.length !== 1 ? "itens" : "item"}</p>
           <div className="grid gap-2 sm:grid-cols-2">
             {items.map((item) => (
               <ItemCard key={item.id} item={item} showProject onClick={() => openItemDetail(item.id)} />

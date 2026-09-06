@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Shell } from "@/components/life-os/shell";
 
 export const metadata: Metadata = {
-  title: "Dashboard",
+  title: "Painel",
   robots: {
     index: false,
     follow: false,

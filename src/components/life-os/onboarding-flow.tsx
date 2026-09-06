@@ -17,32 +17,32 @@ const STEPS = [
   {
     icon: "Brain",
     color: "#a78bfa",
-    title: "Welcome to your Digital Brain",
-    desc: "Life OS connects everything — tasks, notes, journals, habits, finances, and more — into one interconnected system. Nothing lives in isolation.",
+    title: "Bem-vindo ao seu Cérebro Digital",
+    desc: "O Life OS conecta tudo — tarefas, notas, diários, hábitos, finanças e muito mais — em um único sistema interconectado. Nada vive isolado.",
   },
   {
     icon: "Zap",
     color: "#f59e0b",
-    title: "Capture anything, instantly",
-    desc: "Press ⌘K anywhere to capture a thought. It goes to your Inbox. Process it later — no need to decide where it belongs in the moment.",
+    title: "Capture qualquer coisa, instantaneamente",
+    desc: "Aperte ⌘K em qualquer lugar pra capturar um pensamento. Ele vai pra sua Entrada. Processe depois — sem precisar decidir na hora onde ele se encaixa.",
   },
   {
     icon: "CalendarDays",
     color: "#06b6d4",
-    title: "One calendar for everything",
-    desc: "Tasks, bills, appointments, and birthdays all appear on your Master Calendar automatically. Toggle layers to see your life through different lenses.",
+    title: "Um calendário para tudo",
+    desc: "Tarefas, contas, compromissos e aniversários aparecem automaticamente no seu Calendário Mestre. Alterne camadas pra ver sua vida por diferentes ângulos.",
   },
   {
     icon: "Network",
     color: "#10b981",
-    title: "Everything connects",
-    desc: "Link a journal entry to a project. Connect a task to a goal. See your whole life as a graph. The connections make your data come alive.",
+    title: "Tudo se conecta",
+    desc: "Ligue uma entrada de diário a um projeto. Conecte uma tarefa a uma meta. Veja sua vida inteira como um grafo. As conexões dão vida aos seus dados.",
   },
   {
     icon: "NotebookPen",
     color: "#ec4899",
-    title: "Reflect and grow",
-    desc: "Daily reflections, weekly reviews, mood tracking, and insights keep your system — and your mind — trustworthy over time.",
+    title: "Reflita e cresça",
+    desc: "Reflexões diárias, revisões semanais, rastreamento de humor e insights mantêm seu sistema — e sua mente — confiáveis ao longo do tempo.",
   },
 ];
 
@@ -84,8 +84,8 @@ export function OnboardingFlow() {
     <Dialog open={open} onOpenChange={(o) => { if (!o) skip(); }}>
       <DialogContent className="max-w-md overflow-hidden p-0">
         <DialogHeader className="sr-only">
-          <DialogTitle>Welcome to Life OS</DialogTitle>
-          <DialogDescription>A quick tour of your digital brain.</DialogDescription>
+          <DialogTitle>Bem-vindo ao Life OS</DialogTitle>
+          <DialogDescription>Um tour rápido pelo seu cérebro digital.</DialogDescription>
         </DialogHeader>
 
         <div className="relative">
@@ -139,10 +139,10 @@ export function OnboardingFlow() {
               </div>
               <div className="flex items-center gap-2">
                 {step < STEPS.length - 1 && (
-                  <Button variant="ghost" size="sm" onClick={skip}>Skip</Button>
+                  <Button variant="ghost" size="sm" onClick={skip}>Pular</Button>
                 )}
                 <Button size="sm" onClick={next} className="gap-1.5" style={{ background: current.color, color: "white" }}>
-                  {step < STEPS.length - 1 ? "Next" : "Get started"}
+                  {step < STEPS.length - 1 ? "Próximo" : "Começar"}
                   <Icon name={step < STEPS.length - 1 ? "ArrowRight" : "Check"} className="h-3.5 w-3.5" />
                 </Button>
               </div>

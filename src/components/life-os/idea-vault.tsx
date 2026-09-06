@@ -32,14 +32,14 @@ export function IdeaVault() {
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-pink-500/15 text-pink-500">
             <Icon name="Lightbulb" className="h-3.5 w-3.5" />
           </span>
-          <h3 className="text-sm font-semibold">Idea vault</h3>
+          <h3 className="text-sm font-semibold">Cofre de ideias</h3>
         </div>
-        <p className="text-xs text-muted-foreground">Capture sparks of inspiration, log media you enjoy, and track milestones.</p>
+        <p className="text-xs text-muted-foreground">Capture faíscas de inspiração, registre mídias que você curte e acompanhe marcos.</p>
         <button
           onClick={() => openItemEditor({ type: "idea" })}
           className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-pink-500 hover:underline"
         >
-          <Icon name="Plus" className="h-3 w-3" /> Capture an idea
+          <Icon name="Plus" className="h-3 w-3" /> Capturar uma ideia
         </button>
       </motion.div>
     );
@@ -60,9 +60,9 @@ export function IdeaVault() {
                 <Icon name="Lightbulb" className="h-3.5 w-3.5" />
               </span>
               <div>
-                <h3 className="text-sm font-semibold">Idea vault</h3>
+                <h3 className="text-sm font-semibold">Cofre de ideias</h3>
                 <p className="text-[10px] text-muted-foreground">
-                  {ideas.length} idea{ideas.length !== 1 ? "s" : ""}{inboxIdeas.length > 0 && ` · ${inboxIdeas.length} unprocessed`}
+                  {ideas.length} ideia{ideas.length !== 1 ? "s" : ""}{inboxIdeas.length > 0 && ` · ${inboxIdeas.length} não processada${inboxIdeas.length !== 1 ? "s" : ""}`}
                 </p>
               </div>
             </div>
@@ -85,7 +85,7 @@ export function IdeaVault() {
                   {idea.content && <p className="mt-0.5 line-clamp-1 text-[10px] text-muted-foreground">{idea.content}</p>}
                 </div>
                 {idea.status === "inbox" && (
-                  <span className="flex-shrink-0 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold text-amber-600">NEW</span>
+                  <span className="flex-shrink-0 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold text-amber-600">NOVA</span>
                 )}
               </motion.button>
             ))}
@@ -100,7 +100,7 @@ export function IdeaVault() {
           <div className="rounded-2xl border border-border/50 bg-card/30 p-3">
             <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               <Icon name="Film" className="h-3 w-3" />
-              Media log
+              Registro de mídia
             </h4>
             <div className="space-y-1">
               {mediaLog.slice(0, 3).map((m: any, i: number) => (
@@ -130,7 +130,7 @@ export function IdeaVault() {
           <div className="rounded-2xl border border-border/50 bg-card/30 p-3">
             <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               <Icon name="Calendar" className="h-3 w-3" />
-              Upcoming
+              Em breve
             </h4>
             <div className="space-y-1">
               {events.slice(0, 3).map((e: any, i: number) => (
@@ -158,7 +158,7 @@ export function IdeaVault() {
         <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent p-3">
           <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-amber-600">
             <Icon name="Flag" className="h-3 w-3" />
-            Milestones
+            Marcos
           </h4>
           <div className="flex flex-wrap gap-1.5">
             {milestones.map((ms: any) => (

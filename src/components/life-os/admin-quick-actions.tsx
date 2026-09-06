@@ -17,10 +17,10 @@ export function AdminQuickActions() {
 
   // Maintenance tasks (home-related)
   const maintenance = tasks.filter((t: any) =>
-    /filter|hvac|repair|fix|replace|clean|inspect|maintenance/i.test(t.title)
+    /filter|hvac|repair|fix|replace|clean|inspect|maintenance|filtro|reparar|consertar|trocar|limpar|inspecionar|manuten[çc][ãa]o/i.test(t.title)
   );
   // Grocery/shopping tasks
-  const groceries = tasks.filter((t: any) => /grocery|groceries|buy|shopping|list/i.test(t.title));
+  const groceries = tasks.filter((t: any) => /grocery|groceries|buy|shopping|list|mercado|compras|comprar|feira/i.test(t.title));
   // Other admin tasks
   const otherTasks = tasks.filter((t: any) => !maintenance.includes(t) && !groceries.includes(t));
 
@@ -35,14 +35,14 @@ export function AdminQuickActions() {
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-500/15 text-zinc-600">
             <Icon name="Home" className="h-3.5 w-3.5" />
           </span>
-          <h3 className="text-sm font-semibold">Home & Admin</h3>
+          <h3 className="text-sm font-semibold">Casa & Administração</h3>
         </div>
-        <p className="text-xs text-muted-foreground">Track home maintenance, grocery lists, and important documents.</p>
+        <p className="text-xs text-muted-foreground">Acompanhe manutenção da casa, listas de compras e documentos importantes.</p>
         <button
           onClick={() => openItemEditor({ type: "task" })}
           className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-zinc-600 hover:underline"
         >
-          <Icon name="Plus" className="h-3 w-3" /> Add a task
+          <Icon name="Plus" className="h-3 w-3" /> Adicionar tarefa
         </button>
       </motion.div>
     );
@@ -61,7 +61,7 @@ export function AdminQuickActions() {
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600">
               <Icon name="ShoppingCart" className="h-3.5 w-3.5" />
             </span>
-            <h3 className="text-sm font-semibold">Shopping list</h3>
+            <h3 className="text-sm font-semibold">Lista de compras</h3>
           </div>
           <div className="space-y-1">
             {groceries.map((g: any, i: number) => (
@@ -97,7 +97,7 @@ export function AdminQuickActions() {
           <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent p-3">
             <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-amber-600">
               <Icon name="Wrench" className="h-3 w-3" />
-              Maintenance
+              Manutenção
             </h4>
             <div className="space-y-1">
               {maintenance.slice(0, 4).map((m: any) => (
@@ -127,7 +127,7 @@ export function AdminQuickActions() {
           <div className="rounded-2xl border border-border/50 bg-card/30 p-3">
             <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               <Icon name="FileText" className="h-3 w-3" />
-              Documents
+              Documentos
             </h4>
             <div className="space-y-1">
               {documents.slice(0, 4).map((d: any) => (
@@ -155,7 +155,7 @@ export function AdminQuickActions() {
         <div className="rounded-2xl border border-border/50 bg-card/30 p-3">
           <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             <Icon name="ClipboardList" className="h-3 w-3" />
-            Other tasks
+            Outras tarefas
           </h4>
           <div className="flex flex-wrap gap-1.5">
             {otherTasks.slice(0, 6).map((t: any) => (

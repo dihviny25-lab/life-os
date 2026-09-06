@@ -48,10 +48,10 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password, name }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || "Authentication failed"); return; }
+      if (!res.ok) { setError(data.error || "Falha na autenticação"); return; }
       if (data.requiresVerification) { setStep("verify"); }
       else if (data.authenticated) { setStep("done"); setTimeout(() => { window.location.href = "/app"; }, 800); }
-    } catch { setError("Network error. Please try again."); }
+    } catch { setError("Erro de rede. Tente novamente."); }
     finally { setLoading(false); }
   }
 
@@ -66,10 +66,10 @@ export default function LoginPage() {
         body: JSON.stringify({ token: verifyCode }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || "Verification failed"); return; }
+      if (!res.ok) { setError(data.error || "Falha na verificação"); return; }
       setStep("done");
       setTimeout(() => { window.location.href = "/app"; }, 800);
-    } catch { setError("Network error"); }
+    } catch { setError("Erro de rede"); }
     finally { setLoading(false); }
   }
 
@@ -115,7 +115,7 @@ export default function LoginPage() {
             <Brain className="h-8 w-8 text-white" />
           </motion.div>
           <h1 className="text-3xl font-bold tracking-tight">Life OS</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">Your digital brain, secured.</p>
+          <p className="mt-1.5 text-sm text-muted-foreground">Seu cérebro digital, protegido.</p>
         </div>
 
         <motion.div
@@ -134,23 +134,23 @@ export default function LoginPage() {
                     onClick={() => { setMode("login"); setError(""); }}
                     className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-all ${mode === "login" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
                   >
-                    Sign in
+                    Entrar
                   </button>
                   <button
                     onClick={() => { setMode("register"); setError(""); }}
                     className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-all ${mode === "register" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
                   >
-                    Create account
+                    Criar conta
                   </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {mode === "register" && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
-                      <Label className="mb-1.5 block text-xs font-semibold text-muted-foreground">Name</Label>
+                      <Label className="mb-1.5 block text-xs font-semibold text-muted-foreground">Nome</Label>
                       <div className="relative">
                         <Brain className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
-                        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className="h-11 pl-10" />
+                        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" className="h-11 pl-10" />
                       </div>
                     </motion.div>
                   )}
@@ -159,12 +159,12 @@ export default function LoginPage() {
                     <Label className="mb-1.5 block text-xs font-semibold text-muted-foreground">Email</Label>
                     <div className="relative">
                       <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
-                      <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="h-11 pl-10" />
+                      <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@exemplo.com" className="h-11 pl-10" />
                     </div>
                   </div>
 
                   <div>
-                    <Label className="mb-1.5 block text-xs font-semibold text-muted-foreground">Password</Label>
+                    <Label className="mb-1.5 block text-xs font-semibold text-muted-foreground">Senha</Label>
                     <div className="relative">
                       <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
                       <Input
@@ -179,7 +179,7 @@ export default function LoginPage() {
                         {showPassword ? <X className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
                       </button>
                     </div>
-                    {mode === "register" && <p className="mt-1 text-[10px] text-muted-foreground">Minimum 8 characters</p>}
+                    {mode === "register" && <p className="mt-1 text-[10px] text-muted-foreground">Mínimo de 8 caracteres</p>}
                   </div>
 
                   {error && (
@@ -195,7 +195,7 @@ export default function LoginPage() {
                   >
                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                       <>
-                        {mode === "login" ? "Sign in" : "Create account"}
+                        {mode === "login" ? "Entrar" : "Criar conta"}
                         <ArrowRight className="h-5 w-5" />
                       </>
                     )}
@@ -210,10 +210,10 @@ export default function LoginPage() {
                         className="h-11 w-full gap-2"
                       >
                         <PlayCircle className="h-4 w-4" />
-                        Fill demo credentials
+                        Preencher credenciais de demonstração
                       </Button>
                       <p className="text-center text-[10px] text-muted-foreground">
-                        Uses demo@gmail.com with Password123
+                        Usa demo@gmail.com com a senha Password123
                       </p>
                     </div>
                   )}
@@ -222,9 +222,9 @@ export default function LoginPage() {
                 {/* Features list */}
                 <div className="mt-6 space-y-2 border-t border-border/40 pt-4">
                   {[
-                    { icon: Lock, color: "#10b981", text: "Your data stays on your server" },
-                    { icon: Brain, color: "#a78bfa", text: "Bi-directional linking — everything connects" },
-                    { icon: Zap, color: "#f59e0b", text: "Quick capture with ⌘K anywhere" },
+                    { icon: Lock, color: "#10b981", text: "Seus dados ficam no seu servidor" },
+                    { icon: Brain, color: "#a78bfa", text: "Links bidirecionais — tudo se conecta" },
+                    { icon: Zap, color: "#f59e0b", text: "Captura rápida com ⌘K em qualquer lugar" },
                   ].map((f, i) => (
                     <motion.div
                       key={i}
@@ -248,8 +248,8 @@ export default function LoginPage() {
                   <div className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/15">
                     <Shield className="h-7 w-7 text-emerald-500" />
                   </div>
-                  <h2 className="text-xl font-bold">Two-factor verification</h2>
-                  <p className="mt-1.5 text-sm text-muted-foreground">Enter the 6-digit code from your authenticator app</p>
+                  <h2 className="text-xl font-bold">Verificação em duas etapas</h2>
+                  <p className="mt-1.5 text-sm text-muted-foreground">Digite o código de 6 dígitos do seu app autenticador</p>
                 </div>
                 <form onSubmit={handleVerify} className="space-y-4">
                   <Input
@@ -263,11 +263,11 @@ export default function LoginPage() {
                   />
                   {error && <p className="text-center text-sm text-rose-500">{error}</p>}
                   <Button type="submit" disabled={loading || verifyCode.length !== 6} className="h-11 w-full gap-2 bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
-                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Verify <ArrowRight className="h-5 w-5" /></>}
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Verificar <ArrowRight className="h-5 w-5" /></>}
                   </Button>
                 </form>
                 <button onClick={() => { setStep("auth"); setError(""); setVerifyCode(""); }} className="mt-4 w-full text-center text-xs text-muted-foreground hover:text-foreground">
-                  ← Back to sign in
+                  ← Voltar para o login
                 </button>
               </motion.div>
             )}
@@ -279,8 +279,8 @@ export default function LoginPage() {
                   <div className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/15">
                     <QrCode className="h-7 w-7 text-violet-500" />
                   </div>
-                  <h2 className="text-xl font-bold">Confirm login</h2>
-                  <p className="mt-1.5 text-sm text-muted-foreground">Enter your credentials to sign in on this device</p>
+                  <h2 className="text-xl font-bold">Confirmar login</h2>
+                  <p className="mt-1.5 text-sm text-muted-foreground">Digite suas credenciais para entrar neste dispositivo</p>
                 </div>
                 <form onSubmit={async (e) => {
                   e.preventDefault();
@@ -293,15 +293,15 @@ export default function LoginPage() {
                       body: JSON.stringify({ action: "confirm", token: qrConfirmToken, email, password }),
                     });
                     const data = await res.json();
-                    if (!res.ok) { setError(data.error || "Failed to confirm"); return; }
+                    if (!res.ok) { setError(data.error || "Falha ao confirmar"); return; }
                     setStep("done");
                     setTimeout(() => { window.location.href = "/app"; }, 800);
-                  } catch { setError("Network error"); }
+                  } catch { setError("Erro de rede"); }
                   finally { setLoading(false); }
                 }} className="space-y-4">
                   <div className="relative">
                     <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
-                    <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="h-11 pl-10" />
+                    <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@exemplo.com" className="h-11 pl-10" />
                   </div>
                   <div className="relative">
                     <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
@@ -309,11 +309,11 @@ export default function LoginPage() {
                   </div>
                   {error && <p className="text-sm text-rose-500">{error}</p>}
                   <Button type="submit" disabled={loading} className="h-11 w-full gap-2 bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white">
-                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Confirm login <ArrowRight className="h-5 w-5" /></>}
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Confirmar login <ArrowRight className="h-5 w-5" /></>}
                   </Button>
                 </form>
                 <button onClick={() => { setStep("auth"); window.history.replaceState({}, "", "/login"); }} className="mt-4 w-full text-center text-xs text-muted-foreground hover:text-foreground">
-                  ← Cancel
+                  ← Cancelar
                 </button>
               </motion.div>
             )}
@@ -329,8 +329,8 @@ export default function LoginPage() {
                 >
                   <Check className="h-8 w-8" strokeWidth={3} />
                 </motion.div>
-                <h2 className="text-xl font-bold">Welcome to Life OS</h2>
-                <p className="mt-1.5 text-sm text-muted-foreground">Opening your digital brain…</p>
+                <h2 className="text-xl font-bold">Bem-vindo ao Life OS</h2>
+                <p className="mt-1.5 text-sm text-muted-foreground">Abrindo seu cérebro digital…</p>
                 <Loader2 className="mx-auto mt-4 h-5 w-5 animate-spin text-muted-foreground" />
               </motion.div>
             )}
@@ -340,7 +340,7 @@ export default function LoginPage() {
         {/* Footer */}
         <p className="mt-6 text-center text-[11px] text-muted-foreground">
           <Shield className="mr-1 inline h-3 w-3" />
-          Open-source · Self-hosted · Your data, your brain
+          Código aberto · Auto-hospedado · Seus dados, seu cérebro
         </p>
       </div>
     </div>

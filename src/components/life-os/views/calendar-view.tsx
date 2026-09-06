@@ -13,6 +13,7 @@ import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval,
   isSameMonth, isSameDay, addMonths, subMonths, format,
 } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
@@ -52,8 +53,8 @@ export function CalendarView() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Master Calendar"
-        subtitle="Everything with a date — tasks, bills, appointments, birthdays — in one view."
+        title="Calendário Mestre"
+        subtitle="Tudo que tem uma data — tarefas, contas, compromissos, aniversários — em uma visão só."
         icon="CalendarDays"
         color="#06b6d4"
         actions={
@@ -62,7 +63,7 @@ export function CalendarView() {
               <Icon name="ChevronLeft" className="h-4 w-4" />
             </Button>
             <Button variant="outline" size="sm" className="h-8" onClick={() => { setCursor(new Date()); setSelectedDay(new Date()); }}>
-              Today
+              Hoje
             </Button>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCursor(addMonths(cursor, 1))}>
               <Icon name="ChevronRight" className="h-4 w-4" />
@@ -76,15 +77,15 @@ export function CalendarView() {
         <SectionCard className="overflow-hidden p-0">
           {/* Month header */}
           <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
-            <h2 className="text-lg font-semibold">{format(cursor, "MMMM yyyy")}</h2>
+            <h2 className="text-lg font-semibold">{format(cursor, "MMMM yyyy", { locale: ptBR })}</h2>
             <span className="text-xs text-muted-foreground">
-              {Object.values(dayMap).reduce((s, v) => s + v.length, 0)} items this view
+              {Object.values(dayMap).reduce((s, v) => s + v.length, 0)} itens nesta visão
             </span>
           </div>
 
           {/* Weekday header */}
           <div className="grid grid-cols-7 border-b border-border/60">
-            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
+            {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((d) => (
               <div key={d} className="px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {d}
               </div>
@@ -157,19 +158,19 @@ export function CalendarView() {
         {/* Right column: layers + selected day */}
         <div className="space-y-6">
           {/* Layers */}
-          <SectionCard title="Layers" icon="Layers">
+          <SectionCard title="Camadas" icon="Layers">
             <div className="mb-3 flex gap-1 rounded-lg bg-muted p-1">
               <button
                 onClick={() => setCalendarLayerMode("type")}
                 className={cn("flex-1 rounded-md py-1 text-xs font-medium transition-all", calendarLayerMode === "type" ? "bg-background shadow-sm" : "text-muted-foreground")}
               >
-                By type
+                Por tipo
               </button>
               <button
                 onClick={() => setCalendarLayerMode("domain")}
                 className={cn("flex-1 rounded-md py-1 text-xs font-medium transition-all", calendarLayerMode === "domain" ? "bg-background shadow-sm" : "text-muted-foreground")}
               >
-                By domain
+                Por domínio
               </button>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -192,22 +193,22 @@ export function CalendarView() {
               })}
               {calendarLayers.length > 0 && (
                 <button onClick={() => calendarLayers.forEach(toggleLayer)} className="text-xs text-muted-foreground underline">
-                  clear
+                  limpar
                 </button>
               )}
             </div>
             <p className="mt-3 text-[11px] text-muted-foreground">
-              {calendarLayers.length === 0 ? "Showing all layers" : `Filtering to ${calendarLayers.length} layer${calendarLayers.length > 1 ? "s" : ""}`}
+              {calendarLayers.length === 0 ? "Mostrando todas as camadas" : `Filtrando para ${calendarLayers.length} camada${calendarLayers.length > 1 ? "s" : ""}`}
             </p>
           </SectionCard>
 
           {/* Selected day detail */}
           <SectionCard
-            title={selectedDay ? format(selectedDay, "EEEE, MMM d") : "Select a day"}
+            title={selectedDay ? format(selectedDay, "EEEE, d MMM", { locale: ptBR }) : "Selecione um dia"}
             icon="CalendarClock"
           >
             {selectedDayItems.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">Nothing scheduled.</p>
+              <p className="py-6 text-center text-sm text-muted-foreground">Nada agendado.</p>
             ) : (
               <div className="max-h-96 space-y-2 overflow-y-auto">
                 {selectedDayItems.map((it) => {
@@ -231,8 +232,8 @@ export function CalendarView() {
                         <p className="truncate text-sm font-medium">{it.title}</p>
                         <p className="text-[11px] text-muted-foreground">
                           {m.name}
-                          {it._dateField === "due" ? " · due" : it._dateField === "scheduled" ? " · scheduled" : ""}
-                          {it.metadata?.amount ? ` · $${it.metadata.amount}` : ""}
+                          {it._dateField === "due" ? " · vencimento" : it._dateField === "scheduled" ? " · agendado" : ""}
+                          {it.metadata?.amount ? ` · R$${it.metadata.amount}` : ""}
                         </p>
                       </div>
                     </motion.button>

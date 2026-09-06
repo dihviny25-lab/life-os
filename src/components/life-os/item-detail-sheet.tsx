@@ -32,6 +32,9 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+const RECURRING_LABELS: Record<string, string> = { "one-time": "única vez", monthly: "mensal", weekly: "semanal", yearly: "anual" };
+const CADENCE_LABELS: Record<string, string> = { daily: "diário", weekly: "semanal", weekdays: "dias úteis" };
+
 export function ItemDetailSheet() {
   const { itemDetailId, closeItemDetail, openItemEditor } = useLifeOS();
   const { data: item, isLoading } = useItem(itemDetailId);
@@ -55,13 +58,13 @@ export function ItemDetailSheet() {
   async function saveContent() {
     await update.mutateAsync({ id: item.id, content: contentDraft });
     setEditingContent(false);
-    notify.success("Notes saved");
+    notify.success("Notas salvas");
   }
 
   async function addLink(toId: string) {
     await createLink.mutateAsync({ fromId: item.id, toId, type: "related" });
     setLinkSearch("");
-    notify.success("Connected");
+    notify.success("Conectado");
   }
 
   async function removeLink(linkId: string, direction: "out" | "in") {
@@ -70,13 +73,13 @@ export function ItemDetailSheet() {
     } else {
       await deleteLink.mutateAsync({ fromId: linkId, toId: item.id });
     }
-    notify.success("Link removed");
+    notify.success("Link removido");
   }
 
   async function handleDelete() {
     await del.mutateAsync(item.id);
     closeItemDetail();
-    notify.success("Deleted");
+    notify.success("Excluído");
   }
 
   return (
@@ -171,7 +174,7 @@ export function ItemDetailSheet() {
                   {item.scheduledAt && !item.dueDate && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
                       <Icon name="Clock" className="h-2.5 w-2.5" />
-                      {fmtDate(item.scheduledAt, "MMM d, p")}
+                      {fmtDate(item.scheduledAt, "d MMM, p")}
                     </span>
                   )}
                 </div>
@@ -224,19 +227,19 @@ export function ItemDetailSheet() {
                   <div className="mb-2 flex items-center justify-between">
                     <h4 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       <Icon name="FileText" className="h-3 w-3" />
-                      {item.type === "note" ? "Content" : item.type === "idea" ? "Description" : "Notes"}
+                      {item.type === "note" ? "Conteúdo" : item.type === "idea" ? "Descrição" : "Notas"}
                     </h4>
                     {!editingContent ? (
                       <button
                         onClick={() => { setContentDraft(item.content || ""); setEditingContent(true); }}
                         className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
                       >
-                        <Icon name="Pencil" className="h-3 w-3" /> Edit
+                        <Icon name="Pencil" className="h-3 w-3" /> Editar
                       </button>
                     ) : (
                       <div className="flex gap-1">
-                        <button onClick={() => setEditingContent(false)} className="rounded px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-muted">Cancel</button>
-                        <button onClick={saveContent} className="rounded bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground hover:bg-primary/90">Save</button>
+                        <button onClick={() => setEditingContent(false)} className="rounded px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-muted">Cancelar</button>
+                        <button onClick={saveContent} className="rounded bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground hover:bg-primary/90">Salvar</button>
                       </div>
                     )}
                   </div>
@@ -246,7 +249,7 @@ export function ItemDetailSheet() {
                       value={contentDraft}
                       onChange={(e) => setContentDraft(e.target.value)}
                       className="resize-none border-0 bg-transparent p-0 text-sm focus-visible:ring-0"
-                      placeholder="Write your notes… (Markdown supported)"
+                      placeholder="Escreva suas notas… (Markdown suportado)"
                       autoFocus
                     />
                   ) : item.content ? (
@@ -254,7 +257,7 @@ export function ItemDetailSheet() {
                       <ReactMarkdown>{item.content}</ReactMarkdown>
                     </div>
                   ) : (
-                    <p className="text-sm italic text-muted-foreground/60">No notes yet. Click edit to add context.</p>
+                    <p className="text-sm italic text-muted-foreground/60">Nenhuma nota ainda. Clique em editar pra adicionar contexto.</p>
                   )}
                 </div>
                 )}
@@ -269,7 +272,7 @@ export function ItemDetailSheet() {
                   <h4 className="mb-3 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                       <Icon name="Network" className="h-3 w-3" />
-                      Connections
+                      Conexões
                     </span>
                     <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] tabular-nums">
                       {(item.linksFrom?.length || 0) + (item.linksTo?.length || 0)}
@@ -282,7 +285,7 @@ export function ItemDetailSheet() {
                     <Input
                       value={linkSearch}
                       onChange={(e) => setLinkSearch(e.target.value)}
-                      placeholder="Search to connect…"
+                      placeholder="Pesquisar para conectar…"
                       className="h-8 bg-background pl-8 text-sm"
                     />
                     <AnimatePresence>
@@ -349,8 +352,8 @@ export function ItemDetailSheet() {
                     {!item.linksFrom?.length && !item.linksTo?.length && (
                       <div className="flex flex-col items-center py-4 text-center">
                         <Icon name="Link2" className="mb-1 h-6 w-6 text-muted-foreground/30" />
-                        <p className="text-xs text-muted-foreground">No connections yet</p>
-                        <p className="text-[10px] text-muted-foreground/60">Search above to link this item to others</p>
+                        <p className="text-xs text-muted-foreground">Nenhuma conexão ainda</p>
+                        <p className="text-[10px] text-muted-foreground/60">Pesquise acima pra ligar este item a outros</p>
                       </div>
                     )}
                   </div>
@@ -358,9 +361,9 @@ export function ItemDetailSheet() {
 
                 {/* Timestamps */}
                 <div className="flex items-center justify-center gap-3 pb-2 text-[10px] text-muted-foreground/50">
-                  <span>Created {fmtDate(item.createdAt, "MMM d, yyyy")}</span>
+                  <span>Criado {fmtDate(item.createdAt, "d MMM, yyyy")}</span>
                   <span>·</span>
-                  <span>Updated {fmtDate(item.updatedAt, "MMM d")}</span>
+                  <span>Atualizado {fmtDate(item.updatedAt, "d MMM")}</span>
                 </div>
               </div>
             </div>
@@ -372,11 +375,11 @@ export function ItemDetailSheet() {
                   <Button
                     size="sm"
                     variant={isDone ? "outline" : "default"}
-                    onClick={() => { update.mutate({ id: item.id, status: isDone ? "active" : "done" }); notify.success(isDone ? "Reopened" : "Completed"); }}
+                    onClick={() => { update.mutate({ id: item.id, status: isDone ? "active" : "done" }); notify.success(isDone ? "Reaberto" : "Concluído"); }}
                     className="gap-1.5"
                   >
                     <Icon name={isDone ? "RotateCcw" : "Check"} className="h-3.5 w-3.5" />
-                    {isDone ? "Reopen" : "Complete"}
+                    {isDone ? "Reabrir" : "Concluir"}
                   </Button>
                 )}
                 <Button
@@ -386,7 +389,7 @@ export function ItemDetailSheet() {
                   className="gap-1.5"
                 >
                   <Icon name="Pencil" className="h-3.5 w-3.5" />
-                  Edit
+                  Editar
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -396,14 +399,14 @@ export function ItemDetailSheet() {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Delete this item?</AlertDialogTitle>
+                      <AlertDialogTitle>Excluir este item?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This will permanently remove &ldquo;{item.title}&rdquo; and all its connections. This cannot be undone.
+                        Isso vai remover permanentemente &ldquo;{item.title}&rdquo; e todas as suas conexões. Essa ação não pode ser desfeita.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDelete} className="bg-rose-500 hover:bg-rose-600">Delete</AlertDialogAction>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete} className="bg-rose-500 hover:bg-rose-600">Excluir</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -434,26 +437,26 @@ function TypeHighlight({ item, typeMeta }: { item: any; typeMeta: any }) {
         <div className="flex items-end justify-between">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {isGoal ? "Savings goal" : isIncome ? "Income" : "Expense"}
+              {isGoal ? "Meta de economia" : isIncome ? "Receita" : "Despesa"}
             </p>
             <p
               className="mt-0.5 text-3xl font-bold tabular-nums"
               style={{ color: isIncome ? "#10b981" : isGoal ? "#3b82f6" : "#f43f5e" }}
             >
-              {isIncome ? "+" : isGoal ? "" : "−"}${Number(m.amount).toLocaleString()}
+              {isIncome ? "+" : isGoal ? "" : "−"}R${Number(m.amount).toLocaleString()}
             </p>
           </div>
           {m.recurring && m.recurring !== "one-time" && (
             <span className="inline-flex items-center gap-1 rounded-full bg-background/60 px-2 py-1 text-[10px] font-medium text-muted-foreground">
               <Icon name="Repeat" className="h-3 w-3" />
-              {m.recurring}
+              {RECURRING_LABELS[m.recurring] || m.recurring}
             </span>
           )}
         </div>
         {isGoal && m.current != null && (
           <div className="mt-3">
             <div className="mb-1 flex justify-between text-[11px] text-muted-foreground">
-              <span>${Number(m.current).toLocaleString()} saved</span>
+              <span>R${Number(m.current).toLocaleString()} economizados</span>
               <span>{Math.round((m.current / m.amount) * 100)}%</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-muted">
@@ -474,7 +477,7 @@ function TypeHighlight({ item, typeMeta }: { item: any; typeMeta: any }) {
   if (item.type === "bookmark" && (m.rating || m.author || m.medium)) {
     const isBook = m.medium === "book";
     const isMedia = m.medium === "movie" || m.medium === "video" || m.medium === "podcast";
-    const statusLabel = m.status === "reading" ? "Reading" : m.status === "finished" ? "Finished" : isMedia ? "To watch" : "Queued";
+    const statusLabel = m.status === "reading" ? (isBook ? "Lendo" : "Assistindo") : m.status === "finished" ? (isMedia ? "Assistido" : "Finalizado") : isMedia ? "Pra assistir" : "Na fila";
     const statusColor = m.status === "finished" ? "#10b981" : m.status === "reading" ? "#3b82f6" : isMedia ? "#ec4899" : "#71717a";
     const readingPct = isBook && m.totalPages > 0 ? Math.min(100, Math.round(((m.currentPage || 0) / m.totalPages) * 100)) : 0;
 
@@ -506,7 +509,7 @@ function TypeHighlight({ item, typeMeta }: { item: any; typeMeta: any }) {
           <div className="mt-3">
             <div className="mb-1 flex items-center justify-between text-[11px]">
               <span className="text-muted-foreground">
-                Page {m.currentPage || 0} of {m.totalPages}
+                Página {m.currentPage || 0} de {m.totalPages}
               </span>
               <span className="font-semibold" style={{ color: typeMeta.color }}>{readingPct}%</span>
             </div>
@@ -530,7 +533,7 @@ function TypeHighlight({ item, typeMeta }: { item: any; typeMeta: any }) {
         {/* Rating */}
         {m.rating > 0 && (
           <div className="mt-2 flex items-center gap-1">
-            <span className="text-[10px] text-muted-foreground">Rating:</span>
+            <span className="text-[10px] text-muted-foreground">Avaliação:</span>
             <div className="flex gap-0.5">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Icon
@@ -576,13 +579,13 @@ function TypeHighlight({ item, typeMeta }: { item: any; typeMeta: any }) {
           {m.birthday && (
             <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
               <Icon name="Cake" className="h-3 w-3" />
-              {fmtDate(m.birthday, "MMM d")}
+              {fmtDate(m.birthday, "d MMM")}
             </p>
           )}
         </div>
         {m.lastContact && (
           <span className="rounded-full bg-muted px-2 py-1 text-[10px] text-muted-foreground">
-            Last contact {smartDate(m.lastContact)}
+            Último contato {smartDate(m.lastContact)}
           </span>
         )}
       </motion.div>
@@ -600,12 +603,12 @@ function TypeHighlight({ item, typeMeta }: { item: any; typeMeta: any }) {
       >
         <div className="text-center">
           <p className="text-2xl font-bold" style={{ color: typeMeta.color }}>{m.streak || 0}</p>
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">day streak</p>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">dias seguidos</p>
         </div>
         <div className="h-10 w-px bg-border/40" />
         <div className="flex-1">
-          <p className="text-sm font-medium capitalize">{m.cadence || "daily"}</p>
-          {m.target && <p className="text-[11px] text-muted-foreground">Goal: {m.target} {m.unit || ""}</p>}
+          <p className="text-sm font-medium capitalize">{CADENCE_LABELS[m.cadence] || CADENCE_LABELS.daily}</p>
+          {m.target && <p className="text-[11px] text-muted-foreground">Meta: {m.target} {m.unit || ""}</p>}
         </div>
       </motion.div>
     );
@@ -624,7 +627,7 @@ function TypeHighlight({ item, typeMeta }: { item: any; typeMeta: any }) {
           <Icon name="Activity" className="h-5 w-5" />
         </span>
         <div className="flex-1">
-          <p className="text-sm font-medium">Severity: {m.severity}/5</p>
+          <p className="text-sm font-medium">Gravidade: {m.severity}/5</p>
           <div className="mt-1 flex gap-1">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="h-1.5 flex-1 rounded-full" style={{ background: i < m.severity ? sevColor : "var(--muted)" }} />
@@ -662,15 +665,15 @@ function JournalEditor({
         <div className="flex items-center justify-between border-b border-border/50 bg-muted/30 px-3 py-1.5">
           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
             <Icon name="PenLine" className="h-3 w-3" style={{ color: accentColor }} />
-            <span className="font-medium">Writing</span>
+            <span className="font-medium">Escrevendo</span>
             <span>·</span>
-            <span>{wordCount} words</span>
+            <span>{wordCount} palavras</span>
             <span>·</span>
-            <span>{readTime} min read</span>
+            <span>{readTime} min de leitura</span>
           </div>
           <div className="flex gap-1">
-            <button onClick={onCancel} className="rounded px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-muted">Cancel</button>
-            <button onClick={onSave} className="rounded px-2 py-0.5 text-[11px] font-medium text-white" style={{ background: accentColor }}>Save</button>
+            <button onClick={onCancel} className="rounded px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-muted">Cancelar</button>
+            <button onClick={onSave} className="rounded px-2 py-0.5 text-[11px] font-medium text-white" style={{ background: accentColor }}>Salvar</button>
           </div>
         </div>
         <Textarea
@@ -678,7 +681,7 @@ function JournalEditor({
           onChange={(e) => onChange(e.target.value)}
           rows={14}
           className="resize-y border-0 bg-background p-4 text-[15px] leading-relaxed focus-visible:ring-0"
-          placeholder="What's on your mind? Write freely…&#10;&#10;Markdown is supported — use **bold**, *italic*, # headings, - lists."
+          placeholder="No que você está pensando? Escreva livremente…&#10;&#10;Markdown é suportado — use **negrito**, *itálico*, # títulos, - listas."
           autoFocus
         />
       </div>
@@ -690,13 +693,13 @@ function JournalEditor({
       <div className="flex items-center justify-between border-b border-border/30 px-4 py-2">
         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
           <Icon name="BookHeart" className="h-3 w-3" style={{ color: accentColor }} />
-          <span className="font-medium">Journal entry</span>
+          <span className="font-medium">Entrada de diário</span>
           {content && (
             <>
               <span>·</span>
-              <span>{wordCount} words</span>
+              <span>{wordCount} palavras</span>
               <span>·</span>
-              <span>{readTime} min read</span>
+              <span>{readTime} min de leitura</span>
             </>
           )}
         </div>
@@ -705,14 +708,14 @@ function JournalEditor({
             onClick={onEdit}
             className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            <Icon name="Pencil" className="h-3 w-3" /> {content ? "Edit" : "Write"}
+            <Icon name="Pencil" className="h-3 w-3" /> {content ? "Editar" : "Escrever"}
           </button>
           <button
             onClick={() => useLifeOS.getState().openJournalEditor(itemId)}
             className="inline-flex items-center gap-1 text-[11px] font-medium transition-colors hover:text-foreground"
             style={{ color: accentColor }}
           >
-            <Icon name="Maximize2" className="h-3 w-3" /> Full editor
+            <Icon name="Maximize2" className="h-3 w-3" /> Editor completo
           </button>
         </div>
       </div>
@@ -727,7 +730,7 @@ function JournalEditor({
             className="flex w-full flex-col items-center py-8 text-center text-muted-foreground/60 transition-colors hover:text-muted-foreground"
           >
             <Icon name="PenLine" className="mb-2 h-6 w-6" style={{ color: accentColor }} />
-            <p className="text-sm">Start writing your journal entry…</p>
+            <p className="text-sm">Comece a escrever sua entrada de diário…</p>
           </button>
         )}
       </div>
@@ -753,7 +756,7 @@ function ReadingProgressUpdater({ item, currentPage, totalPages, accentColor }: 
     // also update bookmark status to finished if done
     if (isFinished) {
       update.mutate({ id: item.id, metadata: { ...newMeta, status: "finished" }, status: "done" });
-      notify.success("Finished reading!");
+      notify.success("Leitura concluída!");
     }
     setPageInput(String(clamped));
   }
@@ -778,19 +781,19 @@ function ReadingProgressUpdater({ item, currentPage, totalPages, accentColor }: 
         }}
         className="h-7 w-16 rounded-md border border-border/60 bg-background px-2 text-xs tabular-nums outline-none focus:border-primary/40"
       />
-      <span className="text-[10px] text-muted-foreground">/ {totalPages} pages</span>
+      <span className="text-[10px] text-muted-foreground">/ {totalPages} páginas</span>
       <div className="ml-auto flex gap-1">
         <button
           onClick={() => updatePage(Math.max(0, currentPage - 10))}
           className="rounded-md border border-border/60 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-muted"
-          title="Go back 10 pages"
+          title="Voltar 10 páginas"
         >
           −10
         </button>
         <button
           onClick={() => updatePage(Math.min(totalPages, currentPage + 10))}
           className="rounded-md border border-border/60 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-muted"
-          title="Forward 10 pages"
+          title="Avançar 10 páginas"
         >
           +10
         </button>
@@ -798,9 +801,9 @@ function ReadingProgressUpdater({ item, currentPage, totalPages, accentColor }: 
           onClick={() => updatePage(totalPages)}
           className="rounded-md px-2 py-0.5 text-[10px] font-medium text-white"
           style={{ background: accentColor }}
-          title="Mark as finished"
+          title="Marcar como finalizado"
         >
-          Done
+          Concluído
         </button>
       </div>
     </div>
@@ -854,14 +857,14 @@ function ConnectionRow({
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs font-medium">{title}</p>
           <p className="text-[10px] text-muted-foreground">
-            {direction === "in" ? "← linked from" : "→ links to"} · {type}
+            {direction === "in" ? "← ligado de" : "→ liga para"} · {type}
           </p>
         </div>
       </button>
       <button
         onClick={onRemove}
         className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 transition-all hover:bg-rose-500/10 hover:text-rose-500 group-hover:opacity-100"
-        title="Remove connection"
+        title="Remover conexão"
       >
         <Icon name="X" className="h-3.5 w-3.5" />
       </button>
@@ -892,9 +895,9 @@ function HabitSection({ itemId, logs, meta, accentColor }: { itemId: string; log
         <div>
           <h4 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             <Icon name="CalendarCheck" className="h-3 w-3" />
-            Last 5 weeks
+            Últimas 5 semanas
           </h4>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">{doneCount}/35 days · streak {meta?.streak || 0}</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">{doneCount}/35 dias · sequência de {meta?.streak || 0}</p>
         </div>
         <Button
           size="sm"
@@ -904,7 +907,7 @@ function HabitSection({ itemId, logs, meta, accentColor }: { itemId: string; log
           style={!doneToday ? { background: accentColor } : {}}
         >
           <Icon name={doneToday ? "Check" : "Plus"} className="h-3.5 w-3.5" />
-          {doneToday ? "Done today" : "Mark today"}
+          {doneToday ? "Feito hoje" : "Marcar hoje"}
         </Button>
       </div>
       <div className="grid grid-flow-col grid-rows-7 gap-1" style={{ gridAutoColumns: "minmax(0, 1fr)" }}>
@@ -918,7 +921,7 @@ function HabitSection({ itemId, logs, meta, accentColor }: { itemId: string; log
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.2 }}
-              title={fmtDate(d, "EEE, MMM d")}
+              title={fmtDate(d, "EEE, d MMM")}
               className={cn("aspect-square rounded-sm transition-colors", isToday && "ring-1 ring-offset-1 ring-offset-background")}
               style={{
                 background: done ? accentColor : "var(--muted)",

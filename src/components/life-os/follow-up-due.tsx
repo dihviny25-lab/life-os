@@ -8,12 +8,12 @@ import { fmtDate } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 
 const RELATIONSHIP_CADENCE: Record<string, number> = {
-  "close friend": 14,
-  friend: 30,
-  family: 14,
+  "amigo próximo": 14,
+  amigo: 30,
+  família: 14,
   mentor: 45,
-  colleague: 60,
-  acquaintance: 90,
+  colega: 60,
+  conhecido: 90,
 };
 const DEFAULT_CADENCE = 45;
 
@@ -46,14 +46,14 @@ export function FollowUpDue() {
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/15 text-cyan-600">
             <Icon name="Users" className="h-3.5 w-3.5" />
           </span>
-          <h3 className="text-sm font-semibold">Stay connected</h3>
+          <h3 className="text-sm font-semibold">Mantenha contato</h3>
         </div>
-        <p className="text-xs text-muted-foreground">Add contacts to get gentle reminders when it's time to reach out.</p>
+        <p className="text-xs text-muted-foreground">Adicione contatos pra receber lembretes gentis de quando é hora de falar com eles.</p>
         <button
           onClick={() => openItemEditor({ type: "contact" })}
           className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-cyan-600 hover:underline"
         >
-          <Icon name="Plus" className="h-3 w-3" /> Add a contact
+          <Icon name="Plus" className="h-3 w-3" /> Adicionar contato
         </button>
       </motion.div>
     );
@@ -71,11 +71,11 @@ export function FollowUpDue() {
             <Icon name="Users" className="h-3.5 w-3.5" />
           </span>
           <div>
-            <h3 className="text-sm font-semibold">Reconnect</h3>
+            <h3 className="text-sm font-semibold">Reconectar</h3>
             <p className="text-[10px] text-muted-foreground">
               {dueContacts.length > 0
-                ? `${dueContacts.length} ${dueContacts.length === 1 ? "person" : "people"} to reach out to`
-                : "You're all caught up"}
+                ? `${dueContacts.length} ${dueContacts.length === 1 ? "pessoa" : "pessoas"} pra falar`
+                : "Você está em dia"}
             </p>
           </div>
         </div>
@@ -104,7 +104,7 @@ export function FollowUpDue() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-medium">{c.title}</p>
                 <p className="text-[10px] text-muted-foreground">
-                  {c.metadata?.relationship || "contact"} · {c.daysSince}d ago
+                  {c.metadata?.relationship || "contato"} · há {c.daysSince}d
                 </p>
               </div>
               <span
@@ -113,7 +113,7 @@ export function FollowUpDue() {
                   urgency === "high" ? "bg-rose-500/15 text-rose-500" : "bg-amber-500/15 text-amber-600",
                 )}
               >
-                {c.daysSince > c.cadence * 2 ? "Overdue" : "Due"}
+                {c.daysSince > c.cadence * 2 ? "Atrasado" : "Pendente"}
               </span>
             </motion.button>
           );
@@ -134,7 +134,7 @@ export function FollowUpDue() {
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-medium">{c.title}</p>
               <p className="text-[10px] text-muted-foreground">
-                {c.metadata?.relationship || "contact"} · in {c.dueIn}d
+                {c.metadata?.relationship || "contato"} · em {c.dueIn}d
               </p>
             </div>
             <Icon name="Clock" className="h-3 w-3 text-muted-foreground/50" />

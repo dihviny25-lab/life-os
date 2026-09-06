@@ -17,16 +17,16 @@ import {
 import { useState } from "react";
 
 const NAV = [
-  { key: "dashboard", name: "Dashboard", icon: "LayoutDashboard" },
-  { key: "inbox", name: "Inbox", icon: "Inbox" },
-  { key: "calendar", name: "Calendar", icon: "CalendarDays" },
+  { key: "dashboard", name: "Painel", icon: "LayoutDashboard" },
+  { key: "inbox", name: "Entrada", icon: "Inbox" },
+  { key: "calendar", name: "Calendário", icon: "CalendarDays" },
   { key: "agenda", name: "Agenda", icon: "CalendarRange" },
-  { key: "focus", name: "Focus", icon: "Brain" },
-  { key: "projects", name: "Projects", icon: "FolderKanban" },
-  { key: "graph", name: "Brain Graph", icon: "Network" },
-  { key: "reviews", name: "Reviews", icon: "NotebookPen" },
+  { key: "focus", name: "Foco", icon: "Brain" },
+  { key: "projects", name: "Projetos", icon: "FolderKanban" },
+  { key: "graph", name: "Grafo Mental", icon: "Network" },
+  { key: "reviews", name: "Revisões", icon: "NotebookPen" },
   { key: "insights", name: "Insights", icon: "TrendingUp" },
-  { key: "all", name: "All Items", icon: "Layers" },
+  { key: "all", name: "Todos os Itens", icon: "Layers" },
 ] as const;
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
@@ -49,7 +49,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         </div>
         <div>
           <div className="text-sm font-semibold leading-none tracking-tight">Life OS</div>
-          <div className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">Digital Brain</div>
+          <div className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">Cérebro Digital</div>
         </div>
       </div>
 
@@ -81,7 +81,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           })}
         </div>
 
-        <div className="mt-4 mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Life Domains</div>
+        <div className="mt-4 mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Domínios de Vida</div>
         <div className="space-y-0.5">
           {DOMAINS.map((d) => {
             const active = view === d.key;
@@ -116,14 +116,14 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           )}
         >
           <Icon name="Settings" className="h-3.5 w-3.5" />
-          Settings
+          Configurações
         </button>
         <button
           onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/login"; }}
           className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-rose-500/10 hover:text-rose-500"
         >
           <Icon name="LogOut" className="h-3.5 w-3.5" />
-          Sign out
+          Sair
         </button>
       </div>
     </>
@@ -148,7 +148,7 @@ export function Sidebar() {
       <button
         onClick={() => setMobileOpen(true)}
         className="fixed left-3 top-3 z-40 flex h-10 w-10 items-center justify-center rounded-lg border border-border/60 bg-background/80 shadow-md backdrop-blur-md md:hidden"
-        aria-label="Open menu"
+        aria-label="Abrir menu"
       >
         <Icon name="Menu" className="h-5 w-5" />
       </button>
@@ -157,8 +157,8 @@ export function Sidebar() {
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-72 p-0">
           <SheetHeader className="sr-only">
-            <SheetTitle>Navigation</SheetTitle>
-            <SheetDescription>Navigate between Life OS views and life domains.</SheetDescription>
+            <SheetTitle>Navegação</SheetTitle>
+            <SheetDescription>Navegue entre as telas do Life OS e os domínios de vida.</SheetDescription>
           </SheetHeader>
           <div className="flex h-full flex-col">
             <SidebarContent onNavigate={closeMobile} />

@@ -33,8 +33,8 @@ export function OnThisDay() {
     return (
       <div className="rounded-2xl border border-dashed border-border/60 bg-card/30 p-4 text-center">
         <Icon name="CalendarHeart" className="mx-auto mb-1.5 h-5 w-5 text-muted-foreground/50" />
-        <p className="text-xs font-medium text-muted-foreground">No memories on this day yet</p>
-        <p className="mt-0.5 text-[11px] text-muted-foreground/70">Keep journaling — future you will thank you.</p>
+        <p className="text-xs font-medium text-muted-foreground">Nenhuma memória neste dia ainda</p>
+        <p className="mt-0.5 text-[11px] text-muted-foreground/70">Continue escrevendo — o seu eu do futuro vai agradecer.</p>
       </div>
     );
   }
@@ -50,8 +50,8 @@ export function OnThisDay() {
           <Icon name="CalendarHeart" className="h-3.5 w-3.5" />
         </span>
         <div>
-          <h3 className="text-sm font-semibold">On this day</h3>
-          <p className="text-[10px] text-muted-foreground">{total} memor{total === 1 ? "y" : "ies"} from the past</p>
+          <h3 className="text-sm font-semibold">Neste dia</h3>
+          <p className="text-[10px] text-muted-foreground">{total} memória{total === 1 ? "" : "s"} do passado</p>
         </div>
       </div>
 
@@ -69,7 +69,7 @@ export function OnThisDay() {
             >
               <div className="mb-0.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
                 <Icon name="BookHeart" className="h-3 w-3 text-violet-500" />
-                <span>{yearsAgo} year{yearsAgo !== 1 ? "s" : ""} ago · {fmtDate(j.scheduledAt || j.createdAt, "MMM d")}</span>
+                <span>{yearsAgo} ano{yearsAgo !== 1 ? "s" : ""} atrás · {fmtDate(j.scheduledAt || j.createdAt, "d MMM")}</span>
               </div>
               <p className="line-clamp-1 text-xs font-medium">{j.title}</p>
               {j.content && <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">{j.content}</p>}
@@ -89,7 +89,7 @@ export function OnThisDay() {
             >
               <div className="mb-0.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
                 <Icon name="NotebookPen" className="h-3 w-3 text-amber-500" />
-                <span>{yearsAgo} year{yearsAgo !== 1 ? "s" : ""} ago · {r.type} review</span>
+                <span>{yearsAgo} ano{yearsAgo !== 1 ? "s" : ""} atrás · revisão {r.type === "daily" ? "diária" : "semanal"}</span>
                 {r.mood && <span className="ml-auto" style={{ color: ["", "#f43f5e", "#f59e0b", "#eab308", "#10b981", "#06b6d4"][r.mood] }}>
                   <Icon name={["", "Frown", "Meh", "Smile", "SmilePlus", "Laugh"][r.mood] || "Smile"} className="h-3.5 w-3.5" />
                 </span>}
@@ -116,7 +116,7 @@ export function OnThisDay() {
               </span>
               <div className="min-w-0 flex-1">
                 <p className="line-clamp-1 text-xs font-medium">{c.title}</p>
-                <p className="text-[10px] text-muted-foreground">{yearsAgo} year{yearsAgo !== 1 ? "s" : ""} ago · completed</p>
+                <p className="text-[10px] text-muted-foreground">{yearsAgo} ano{yearsAgo !== 1 ? "s" : ""} atrás · concluído</p>
               </div>
             </motion.button>
           );

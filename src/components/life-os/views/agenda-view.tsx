@@ -10,6 +10,7 @@ import { ITEM_TYPE_MAP } from "@/lib/constants";
 import {
   startOfWeek, addDays, format, isSameDay, isToday, addWeeks, subWeeks,
 } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -37,8 +38,8 @@ export function AgendaView() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Weekly Agenda"
-        subtitle="A calm, time-blocked view of your week. See everything ahead at a glance."
+        title="Agenda Semanal"
+        subtitle="Uma visão calma e organizada por horário da sua semana. Veja tudo o que vem por aí de relance."
         icon="CalendarRange"
         color="#06b6d4"
         actions={
@@ -47,7 +48,7 @@ export function AgendaView() {
               <Icon name="ChevronLeft" className="h-4 w-4" />
             </Button>
             <Button variant="outline" size="sm" className="h-8" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>
-              This week
+              Esta semana
             </Button>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>
               <Icon name="ChevronRight" className="h-4 w-4" />
@@ -60,10 +61,10 @@ export function AgendaView() {
       <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border/60 bg-gradient-to-r from-cyan-500/5 to-transparent p-4">
         <div>
           <p className="text-sm font-semibold">
-            {format(weekStart, "MMM d")} – {format(addDays(weekStart, 6), "MMM d, yyyy")}
+            {format(weekStart, "d MMM", { locale: ptBR })} – {format(addDays(weekStart, 6), "d MMM, yyyy", { locale: ptBR })}
           </p>
           <p className="text-xs text-muted-foreground">
-            {days.reduce((s, d) => s + d.items.length, 0)} items this week
+            {days.reduce((s, d) => s + d.items.length, 0)} itens esta semana
           </p>
         </div>
         <div className="ml-auto flex gap-2">
@@ -73,7 +74,7 @@ export function AgendaView() {
                 "flex h-9 w-9 flex-col items-center justify-center rounded-lg text-xs",
                 isToday(d.date) ? "bg-primary text-primary-foreground" : "bg-muted/50",
               )}>
-                <span className="text-[9px] uppercase">{format(d.date, "EEEEE")}</span>
+                <span className="text-[9px] uppercase">{format(d.date, "EEEEE", { locale: ptBR })}</span>
                 <span className="text-sm font-bold leading-none">{format(d.date, "d")}</span>
               </div>
               {d.items.length > 0 && (
@@ -92,8 +93,8 @@ export function AgendaView() {
       ) : days.every((d) => d.items.length === 0) ? (
         <EmptyState
           icon="CalendarRange"
-          title="An open week"
-          description="Nothing scheduled this week. Capture a thought or plan something meaningful."
+          title="Uma semana livre"
+          description="Nada agendado nesta semana. Capture um pensamento ou planeje algo significativo."
         />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-7">
@@ -111,7 +112,7 @@ export function AgendaView() {
               {/* day header */}
               <div className="mb-2 flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{format(d.date, "EEE")}</p>
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{format(d.date, "EEE", { locale: ptBR })}</p>
                   <p className={cn("text-lg font-bold leading-none", isToday(d.date) && "text-primary")}>
                     {format(d.date, "d")}
                   </p>
@@ -164,7 +165,7 @@ export function AgendaView() {
                             )}
                             {item.metadata?.amount != null && (
                               <span className="ml-1 text-[9px] font-semibold" style={{ color: item.metadata.kind === "income" ? "#10b981" : "#f43f5e" }}>
-                                ${item.metadata.amount}
+                                R${item.metadata.amount}
                               </span>
                             )}
                           </div>

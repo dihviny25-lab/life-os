@@ -236,13 +236,13 @@ export function GraphView() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Digital Brain"
-        subtitle="See how everything connects. Every line is a link or a project thread weaving your life together."
+        title="Cérebro Digital"
+        subtitle="Veja como tudo se conecta. Cada linha é um link ou uma thread de projeto entrelaçando sua vida."
         icon="Network"
         color="#a78bfa"
         actions={
           <Button variant="outline" size="sm" onClick={() => setFilterKinds(new Set())}>
-            <Icon name="RotateCcw" className="mr-1.5 h-3.5 w-3.5" /> Reset
+            <Icon name="RotateCcw" className="mr-1.5 h-3.5 w-3.5" /> Redefinir
           </Button>
         }
       />
@@ -263,11 +263,11 @@ export function GraphView() {
                   <div className="absolute left-1/4 top-2/3 h-7 w-7 skeleton rounded-full bg-muted/30" />
                   <div className="absolute left-3/4 top-2/3 h-9 w-9 skeleton rounded-full bg-muted/40" />
                   <div className="absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 skeleton rounded-full bg-muted/20" />
-                  <p className="absolute bottom-0 left-1/2 -translate-x-1/2 text-sm text-muted-foreground">Weaving your brain…</p>
+                  <p className="absolute bottom-0 left-1/2 -translate-x-1/2 text-sm text-muted-foreground">Entrelaçando seu cérebro…</p>
                 </div>
               </div>
             ) : allNodes.length === 0 ? (
-              <EmptyState icon="Network" title="No connections yet" description="Link items to each other from the detail panel to see your digital brain bloom." />
+              <EmptyState icon="Network" title="Nenhuma conexão ainda" description="Ligue itens entre si pelo painel de detalhes pra ver seu cérebro digital florescer." />
             ) : (
               <svg
                 width={dims.w}
@@ -384,9 +384,9 @@ export function GraphView() {
 
             {!isLoading && allNodes.length > 0 && (
               <div className="pointer-events-none absolute bottom-3 left-3 flex gap-2 text-[11px] text-muted-foreground">
-                <span className="rounded-md bg-background/80 px-2 py-1 backdrop-blur">{visibleNodes.filter((n) => n.kind === "item").length} items</span>
-                <span className="rounded-md bg-background/80 px-2 py-1 backdrop-blur">{visibleNodes.filter((n) => n.kind === "project").length} projects</span>
-                <span className="rounded-md bg-background/80 px-2 py-1 backdrop-blur">{visibleEdges.length} connections</span>
+                <span className="rounded-md bg-background/80 px-2 py-1 backdrop-blur">{visibleNodes.filter((n) => n.kind === "item").length} itens</span>
+                <span className="rounded-md bg-background/80 px-2 py-1 backdrop-blur">{visibleNodes.filter((n) => n.kind === "project").length} projetos</span>
+                <span className="rounded-md bg-background/80 px-2 py-1 backdrop-blur">{visibleEdges.length} conexões</span>
               </div>
             )}
 
@@ -396,21 +396,21 @@ export function GraphView() {
                 <button
                   onClick={() => setZoom((z) => Math.min(3, z + 0.2))}
                   className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-background/80 text-foreground shadow-sm backdrop-blur transition-all hover:bg-background"
-                  title="Zoom in"
+                  title="Aumentar zoom"
                 >
                   <Icon name="Plus" className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setZoom((z) => Math.max(0.3, z - 0.2))}
                   className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-background/80 text-foreground shadow-sm backdrop-blur transition-all hover:bg-background"
-                  title="Zoom out"
+                  title="Diminuir zoom"
                 >
                   <Icon name="Minus" className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
                   className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-background/80 text-foreground shadow-sm backdrop-blur transition-all hover:bg-background"
-                  title="Reset view"
+                  title="Redefinir visualização"
                 >
                   <Icon name="Maximize" className="h-4 w-4" />
                 </button>
@@ -430,7 +430,7 @@ export function GraphView() {
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search nodes…"
+                placeholder="Pesquisar nós…"
                 className="w-full rounded-lg border border-border/60 bg-background py-1.5 pl-8 pr-7 text-xs outline-none focus:border-violet-500/40"
               />
               {searchQuery && (
@@ -444,34 +444,34 @@ export function GraphView() {
             </div>
             {searchMatchIds && (
               <p className="mt-2 text-[10px] text-muted-foreground">
-                {searchMatchIds.size} match{searchMatchIds.size !== 1 ? "es" : ""} · non-matches dimmed
+                {searchMatchIds.size} resultado{searchMatchIds.size !== 1 ? "s" : ""} · não-correspondências apagadas
               </p>
             )}
           </SectionCard>
 
-          <SectionCard title="Legend" icon="Info">
+          <SectionCard title="Legenda" icon="Info">
             <div className="space-y-2 text-xs">
               <div className="flex items-center gap-2">
                 <span className="h-4 w-4 rounded" style={{ background: "#a78bfa" }} />
-                <span>Project / Thread (square)</span>
+                <span>Projeto / Thread (quadrado)</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="h-4 w-4 rounded-full" style={{ background: "#f59e0b" }} />
-                <span>Item (circle, colored by type)</span>
+                <span>Item (círculo, colorido por tipo)</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="h-4 w-4 rounded border-2 border-dashed border-muted-foreground" />
-                <span>Project membership (dashed)</span>
+                <span>Vínculo com projeto (tracejado)</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="h-4 w-4 rounded border-2 border-emerald-500 border-dashed" />
-                <span>Completed (green ring)</span>
+                <span>Concluído (anel verde)</span>
               </div>
             </div>
           </SectionCard>
 
           {presentTypes.length > 0 && (
-            <SectionCard title="Filter by type" icon="Filter">
+            <SectionCard title="Filtrar por tipo" icon="Filter">
               <div className="flex flex-wrap gap-1.5">
                 {presentTypes.map((t) => {
                   const on = filterKinds.has(t.type);
@@ -499,20 +499,20 @@ export function GraphView() {
                 })}
                 {filterKinds.size > 0 && (
                   <button onClick={() => setFilterKinds(new Set())} className="text-xs text-muted-foreground underline">
-                    clear
+                    limpar
                   </button>
                 )}
               </div>
               <p className="mt-3 text-[11px] text-muted-foreground">
-                Click a node to open it. Hover to highlight its connections.
+                Clique em um nó pra abri-lo. Passe o mouse pra destacar suas conexões.
               </p>
               <div className="mt-2 space-y-1 text-[10px] text-muted-foreground/70">
                 <div className="flex items-center gap-1.5">
                   <kbd className="rounded border border-border bg-muted px-1">+</kbd>/<kbd className="rounded border border-border bg-muted px-1">−</kbd> zoom
                   <span className="mx-1">·</span>
-                  <kbd className="rounded border border-border bg-muted px-1">0</kbd> reset
+                  <kbd className="rounded border border-border bg-muted px-1">0</kbd> redefinir
                 </div>
-                <div>Scroll to zoom · drag to pan</div>
+                <div>Role pra dar zoom · arraste pra navegar</div>
               </div>
             </SectionCard>
           )}

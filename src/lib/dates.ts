@@ -1,31 +1,32 @@
 import { format, formatDistanceToNow, isToday, isTomorrow, isYesterday, isThisWeek, parseISO, differenceInCalendarDays } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
-export function fmtDate(d: string | Date | null | undefined, fmt = "MMM d") {
+export function fmtDate(d: string | Date | null | undefined, fmt = "d MMM") {
   if (!d) return "";
   const date = typeof d === "string" ? parseISO(d) : d;
   if (isNaN(date.getTime())) return "";
-  return format(date, fmt);
+  return format(date, fmt, { locale: ptBR });
 }
 
 export function fmtRelative(d: string | Date | null | undefined) {
   if (!d) return "";
   const date = typeof d === "string" ? parseISO(d) : d;
   if (isNaN(date.getTime())) return "";
-  return formatDistanceToNow(date, { addSuffix: true });
+  return formatDistanceToNow(date, { addSuffix: true, locale: ptBR });
 }
 
 export function smartDate(d: string | Date | null | undefined) {
   if (!d) return "";
   const date = typeof d === "string" ? parseISO(d) : d;
   if (isNaN(date.getTime())) return "";
-  if (isToday(date)) return "Today";
-  if (isTomorrow(date)) return "Tomorrow";
-  if (isYesterday(date)) return "Yesterday";
-  if (isThisWeek(date)) return format(date, "EEEE");
+  if (isToday(date)) return "Hoje";
+  if (isTomorrow(date)) return "Amanhã";
+  if (isYesterday(date)) return "Ontem";
+  if (isThisWeek(date)) return format(date, "EEEE", { locale: ptBR });
   const diff = differenceInCalendarDays(date, new Date());
-  if (diff > 0 && diff < 30) return `In ${diff} days`;
-  if (diff < 0 && diff > -30) return `${Math.abs(diff)} days ago`;
-  return format(date, "MMM d");
+  if (diff > 0 && diff < 30) return `Em ${diff} dias`;
+  if (diff < 0 && diff > -30) return `${Math.abs(diff)} dias atrás`;
+  return format(date, "d MMM", { locale: ptBR });
 }
 
 export function dateColor(d: string | Date | null | undefined): string {

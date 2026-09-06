@@ -76,7 +76,7 @@ export function ItemEditor() {
 
   async function save() {
     if (!form.title?.trim()) {
-      notify.error("Title is required");
+      notify.error("O título é obrigatório");
       return;
     }
     const payload: any = {
@@ -118,14 +118,14 @@ export function ItemEditor() {
     try {
       if (form.id) {
         await update.mutateAsync({ id: form.id, ...payload });
-        notify.success("Updated");
+        notify.success("Atualizado");
       } else {
         await create.mutateAsync(payload);
-        notify.success("Created");
+        notify.success("Criado");
       }
       closeItemEditor();
     } catch (e: any) {
-      notify.error(e.message || "Failed to save");
+      notify.error(e.message || "Falha ao salvar");
     }
   }
 
@@ -139,23 +139,23 @@ export function ItemEditor() {
 
   // type-specific hint text
   const typeHints: Record<string, string> = {
-    task: "What needs to be done?",
-    note: "Capture a thought or reference",
-    journal: "What's on your mind right now?",
-    habit: "What do you want to do regularly?",
-    event: "What's happening and when?",
-    finance: "Track income, expense, or a savings goal",
-    contact: "Someone in your life",
-    idea: "A spark worth keeping",
-    goal: "An outcome you're working toward",
-    bookmark: "A book, article, or media to revisit",
-    symptom: "Log how you're feeling physically",
-    medication: "A supplement or prescription",
-    affirmation: "A phrase to repeat to yourself",
-    vision: "A picture of your future",
-    milestone: "A significant checkpoint",
-    routine: "A repeatable sequence",
-    document: "An important file or record",
+    task: "O que precisa ser feito?",
+    note: "Capture um pensamento ou referência",
+    journal: "O que está passando pela sua cabeça agora?",
+    habit: "O que você quer fazer regularmente?",
+    event: "O que vai acontecer e quando?",
+    finance: "Registre receita, despesa ou uma meta de economia",
+    contact: "Alguém na sua vida",
+    idea: "Uma faísca que vale a pena guardar",
+    goal: "Um resultado que você está buscando",
+    bookmark: "Um livro, artigo ou mídia para revisitar",
+    symptom: "Registre como você está se sentindo fisicamente",
+    medication: "Um suplemento ou prescrição",
+    affirmation: "Uma frase para repetir para si mesmo",
+    vision: "Uma imagem do seu futuro",
+    milestone: "Um marco importante",
+    routine: "Uma sequência repetível",
+    document: "Um arquivo ou registro importante",
   };
 
   return (
@@ -174,10 +174,10 @@ export function ItemEditor() {
               >
                 <Icon name={typeMeta.icon} className="h-4.5 w-4.5" />
               </span>
-              {form.id ? "Edit item" : "New item"}
+              {form.id ? "Editar item" : "Novo item"}
             </DialogTitle>
             <DialogDescription className="mt-1 pl-[46px] text-xs">
-              {typeHints[form.type] || "Create or refine an item in your digital brain."}
+              {typeHints[form.type] || "Crie ou refine um item no seu cérebro digital."}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -187,7 +187,7 @@ export function ItemEditor() {
           <div className="space-y-5">
             {/* Type selector — horizontal chip grid */}
             <div>
-              <SectionLabel icon="Tag">Type</SectionLabel>
+              <SectionLabel icon="Tag">Tipo</SectionLabel>
               <div className="flex flex-wrap gap-1.5">
                 {ITEM_TYPES.map((t) => {
                   const on = form.type === t.type;
@@ -210,12 +210,12 @@ export function ItemEditor() {
 
             {/* Title */}
             <div>
-              <SectionLabel icon="Type">Title</SectionLabel>
+              <SectionLabel icon="Type">Título</SectionLabel>
               <Input
                 autoFocus
                 value={form.title}
                 onChange={(e) => set("title", e.target.value)}
-                placeholder={typeHints[form.type] || "What's on your mind?"}
+                placeholder={typeHints[form.type] || "No que você está pensando?"}
                 className="h-10 text-base"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) save();
@@ -225,12 +225,12 @@ export function ItemEditor() {
 
             {/* Section: Organization */}
             <div>
-              <SectionLabel icon="FolderTree">Organization</SectionLabel>
+              <SectionLabel icon="FolderTree">Organização</SectionLabel>
               <div className="grid grid-cols-2 gap-2">
                 <Select value={form.domainId || "none"} onValueChange={(v) => set("domainId", v === "none" ? "" : v)}>
-                  <SelectTrigger className="h-9"><SelectValue placeholder="No domain" /></SelectTrigger>
+                  <SelectTrigger className="h-9"><SelectValue placeholder="Sem domínio" /></SelectTrigger>
                   <SelectContent className="max-h-72">
-                    <SelectItem value="none">No domain</SelectItem>
+                    <SelectItem value="none">Sem domínio</SelectItem>
                     {DOMAINS.map((d) => (
                       <SelectItem key={d.key} value={domains.find((dd: any) => dd.key === d.key)?.id || d.key}>
                         <span className="inline-flex items-center gap-2">
@@ -242,9 +242,9 @@ export function ItemEditor() {
                   </SelectContent>
                 </Select>
                 <Select value={form.projectId || "none"} onValueChange={(v) => set("projectId", v === "none" ? "" : v)}>
-                  <SelectTrigger className="h-9"><SelectValue placeholder="No project" /></SelectTrigger>
+                  <SelectTrigger className="h-9"><SelectValue placeholder="Sem projeto" /></SelectTrigger>
                   <SelectContent className="max-h-72">
-                    <SelectItem value="none">No project</SelectItem>
+                    <SelectItem value="none">Sem projeto</SelectItem>
                     {projects.map((p: any) => (
                       <SelectItem key={p.id} value={p.id}>
                         <span className="inline-flex items-center gap-2">
@@ -260,16 +260,16 @@ export function ItemEditor() {
 
             {/* Section: Status & Priority */}
             <div>
-              <SectionLabel icon="SlidersHorizontal">Status & Priority</SectionLabel>
+              <SectionLabel icon="SlidersHorizontal">Status & Prioridade</SectionLabel>
               <div className="grid grid-cols-2 gap-2">
                 <Select value={form.status} onValueChange={(v) => set("status", v)}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="inbox">📥 Inbox</SelectItem>
-                    <SelectItem value="active">✓ Active</SelectItem>
-                    <SelectItem value="done">✓ Done</SelectItem>
-                    <SelectItem value="snoozed">⏰ Snoozed</SelectItem>
-                    <SelectItem value="archived">📦 Archived</SelectItem>
+                    <SelectItem value="inbox">📥 Entrada</SelectItem>
+                    <SelectItem value="active">✓ Ativo</SelectItem>
+                    <SelectItem value="done">✓ Concluído</SelectItem>
+                    <SelectItem value="snoozed">⏰ Adiado</SelectItem>
+                    <SelectItem value="archived">📦 Arquivado</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={String(form.priority)} onValueChange={(v) => set("priority", v)}>
@@ -291,15 +291,15 @@ export function ItemEditor() {
             {/* Section: Timing */}
             {(typeMeta.hasDate || form.type === "task" || form.type === "finance" || form.type === "event" || form.type === "journal") && (
               <div>
-                <SectionLabel icon="CalendarClock">Timing</SectionLabel>
+                <SectionLabel icon="CalendarClock">Prazos</SectionLabel>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Input type="datetime-local" value={toDateInput(form.dueDate)} onChange={(e) => set("dueDate", e.target.value)} className="h-9" />
-                    <p className="mt-1 text-[10px] text-muted-foreground">Due date</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">Data de vencimento</p>
                   </div>
                   <div>
                     <Input type="datetime-local" value={toDateInput(form.scheduledAt)} onChange={(e) => set("scheduledAt", e.target.value)} className="h-9" />
-                    <p className="mt-1 text-[10px] text-muted-foreground">Scheduled / logged at</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">Agendado / registrado em</p>
                   </div>
                 </div>
               </div>
@@ -307,33 +307,33 @@ export function ItemEditor() {
 
             {/* Type-specific metadata */}
             {isFinance && (
-              <MetadataSection icon="Wallet" label="Finance details" color={typeMeta.color}>
+              <MetadataSection icon="Wallet" label="Detalhes financeiros" color={typeMeta.color}>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <FieldLabel>Kind</FieldLabel>
+                    <FieldLabel>Tipo</FieldLabel>
                     <Select value={form.metadata.kind || "expense"} onValueChange={(v) => setMeta("kind", v)}>
                       <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="expense">Expense</SelectItem>
-                        <SelectItem value="income">Income</SelectItem>
-                        <SelectItem value="goal">Savings goal</SelectItem>
+                        <SelectItem value="expense">Despesa</SelectItem>
+                        <SelectItem value="income">Receita</SelectItem>
+                        <SelectItem value="goal">Meta de economia</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <FieldLabel>Amount ($)</FieldLabel>
+                    <FieldLabel>Valor (R$)</FieldLabel>
                     <Input type="number" step="0.01" value={form.metadata.amount || ""} onChange={(e) => setMeta("amount", e.target.value)} className="h-9" placeholder="0.00" />
                   </div>
                   {form.metadata.kind !== "goal" && (
                     <div className="col-span-2">
-                      <FieldLabel>Recurrence</FieldLabel>
+                      <FieldLabel>Recorrência</FieldLabel>
                       <Select value={form.metadata.recurring || "one-time"} onValueChange={(v) => setMeta("recurring", v)}>
                         <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="one-time">One-time</SelectItem>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                          <SelectItem value="yearly">Yearly</SelectItem>
+                          <SelectItem value="one-time">Única vez</SelectItem>
+                          <SelectItem value="monthly">Mensal</SelectItem>
+                          <SelectItem value="weekly">Semanal</SelectItem>
+                          <SelectItem value="yearly">Anual</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -343,25 +343,25 @@ export function ItemEditor() {
             )}
 
             {isHabit && (
-              <MetadataSection icon="Repeat" label="Habit setup" color={typeMeta.color}>
+              <MetadataSection icon="Repeat" label="Configuração do hábito" color={typeMeta.color}>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="col-span-1">
-                    <FieldLabel>Cadence</FieldLabel>
+                    <FieldLabel>Frequência</FieldLabel>
                     <Select value={form.metadata.cadence || "daily"} onValueChange={(v) => setMeta("cadence", v)}>
                       <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="daily">Daily</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="weekdays">Weekdays</SelectItem>
+                        <SelectItem value="daily">Diária</SelectItem>
+                        <SelectItem value="weekly">Semanal</SelectItem>
+                        <SelectItem value="weekdays">Dias úteis</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <FieldLabel>Target</FieldLabel>
+                    <FieldLabel>Meta</FieldLabel>
                     <Input type="number" value={form.metadata.target || ""} onChange={(e) => setMeta("target", e.target.value)} className="h-9" placeholder="1" />
                   </div>
                   <div>
-                    <FieldLabel>Unit</FieldLabel>
+                    <FieldLabel>Unidade</FieldLabel>
                     <Input value={form.metadata.unit || ""} onChange={(e) => setMeta("unit", e.target.value)} className="h-9" placeholder="min" />
                   </div>
                 </div>
@@ -369,25 +369,25 @@ export function ItemEditor() {
             )}
 
             {isBookmark && (
-              <MetadataSection icon="Bookmark" label={form.metadata?.medium === "book" ? "Book details" : form.metadata?.medium === "movie" || form.metadata?.medium === "video" ? "Watch list" : "Media details"} color={typeMeta.color}>
+              <MetadataSection icon="Bookmark" label={form.metadata?.medium === "book" ? "Detalhes do livro" : form.metadata?.medium === "movie" || form.metadata?.medium === "video" ? "Lista para assistir" : "Detalhes da mídia"} color={typeMeta.color}>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <FieldLabel>Medium</FieldLabel>
+                    <FieldLabel>Mídia</FieldLabel>
                     <Select value={form.metadata.medium || "book"} onValueChange={(v) => setMeta("medium", v)}>
                       <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="book">Book</SelectItem>
-                        <SelectItem value="article">Article</SelectItem>
-                        <SelectItem value="course">Course</SelectItem>
-                        <SelectItem value="movie">Movie</SelectItem>
-                        <SelectItem value="video">Video</SelectItem>
+                        <SelectItem value="book">Livro</SelectItem>
+                        <SelectItem value="article">Artigo</SelectItem>
+                        <SelectItem value="course">Curso</SelectItem>
+                        <SelectItem value="movie">Filme</SelectItem>
+                        <SelectItem value="video">Vídeo</SelectItem>
                         <SelectItem value="podcast">Podcast</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <FieldLabel>Author / Creator</FieldLabel>
-                    <Input value={form.metadata.author || ""} onChange={(e) => setMeta("author", e.target.value)} className="h-9" placeholder="Name…" />
+                    <FieldLabel>Autor / Criador</FieldLabel>
+                    <Input value={form.metadata.author || ""} onChange={(e) => setMeta("author", e.target.value)} className="h-9" placeholder="Nome…" />
                   </div>
                   <div className="col-span-2">
                     <FieldLabel>URL</FieldLabel>
@@ -398,7 +398,7 @@ export function ItemEditor() {
                   {form.metadata?.medium === "book" && (
                     <>
                       <div>
-                        <FieldLabel>Current page</FieldLabel>
+                        <FieldLabel>Página atual</FieldLabel>
                         <Input
                           type="number"
                           min={0}
@@ -409,14 +409,14 @@ export function ItemEditor() {
                         />
                       </div>
                       <div>
-                        <FieldLabel>Total pages</FieldLabel>
+                        <FieldLabel>Total de páginas</FieldLabel>
                         <Input
                           type="number"
                           min={1}
                           value={form.metadata.totalPages || ""}
                           onChange={(e) => setMeta("totalPages", Number(e.target.value) || 0)}
                           className="h-9"
-                          placeholder="e.g. 320"
+                          placeholder="ex: 320"
                         />
                       </div>
                     </>
@@ -427,19 +427,19 @@ export function ItemEditor() {
                     <Select value={form.metadata.status || "queued"} onValueChange={(v) => setMeta("status", v)}>
                       <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="queued">{form.metadata?.medium === "movie" || form.metadata?.medium === "video" ? "Want to watch" : "Queued"}</SelectItem>
-                        <SelectItem value="reading">{form.metadata?.medium === "book" ? "Reading" : form.metadata?.medium === "movie" || form.metadata?.medium === "video" ? "Watching" : "In progress"}</SelectItem>
-                        <SelectItem value="finished">{form.metadata?.medium === "movie" || form.metadata?.medium === "video" ? "Watched" : "Finished"}</SelectItem>
+                        <SelectItem value="queued">{form.metadata?.medium === "movie" || form.metadata?.medium === "video" ? "Quero assistir" : "Na fila"}</SelectItem>
+                        <SelectItem value="reading">{form.metadata?.medium === "book" ? "Lendo" : form.metadata?.medium === "movie" || form.metadata?.medium === "video" ? "Assistindo" : "Em andamento"}</SelectItem>
+                        <SelectItem value="finished">{form.metadata?.medium === "movie" || form.metadata?.medium === "video" ? "Assistido" : "Finalizado"}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <FieldLabel>Rating</FieldLabel>
+                    <FieldLabel>Avaliação</FieldLabel>
                     <Select value={String(form.metadata.rating || 0)} onValueChange={(v) => setMeta("rating", Number(v))}>
                       <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {[0, 1, 2, 3, 4, 5].map((r) => (
-                          <SelectItem key={r} value={String(r)}>{r === 0 ? "Not rated" : `${r} ★`}</SelectItem>
+                          <SelectItem key={r} value={String(r)}>{r === 0 ? "Sem avaliação" : `${r} ★`}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -449,14 +449,14 @@ export function ItemEditor() {
             )}
 
             {isContact && (
-              <MetadataSection icon="User" label="Contact details" color={typeMeta.color}>
+              <MetadataSection icon="User" label="Detalhes do contato" color={typeMeta.color}>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <FieldLabel>Relationship</FieldLabel>
-                    <Input value={form.metadata.relationship || ""} onChange={(e) => setMeta("relationship", e.target.value)} className="h-9" placeholder="friend, mentor…" />
+                    <FieldLabel>Relacionamento</FieldLabel>
+                    <Input value={form.metadata.relationship || ""} onChange={(e) => setMeta("relationship", e.target.value)} className="h-9" placeholder="amigo, mentor…" />
                   </div>
                   <div>
-                    <FieldLabel>Birthday</FieldLabel>
+                    <FieldLabel>Aniversário</FieldLabel>
                     <Input type="date" value={form.metadata.birthday ? form.metadata.birthday.slice(0, 10) : ""} onChange={(e) => setMeta("birthday", e.target.value)} className="h-9" />
                   </div>
                 </div>
@@ -464,24 +464,24 @@ export function ItemEditor() {
             )}
 
             {isSymptom && (
-              <MetadataSection icon="Thermometer" label="Symptom details" color={typeMeta.color}>
+              <MetadataSection icon="Thermometer" label="Detalhes do sintoma" color={typeMeta.color}>
                 <div>
-                  <FieldLabel>Severity (1-5)</FieldLabel>
+                  <FieldLabel>Gravidade (1-5)</FieldLabel>
                   <Input type="number" min={1} max={5} value={form.metadata.severity || ""} onChange={(e) => setMeta("severity", e.target.value)} className="h-9" />
                 </div>
               </MetadataSection>
             )}
 
             {isMedication && (
-              <MetadataSection icon="Pill" label="Medication details" color={typeMeta.color}>
+              <MetadataSection icon="Pill" label="Detalhes do medicamento" color={typeMeta.color}>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <FieldLabel>Dose</FieldLabel>
                     <Input value={form.metadata.dose || ""} onChange={(e) => setMeta("dose", e.target.value)} className="h-9" placeholder="100mg" />
                   </div>
                   <div>
-                    <FieldLabel>Frequency</FieldLabel>
-                    <Input value={form.metadata.frequency || ""} onChange={(e) => setMeta("frequency", e.target.value)} className="h-9" placeholder="daily" />
+                    <FieldLabel>Frequência</FieldLabel>
+                    <Input value={form.metadata.frequency || ""} onChange={(e) => setMeta("frequency", e.target.value)} className="h-9" placeholder="diária" />
                   </div>
                 </div>
               </MetadataSection>
@@ -489,12 +489,12 @@ export function ItemEditor() {
 
             {/* Section: Notes */}
             <div>
-              <SectionLabel icon="FileText">Notes</SectionLabel>
+              <SectionLabel icon="FileText">Notas</SectionLabel>
               <Textarea
                 rows={4}
                 value={form.content || ""}
                 onChange={(e) => set("content", e.target.value)}
-                placeholder="Add details… (Markdown supported)"
+                placeholder="Adicione detalhes… (Markdown suportado)"
                 className="resize-none"
               />
             </div>
@@ -521,7 +521,7 @@ export function ItemEditor() {
                     }
                   }}
                   list="tag-suggestions"
-                  placeholder="add tag…"
+                  placeholder="adicionar tag…"
                   className="min-w-[80px] flex-1 bg-transparent text-xs outline-none"
                 />
                 <datalist id="tag-suggestions">
@@ -536,7 +536,7 @@ export function ItemEditor() {
 
         {/* ── Sticky footer ── */}
         <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border/60 bg-background/95 px-6 py-3 backdrop-blur-md">
-          <Button variant="ghost" onClick={closeItemEditor} className="h-9">Cancel</Button>
+          <Button variant="ghost" onClick={closeItemEditor} className="h-9">Cancelar</Button>
           <Button
             onClick={save}
             disabled={create.isPending || update.isPending}
@@ -544,7 +544,7 @@ export function ItemEditor() {
             style={{ background: typeMeta.color, color: "white" }}
           >
             <Icon name={form.id ? "Save" : "Plus"} className="h-3.5 w-3.5" />
-            {form.id ? "Save changes" : "Create"}
+            {form.id ? "Salvar alterações" : "Criar"}
           </Button>
         </div>
       </DialogContent>

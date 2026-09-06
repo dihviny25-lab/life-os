@@ -8,10 +8,10 @@ import { smartDate, dateColor } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 
 const ENERGY_META = [
-  { value: 0, name: "Any", color: "#71717a", icon: "Circle" },
-  { value: 1, name: "Low", color: "#3b82f6", icon: "BatteryLow" },
-  { value: 2, name: "Medium", color: "#eab308", icon: "BatteryMedium" },
-  { value: 3, name: "High", color: "#f43f5e", icon: "BatteryFull" },
+  { value: 0, name: "Qualquer", color: "#71717a", icon: "Circle" },
+  { value: 1, name: "Baixa", color: "#3b82f6", icon: "BatteryLow" },
+  { value: 2, name: "Média", color: "#eab308", icon: "BatteryMedium" },
+  { value: 3, name: "Alta", color: "#f43f5e", icon: "BatteryFull" },
 ];
 
 export function TimeActionOverview() {
@@ -46,14 +46,14 @@ export function TimeActionOverview() {
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600">
             <Icon name="Hourglass" className="h-3.5 w-3.5" />
           </span>
-          <h3 className="text-sm font-semibold">Today's actions</h3>
+          <h3 className="text-sm font-semibold">Ações de hoje</h3>
         </div>
-        <p className="text-xs text-muted-foreground">Plan your day with tasks and habits matched to your energy.</p>
+        <p className="text-xs text-muted-foreground">Planeje seu dia com tarefas e hábitos alinhados à sua energia.</p>
         <button
           onClick={() => openItemEditor({ type: "task" })}
           className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-amber-600 hover:underline"
         >
-          <Icon name="Plus" className="h-3 w-3" /> Add a task
+          <Icon name="Plus" className="h-3 w-3" /> Adicionar tarefa
         </button>
       </motion.div>
     );
@@ -73,9 +73,9 @@ export function TimeActionOverview() {
               <Icon name="Hourglass" className="h-3.5 w-3.5" />
             </span>
             <div>
-              <h3 className="text-sm font-semibold">Today</h3>
+              <h3 className="text-sm font-semibold">Hoje</h3>
               <p className="text-[10px] text-muted-foreground">
-                {doneToday.length} done · {dueToday.length} due · {overdue.length} overdue
+                {doneToday.length} concluídas · {dueToday.length} pra hoje · {overdue.length} atrasadas
               </p>
             </div>
           </div>
@@ -98,7 +98,7 @@ export function TimeActionOverview() {
         {/* Overdue */}
         {overdue.length > 0 && (
           <div className="mb-2">
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-rose-500">Overdue</p>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-rose-500">Atrasadas</p>
             <div className="space-y-1">
               {overdue.slice(0, 3).map((t, i) => (
                 <TaskRow key={t.id} task={t} delay={i * 0.04} onClick={() => openItemDetail(t.id)} />
@@ -110,7 +110,7 @@ export function TimeActionOverview() {
         {/* Due today */}
         {dueToday.length > 0 && (
           <div className="mb-2">
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-amber-600">Due today</p>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-amber-600">Pra hoje</p>
             <div className="space-y-1">
               {dueToday.slice(0, 4).map((t, i) => (
                 <TaskRow key={t.id} task={t} delay={(overdue.length + i) * 0.04} onClick={() => openItemDetail(t.id)} />
@@ -122,7 +122,7 @@ export function TimeActionOverview() {
         {/* Upcoming */}
         {upcoming.length > 0 && (
           <div>
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Coming up</p>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Em breve</p>
             <div className="space-y-1">
               {upcoming.map((t, i) => (
                 <TaskRow key={t.id} task={t} delay={(overdue.length + dueToday.length + i) * 0.04} onClick={() => openItemDetail(t.id)} />
@@ -137,7 +137,7 @@ export function TimeActionOverview() {
         <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent p-3">
           <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-emerald-600">
             <Icon name="Repeat" className="h-3 w-3" />
-            Habits this week
+            Hábitos da semana
           </h4>
           <div className="space-y-1.5">
             {habits.slice(0, 4).map((h, i) => {

@@ -43,7 +43,7 @@ export function Shell() {
 
       if (e.key === "/") {
         e.preventDefault();
-        const input = document.querySelector<HTMLInputElement>('input[placeholder="Search your brain…"]');
+        const input = document.querySelector<HTMLInputElement>('input[placeholder="Pesquise seu cérebro…"]');
         input?.focus();
         return;
       }
@@ -141,22 +141,22 @@ function Footer({ onQuickCapture, onCommand }: { onQuickCapture: () => void; onC
           <Icon name="Brain" className="h-3.5 w-3.5 text-emerald-500" />
           <span className="font-medium">Life OS</span>
           <span className="text-muted-foreground/60">·</span>
-          <span>Your digital brain, interconnected.</span>
+          <span>Seu cérebro digital, interconectado.</span>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={onCommand} className="hidden items-center gap-1 hover:text-foreground sm:inline-flex">
-            <kbd className="rounded border border-border bg-muted px-1">⌘P</kbd> command
+            <kbd className="rounded border border-border bg-muted px-1">⌘P</kbd> comando
           </button>
           <span className="hidden text-muted-foreground/60 sm:inline">·</span>
           <span className="hidden sm:inline">
-            <kbd className="rounded border border-border bg-muted px-1">⌘K</kbd> capture
+            <kbd className="rounded border border-border bg-muted px-1">⌘K</kbd> capturar
             <span className="mx-1">·</span>
-            <kbd className="rounded border border-border bg-muted px-1">⌘P</kbd> command
+            <kbd className="rounded border border-border bg-muted px-1">⌘P</kbd> comando
             <span className="mx-1">·</span>
-            <kbd className="rounded border border-border bg-muted px-1">?</kbd> help
+            <kbd className="rounded border border-border bg-muted px-1">?</kbd> ajuda
           </span>
           <button onClick={onQuickCapture} className="inline-flex items-center gap-1 text-emerald-600 hover:underline dark:text-emerald-400">
-            <Icon name="Zap" className="h-3 w-3" /> Quick Capture
+            <Icon name="Zap" className="h-3 w-3" /> Captura Rápida
           </button>
         </div>
       </div>

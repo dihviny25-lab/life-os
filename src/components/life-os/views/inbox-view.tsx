@@ -40,7 +40,7 @@ export function InboxView() {
       const res = await fetch("/api/ai/smart-inbox", { method: "POST" });
       const data = await res.json();
       if (data.error) {
-        notify.error(`AI error: ${data.error}`);
+        notify.error(`Erro da IA: ${data.error}`);
         return;
       }
       const mapped: Record<string, any> = {};
@@ -48,9 +48,9 @@ export function InboxView() {
         mapped[s.itemId] = s;
       }
       setAiSuggestions(mapped);
-      notify.success(`AI analyzed ${data.count} inbox items`);
+      notify.success(`IA analisou ${data.count} itens da entrada`);
     } catch {
-      notify.error("Failed to run AI processing");
+      notify.error("Falha ao processar com IA");
     } finally {
       setAiLoading(false);
     }
@@ -71,7 +71,7 @@ export function InboxView() {
       delete next[itemId];
       return next;
     });
-    notify.success("Item processed");
+    notify.success("Item processado");
   }
 
   function toggle(id: string) {
@@ -87,19 +87,19 @@ export function InboxView() {
     const ids = selected.size ? Array.from(selected) : items.map((i) => i.id);
     await Promise.all(ids.map((id) => update.mutateAsync({ id, [field]: value || null })));
     setSelected(new Set());
-    notify.success(`Processed ${ids.length} item${ids.length > 1 ? "s" : ""}`);
+    notify.success(`${ids.length} ${ids.length > 1 ? "itens processados" : "item processado"}`);
   }
 
   async function clearInbox() {
     await Promise.all(items.map((i) => update.mutateAsync({ id: i.id, status: "active" })));
-    notify.success("Inbox cleared — all items activated");
+    notify.success("Entrada esvaziada — todos os itens ativados");
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Inbox"
-        subtitle="Process your captures. Decide what each one is and where it belongs."
+        title="Entrada"
+        subtitle="Processe suas capturas. Decida o que cada uma é e onde ela pertence."
         icon="Inbox"
         color="#f59e0b"
         actions={
@@ -113,11 +113,11 @@ export function InboxView() {
                 className="gap-1.5 border-violet-500/30 text-violet-600 hover:bg-violet-500/10"
               >
                 <Icon name={aiLoading ? "Loader2" : "Bot"} className={`h-3.5 w-3.5 ${aiLoading ? "animate-spin" : ""}`} />
-                <span className="hidden sm:inline">{aiLoading ? "AI analyzing…" : "AI Smart Process"}</span>
+                <span className="hidden sm:inline">{aiLoading ? "IA analisando…" : "Processamento inteligente com IA"}</span>
               </Button>
             )}
             <Button onClick={() => setQuickCaptureOpen(true)} className="gap-1.5 bg-gradient-to-br from-amber-500 to-orange-600 text-white">
-              <Icon name="Zap" className="h-4 w-4" /> Capture
+              <Icon name="Zap" className="h-4 w-4" /> Capturar
             </Button>
           </div>
         }
@@ -127,24 +127,24 @@ export function InboxView() {
       {items.length > 0 && (
         <div className="sticky top-14 z-20 flex flex-wrap items-center gap-2 rounded-2xl border border-border/60 bg-card/80 p-3 backdrop-blur-md">
           <span className="text-xs font-medium text-muted-foreground">
-            {selected.size > 0 ? `${selected.size} selected` : `${items.length} to process`}
+            {selected.size > 0 ? `${selected.size} selecionados` : `${items.length} para processar`}
           </span>
           <div className="ml-auto flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Set:</span>
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Definir:</span>
             <select onChange={(e) => e.target.value && processAll("type", e.target.value)} className="rounded-md border border-border/60 bg-background px-2 py-1 text-xs" defaultValue="">
-              <option value="">type…</option>
+              <option value="">tipo…</option>
               {ITEM_TYPES.map((t) => <option key={t.type} value={t.type}>{t.name}</option>)}
             </select>
             <select onChange={(e) => e.target.value && processAll("domainId", e.target.value)} className="rounded-md border border-border/60 bg-background px-2 py-1 text-xs" defaultValue="">
-              <option value="">domain…</option>
+              <option value="">domínio…</option>
               {domains.map((d: any) => <option key={d.id} value={d.id}>{DOMAINS.find((dd) => dd.key === d.key)?.name}</option>)}
             </select>
             <select onChange={(e) => e.target.value && processAll("projectId", e.target.value)} className="rounded-md border border-border/60 bg-background px-2 py-1 text-xs" defaultValue="">
-              <option value="">project…</option>
+              <option value="">projeto…</option>
               {projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
             <Button size="sm" variant="default" onClick={() => processAll("status", "active")} className="h-7 gap-1">
-              <Icon name="Inbox" className="h-3 w-3" /> Activate all{selected.size ? ` (${selected.size})` : ""}
+              <Icon name="Inbox" className="h-3 w-3" /> Ativar todos{selected.size ? ` (${selected.size})` : ""}
             </Button>
           </div>
         </div>
@@ -173,9 +173,9 @@ export function InboxView() {
       ) : items.length === 0 ? (
         <EmptyState
           icon="Inbox"
-          title="Inbox zero"
-          description="Your mind is clear. Capture a thought anytime with ⌘K and process it here later."
-          action={{ label: "Quick Capture", onClick: () => setQuickCaptureOpen(true) }}
+          title="Entrada zerada"
+          description="Sua mente está livre. Capture um pensamento a qualquer hora com ⌘K e processe aqui depois."
+          action={{ label: "Captura Rápida", onClick: () => setQuickCaptureOpen(true) }}
         />
       ) : (
         <div className="space-y-2">
@@ -221,30 +221,30 @@ export function InboxView() {
                           onClick={() => applyAiSuggestion(item.id)}
                           className="flex-shrink-0 rounded-md bg-violet-500 px-2 py-0.5 text-[10px] font-medium text-white hover:bg-violet-600"
                         >
-                          Apply
+                          Aplicar
                         </button>
                       </motion.div>
                     )}
                   </div>
                   <div className="flex flex-shrink-0 gap-1">
                     <button
-                      onClick={() => { update.mutate({ id: item.id, status: "active" }); notify.success("Activated"); }}
+                      onClick={() => { update.mutate({ id: item.id, status: "active" }); notify.success("Ativado"); }}
                       className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-500"
-                      title="Activate"
+                      title="Ativar"
                     >
                       <Icon name="Check" className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => { openItemEditor(item); }}
                       className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
-                      title="Edit"
+                      title="Editar"
                     >
                       <Icon name="Pencil" className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => { del.mutate(item.id); notify.success("Deleted"); }}
+                      onClick={() => { del.mutate(item.id); notify.success("Excluído"); }}
                       className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-rose-500/10 hover:text-rose-500"
-                      title="Delete"
+                      title="Excluir"
                     >
                       <Icon name="Trash2" className="h-4 w-4" />
                     </button>

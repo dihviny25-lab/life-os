@@ -101,9 +101,9 @@ export function QuickCapture() {
         await create.mutateAsync({ title, type, status: "active", domainId: domainId || null, projectId: projectId || null });
       }
       setText("");
-      notify.success(captureMode ? "Captured to inbox" : "Created");
+      notify.success(captureMode ? "Capturado para a entrada" : "Criado");
     } catch (e: any) {
-      notify.error(e.message || "Failed");
+      notify.error(e.message || "Falhou");
     }
   }
 
@@ -111,20 +111,20 @@ export function QuickCapture() {
     <Dialog open={quickCaptureOpen} onOpenChange={setQuickCaptureOpen}>
       <DialogContent className="gap-0 p-0 sm:max-w-[560px]" showCloseButton={false}>
         <DialogHeader className="sr-only">
-          <DialogTitle>Quick Capture</DialogTitle>
-          <DialogDescription>Capture a thought instantly.</DialogDescription>
+          <DialogTitle>Captura Rápida</DialogTitle>
+          <DialogDescription>Capture um pensamento instantaneamente.</DialogDescription>
         </DialogHeader>
 
         <div className="flex items-center gap-2 border-b border-border/60 px-4 py-3">
           <Icon name="Zap" className="h-4 w-4 shrink-0 text-amber-500" />
-          <span className="text-sm font-medium">Quick Capture</span>
+          <span className="text-sm font-medium">Captura Rápida</span>
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <span className="hidden items-center gap-1 text-[10px] text-muted-foreground sm:inline-flex">
-              <Kbd>{mod}K</Kbd> to open
+              <Kbd>{mod}K</Kbd> para abrir
             </span>
             <DialogClose className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
               <Icon name="X" className="h-4 w-4" />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">Fechar</span>
             </DialogClose>
           </div>
         </div>
@@ -151,7 +151,7 @@ export function QuickCapture() {
               }
             }
           }}
-          placeholder="What's on your mind? Press Enter to capture to inbox…"
+          placeholder="No que você está pensando? Aperte Enter para capturar para a entrada…"
           rows={3}
           className="w-full resize-none bg-transparent px-4 py-3 text-base outline-none placeholder:text-muted-foreground/60"
         />
@@ -191,7 +191,7 @@ export function QuickCapture() {
             onChange={(e) => setDomainId(e.target.value)}
             className="rounded-md border border-border/60 bg-background px-2 py-1 text-xs"
           >
-            <option value="">No domain</option>
+            <option value="">Sem domínio</option>
             {domains.map((d: any) => (
               <option key={d.id} value={d.id}>{d.name}</option>
             ))}
@@ -201,7 +201,7 @@ export function QuickCapture() {
             onChange={(e) => setProjectId(e.target.value)}
             className="rounded-md border border-border/60 bg-background px-2 py-1 text-xs"
           >
-            <option value="">No project</option>
+            <option value="">Sem projeto</option>
             {projects.map((p: any) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
@@ -210,26 +210,26 @@ export function QuickCapture() {
             onClick={() => { setQuickCaptureOpen(false); openItemEditor({ title: text, type }); }}
             className="ml-auto text-xs text-muted-foreground hover:text-foreground"
           >
-            More fields →
+            Mais campos →
           </button>
         </div>
 
         <div className="flex items-center justify-between gap-2 border-t border-border/60 bg-muted/30 px-4 py-3">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
             <span className="inline-flex items-center gap-1">
-              <Kbd>↵</Kbd> capture
+              <Kbd>↵</Kbd> capturar
             </span>
             <span className="inline-flex items-center gap-1">
-              <Kbd>{mod}↵</Kbd> create active
+              <Kbd>{mod}↵</Kbd> criar ativo
             </span>
             <span className="inline-flex items-center gap-1">
-              <Kbd>⇧↵</Kbd> new line
+              <Kbd>⇧↵</Kbd> nova linha
             </span>
             <span className="inline-flex items-center gap-1">
-              <Kbd>Esc</Kbd> close
+              <Kbd>Esc</Kbd> fechar
             </span>
             <span className="hidden items-center gap-1 sm:inline-flex">
-              <Kbd>1</Kbd>–<Kbd>{QUICK_TYPES.length}</Kbd> switch type
+              <Kbd>1</Kbd>–<Kbd>{QUICK_TYPES.length}</Kbd> mudar tipo
             </span>
           </div>
           <div className="flex gap-2">
@@ -238,14 +238,14 @@ export function QuickCapture() {
               disabled={!text.trim()}
               className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-background disabled:opacity-40"
             >
-              Create active
+              Criar ativo
             </button>
             <button
               onClick={() => submit(true)}
               disabled={!text.trim() || capture.isPending}
               className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
             >
-              {capture.isPending ? "Capturing…" : "Capture to inbox"}
+              {capture.isPending ? "Capturando…" : "Capturar para a entrada"}
             </button>
           </div>
         </div>
