@@ -1,5 +1,4 @@
-// Life OS — Digital Brain schema
-// Everything is an interconnected "Item" node that can be linked to Projects and to each other.
+// Central — schema
 
 generator client {
   provider = "prisma-client-js"
@@ -11,194 +10,60 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
+  id           String   @id @default(cuid())
+  email        String   @unique
   name         String?
   passwordHash String
   totpSecret   String?
-  totpVerified Boolean   @default(false)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  domains      Domain[]
-  items        Item[]
+  totpVerified Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  commitments  Commitment[]
+  bills        Bill[]
   projects     Project[]
-  tags         Tag[]
-  reviews      Review[]
-  settings     Setting[]
+  finance      Finance?
 }
 
-model Domain {
-  id String @id @default(cuid())
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  key String
-  name String
-  description String?
-  icon String?
-  color String @default("#71717a")
-  accent String?
-  order Int @default(0)
-  items Item[]
-  projects Project[]
+model Commitment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  startAt   DateTime
+  location  String?
   createdAt DateTime @default(now())
-  @@unique([userId, key])
-  @@index([userId])
+  @@index([userId, startAt])
 }
 
-model Item {
-  id String @id @default(cuid())
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type String
-  title String
-  content String?
-  domainId String?
-  domain Domain? @relation(fields: [domainId], references: [id], onDelete: SetNull)
-  projectId String?
-  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  status String @default("active")
-  priority Int @default(0)
-  energy Int @default(0)
-  startDate DateTime?
-  dueDate DateTime?
-  scheduledAt DateTime?
-  completedAt DateTime?
-  metadata String?
+model Bill {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  amount    Float
+  dueDate   DateTime
+  paid      Boolean  @default(false)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  linksFrom Link[] @relation("LinkFrom")
-  linksTo Link[] @relation("LinkTo")
-  tags TagOnItem[]
-  reviewItems ReviewItem[]
-  habitLogs HabitLog[]
-  reminders Reminder[]
-  @@index([userId])
-  @@index([userId, type])
-  @@index([userId, status])
-  @@index([domainId])
-  @@index([projectId])
-  @@index([dueDate])
-  @@index([scheduledAt])
+  @@index([userId, dueDate])
 }
 
 model Project {
-  id String @id @default(cuid())
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name String
-  description String?
-  color String @default("#71717a")
-  icon String?
-  domainId String?
-  domain Domain? @relation(fields: [domainId], references: [id], onDelete: SetNull)
-  status String @default("active")
-  progress Int @default(0)
-  startDate DateTime?
-  targetDate DateTime?
-  completedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  items Item[]
-  @@index([userId])
-  @@index([userId, status])
-  @@index([domainId])
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  area          String
+  statusNote    String?
+  needsDecision Boolean  @default(false)
+  hasAlert      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  @@index([userId, area])
 }
 
-model Link {
-  id String @id @default(cuid())
-  fromId String
-  toId String
-  type String @default("related")
-  note String?
-  createdAt DateTime @default(now())
-  from Item @relation("LinkFrom", fields: [fromId], references: [id], onDelete: Cascade)
-  to Item @relation("LinkTo", fields: [toId], references: [id], onDelete: Cascade)
-  @@unique([fromId, toId, type])
-  @@index([fromId])
-  @@index([toId])
-}
-
-model Tag {
-  id String @id @default(cuid())
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name String
-  color String @default("#71717a")
-  items TagOnItem[]
-  createdAt DateTime @default(now())
-  @@unique([userId, name])
-  @@index([userId])
-}
-
-model TagOnItem {
-  itemId String
-  tagId String
-  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  tag Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  @@id([itemId, tagId])
-}
-
-model HabitLog {
-  id String @id @default(cuid())
-  itemId String
-  date DateTime
-  value Int @default(1)
-  note String?
-  createdAt DateTime @default(now())
-  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  @@unique([itemId, date])
-  @@index([itemId, date])
-}
-
-model Review {
-  id String @id @default(cuid())
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type String
-  date DateTime
-  status String @default("completed")
-  weekStart DateTime?
-  weekEnd DateTime?
-  wins String?
-  challenges String?
-  learnings String?
-  priorities String?
-  gratitude String?
-  mood Int?
-  energy Int?
-  notes String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  items ReviewItem[]
-  @@index([userId])
-  @@index([userId, type, date])
-}
-
-model ReviewItem {
-  reviewId String
-  itemId String
-  note String?
-  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  @@id([reviewId, itemId])
-}
-
-model Reminder {
-  id String @id @default(cuid())
-  itemId String
-  remindAt DateTime
-  type String @default("notification")
-  sent Boolean @default(false)
-  createdAt DateTime @default(now())
-  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  @@index([remindAt])
-}
-
-model Setting {
-  userId String
-  key String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  value String
-  @@id([userId, key])
-  @@index([userId])
+model Finance {
+  userId           String   @id
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  availableBalance Float    @default(0)
+  updatedAt        DateTime @updatedAt
 }
