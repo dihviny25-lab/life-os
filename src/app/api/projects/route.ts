@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
   const projects = await db.project.findMany({
     where: { userId: session.userId },
     orderBy: { createdAt: "asc" },
+    include: { tasks: { orderBy: { createdAt: "asc" } } },
   });
   return ok({ projects });
 }

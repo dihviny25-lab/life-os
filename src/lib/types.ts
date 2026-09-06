@@ -13,6 +13,11 @@ export interface Bill {
   paid: boolean;
   area?: string | null;
 }
+export interface Task {
+  id: string;
+  title: string;
+  done: boolean;
+}
 export interface Project {
   id: string;
   name: string;
@@ -20,4 +25,5 @@ export interface Project {
   statusNote: string | null;
   needsDecision: boolean;
   hasAlert: boolean;
+  tasks: Task[];
 }

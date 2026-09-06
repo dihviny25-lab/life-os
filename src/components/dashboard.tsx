@@ -8,6 +8,7 @@ import { Sun, CalendarClock, Wallet, FolderKanban, Church, Code2, AlertTriangle,
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionCard } from "@/components/section-card";
 import { AddCommitmentDialog, AddBillDialog, AddProjectDialog } from "@/components/entry-dialogs";
+import { ProjectTasks } from "@/components/project-tasks";
 import { AREAS } from "@/lib/areas";
 import type { Commitment, Bill, Project } from "@/lib/types";
 
@@ -210,6 +211,7 @@ function ProjectsSection({
             <li key={p.id} className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
               <p className="font-medium">{p.name}</p>
               {p.statusNote && <p className="text-muted-foreground">→ {p.statusNote}</p>}
+              <ProjectTasks projectId={p.id} tasks={p.tasks} onChange={onChange} />
             </li>
           ))}
         </ul>

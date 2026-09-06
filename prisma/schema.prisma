@@ -94,7 +94,19 @@ model Project {
   hasAlert      Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  tasks         Task[]
   @@index([userId, area])
+}
+
+// A step inside a Project — Área → Projeto → Tarefas, per the roadmap.
+model Task {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title     String
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  @@index([projectId])
 }
 
 // Saldo atual (bancário) — não é o mesmo que dinheiro livre.

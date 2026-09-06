@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
     db.bill.findMany({ where: { userId, paid: false, dueDate: { gte: todayStart, lte: todayEnd } } }),
     db.finance.findUnique({ where: { userId } }),
     db.envelope.findMany({ where: { userId } }),
-    db.project.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
+    db.project.findMany({ where: { userId }, orderBy: { createdAt: "asc" }, include: { tasks: { orderBy: { createdAt: "asc" } } } }),
   ]);
 
   const currentBalance = finance?.currentBalance ?? 0;
