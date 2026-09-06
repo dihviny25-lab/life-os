@@ -1,10 +1,13 @@
 import { db } from "@/lib/db";
-import { ok } from "@/lib/api";
+import { ok, bad } from "@/lib/api";
+import { getUserFromRequest } from "@/lib/auth";
+import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/domains
-export async function GET() {
-  const domains = await db.domain.findMany({ orderBy: { order: "asc" } });
+export async function GET(req: NextRequest) {
+  const session = await getUserFromRequest(req);
+  if (!session) return bad("Unauthorized", 401);
+  const domains = await db.domain.findMany({ where: { userId: session.userId }, orderBy: { order: "asc" } });
   return ok({ domains });
 }

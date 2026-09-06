@@ -1,103 +1,37 @@
 import { db } from "@/lib/db";
 import { ok, bad, parseBody } from "@/lib/api";
+import { getUserFromRequest } from "@/lib/auth";
+import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/backup — full database export as JSON
-export async function GET() {
-  const [domains, projects, items, links, tags, reviews, habitLogs] = await Promise.all([
-    db.domain.findMany(),
-    db.project.findMany(),
-    db.item.findMany({ include: { tags: { include: { tag: true } } } }),
-    db.link.findMany(),
-    db.tag.findMany(),
-    db.review.findMany(),
-    db.habitLog.findMany(),
+export async function GET(req: NextRequest) {
+  const session = await getUserFromRequest(req);
+  if (!session) return bad("Unauthorized", 401);
+  const userId = session.userId;
+  const [domains, projects, items, tags, reviews] = await Promise.all([
+    db.domain.findMany({ where: { userId } }),
+    db.project.findMany({ where: { userId } }),
+    db.item.findMany({ where: { userId }, include: { tags: { include: { tag: true } } } }),
+    db.tag.findMany({ where: { userId } }),
+    db.review.findMany({ where: { userId } }),
   ]);
-
-  return ok({
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    domains,
-    projects,
-    items: items.map((i) => ({ ...i, metadata: i.metadata })),
-    links,
-    tags,
-    reviews,
-    habitLogs,
-  });
+  const itemIds = items.map((i) => i.id);
+  const [links, habitLogs] = await Promise.all([
+    itemIds.length ? db.link.findMany({ where: { fromId: { in: itemIds }, toId: { in: itemIds } } }) : [],
+    itemIds.length ? db.habitLog.findMany({ where: { itemId: { in: itemIds } } }) : [],
+  ]);
+  return ok({ version: 2, exportedAt: new Date().toISOString(), domains, projects, items, links, tags, reviews, habitLogs });
 }
 
-// POST /api/backup — restore from JSON backup
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const session = await getUserFromRequest(req);
+  if (!session) return bad("Unauthorized", 401);
   const body = await parseBody(req);
   if (!body || !body.version) return bad("Invalid backup file");
+  if (body.version !== 2) return bad("Unsupported backup version. Export a fresh version 2 backup before restoring.", 400);
 
-  try {
-    // Clear existing data (except users)
-    await db.habitLog.deleteMany();
-    await db.reviewItem.deleteMany();
-    await db.review.deleteMany();
-    await db.link.deleteMany();
-    await db.tagOnItem.deleteMany();
-    await db.tag.deleteMany();
-    await db.item.deleteMany();
-    await db.project.deleteMany();
-    await db.domain.deleteMany();
-
-    // Restore domains
-    if (body.domains) {
-      for (const d of body.domains) {
-        await db.domain.create({ data: { ...d, items: undefined, projects: undefined } });
-      }
-    }
-
-    // Restore tags
-    if (body.tags) {
-      for (const t of body.tags) {
-        await db.tag.create({ data: { ...t, items: undefined } });
-      }
-    }
-
-    // Restore projects
-    if (body.projects) {
-      for (const p of body.projects) {
-        await db.project.create({ data: { ...p, items: undefined, domain: undefined } });
-      }
-    }
-
-    // Restore items
-    if (body.items) {
-      for (const i of body.items) {
-        const { tags, domain, project, ...itemData } = i;
-        await db.item.create({ data: itemData });
-      }
-    }
-
-    // Restore links
-    if (body.links) {
-      for (const l of body.links) {
-        await db.link.create({ data: l });
-      }
-    }
-
-    // Restore reviews
-    if (body.reviews) {
-      for (const r of body.reviews) {
-        const { items, ...reviewData } = r;
-        await db.review.create({ data: reviewData });
-      }
-    }
-
-    // Restore habit logs
-    if (body.habitLogs) {
-      for (const h of body.habitLogs) {
-        await db.habitLog.create({ data: h });
-      }
-    }
-
-    return ok({ success: true, message: "Backup restored successfully" });
-  } catch (e: any) {
-    return bad(`Restore failed: ${e.message}`, 500);
-  }
+  // Destructive restore is disabled during P0 until IDs and relationships
+  // can be remapped transactionally without touching another user's data.
+  return bad("Backup restore is temporarily disabled while user-isolated restore is being implemented. Export remains available.", 503);
 }
