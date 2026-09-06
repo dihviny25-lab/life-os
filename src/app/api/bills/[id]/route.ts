@@ -21,8 +21,28 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.dueDate) data.dueDate = new Date(body.dueDate);
   if (typeof body.priority === "string") data.priority = body.priority;
   if (body.area !== undefined) data.area = body.area || null;
+  if (body.recurring !== undefined) data.recurring = body.recurring || null;
 
   const bill = await db.bill.update({ where: { id }, data });
+
+  // Marking a recurring bill as paid rolls the next occurrence forward automatically.
+  if (data.paid === true && existing.recurring) {
+    const next = new Date(existing.dueDate);
+    if (existing.recurring === "monthly") next.setMonth(next.getMonth() + 1);
+    else if (existing.recurring === "weekly") next.setDate(next.getDate() + 7);
+    await db.bill.create({
+      data: {
+        userId: session.userId,
+        title: existing.title,
+        amount: existing.amount,
+        dueDate: next,
+        area: existing.area,
+        priority: existing.priority,
+        recurring: existing.recurring,
+      },
+    });
+  }
+
   return ok(bill);
 }
 

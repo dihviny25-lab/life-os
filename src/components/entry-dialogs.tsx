@@ -109,6 +109,7 @@ export function AddBillDialog({ onAdded, defaultArea }: { onAdded: () => void; d
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [area, setArea] = useState(defaultArea || "");
+  const [recurring, setRecurring] = useState("");
 
   async function submit() {
     if (!title || !dueDate) {
@@ -118,12 +119,13 @@ export function AddBillDialog({ onAdded, defaultArea }: { onAdded: () => void; d
     await fetch("/api/bills", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, amount: Number(amount.replace(",", ".")) || 0, dueDate, area: area || null }),
+      body: JSON.stringify({ title, amount: Number(amount.replace(",", ".")) || 0, dueDate, area: area || null, recurring: recurring || null }),
     });
     setOpen(false);
     setTitle("");
     setAmount("");
     setDueDate("");
+    setRecurring("");
     onAdded();
   }
 
@@ -152,6 +154,19 @@ export function AddBillDialog({ onAdded, defaultArea }: { onAdded: () => void; d
               <Label>Vencimento</Label>
               <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
             </div>
+          </div>
+          <div>
+            <Label>Recorrência</Label>
+            <Select value={recurring || "none"} onValueChange={(v) => setRecurring(v === "none" ? "" : v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Não recorrente</SelectItem>
+                <SelectItem value="monthly">Mensal</SelectItem>
+                <SelectItem value="weekly">Semanal</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           {!defaultArea && <AreaSelect value={area} onChange={setArea} />}
         </div>

@@ -12,6 +12,7 @@ export interface Bill {
   dueDate: string;
   paid: boolean;
   area?: string | null;
+  recurring?: string | null;
 }
 export interface Task {
   id: string;
@@ -23,7 +24,8 @@ export interface Project {
   name: string;
   area: string;
   statusNote: string | null;
-  needsDecision: boolean;
+  status: string;
   hasAlert: boolean;
+  archived?: boolean;
   tasks: Task[];
 }

@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
       dueDate: new Date(body.dueDate),
       area: body.area || null,
       priority: body.priority || "normal",
+      recurring: body.recurring || null,
     },
   });
   return ok(bill);

@@ -49,6 +49,7 @@ model Bill {
   dueDate   DateTime
   paid      Boolean    @default(false)
   priority  String     @default("normal") // critico | importante | normal | opcional
+  recurring String?    // monthly | weekly | null (one-off)
   area      String?
   createdAt DateTime   @default(now())
   envelopes Envelope[]
