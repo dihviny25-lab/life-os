@@ -6,6 +6,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import type { Task } from "@/lib/types";
 
+const dateFmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
+
 export function ProjectTasks({ projectId, tasks, onChange }: { projectId: string; tasks: Task[]; onChange: () => void }) {
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
@@ -40,6 +42,9 @@ export function ProjectTasks({ projectId, tasks, onChange }: { projectId: string
         <label key={t.id} className="flex items-center gap-2 text-xs">
           <Checkbox checked={t.done} onCheckedChange={() => toggle(t)} className="h-3.5 w-3.5" />
           <span className={t.done ? "text-muted-foreground line-through" : "text-muted-foreground"}>{t.title}</span>
+          {t.done && t.doneAt && (
+            <span className="text-muted-foreground/50">{dateFmt.format(new Date(t.doneAt))}</span>
+          )}
         </label>
       ))}
       {adding ? (

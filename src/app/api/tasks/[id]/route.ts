@@ -15,7 +15,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const body = await parseBody(req);
   const data: Record<string, any> = {};
-  if (typeof body.done === "boolean") data.done = body.done;
+  if (typeof body.done === "boolean") {
+    data.done = body.done;
+    data.doneAt = body.done ? new Date() : null;
+  }
   if (typeof body.title === "string") data.title = body.title;
 
   const task = await db.task.update({ where: { id }, data });

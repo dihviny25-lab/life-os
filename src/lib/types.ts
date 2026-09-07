@@ -19,6 +19,7 @@ export interface Task {
   id: string;
   title: string;
   done: boolean;
+  doneAt?: string | null;
 }
 export interface Project {
   id: string;
