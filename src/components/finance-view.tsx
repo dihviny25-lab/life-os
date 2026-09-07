@@ -3,7 +3,19 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Wallet, AlertTriangle, CalendarDays, TrendingUp, PiggyBank, Repeat } from "lucide-react";
+import { Wallet, AlertTriangle, CalendarDays, TrendingUp, PiggyBank, Repeat, BarChart3 } from "lucide-react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -58,7 +70,11 @@ interface Overview {
   semana: { recebido: number; gasto: number; orcamentoSemanal: number };
   excedente: Excedente;
   projecao30d: { entradas: number; contas: number; margem: number };
+  historico: { semana: string; recebido: number; gasto: number }[];
+  envelopesChart: { name: string; value: number }[];
 }
+
+const PIE_COLORS = ["#38bdf8", "#34d399", "#fbbf24", "#a78bfa", "#f472b6", "#f87171"];
 
 const currency = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const dateFmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
@@ -128,9 +144,17 @@ export function FinanceView() {
       <div className="space-y-5">
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
           <SectionCard title="Situação atual" icon={Wallet} color={financasColor}>
-            <SituacaoAtual situacao={overview.situacao} onChange={load} />
+            <SituacaoAtual situacao={overview.situacao} envelopes={envelopes} onChange={load} />
           </SectionCard>
         </motion.div>
+
+        {(overview.historico.some((h) => h.recebido > 0 || h.gasto > 0) || overview.envelopesChart.length > 0) && (
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>
+            <SectionCard title="Gráficos" icon={BarChart3} color="#38bdf8">
+              <FinanceCharts historico={overview.historico} envelopesChart={overview.envelopesChart} />
+            </SectionCard>
+          </motion.div>
+        )}
 
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <SectionCard title="Precisa da sua atenção" icon={AlertTriangle} color="#f43f5e" actions={<AddBillDialog onAdded={load} />}>
@@ -283,6 +307,77 @@ export function FinanceView() {
   );
 }
 
+function FinanceCharts({
+  historico,
+  envelopesChart,
+}: {
+  historico: { semana: string; recebido: number; gasto: number }[];
+  envelopesChart: { name: string; value: number }[];
+}) {
+  const tooltipStyle = {
+    background: "var(--popover)",
+    border: "1px solid var(--border)",
+    borderRadius: 8,
+    color: "var(--foreground)",
+    fontSize: 12,
+  };
+  const hasHistory = historico.some((h) => h.recebido > 0 || h.gasto > 0);
+
+  return (
+    <div className="space-y-6">
+      {hasHistory && (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
+            Recebido vs. gasto (últimas 6 semanas)
+          </p>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={historico} margin={{ left: -20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="semana" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
+              <YAxis stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} width={48} />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                formatter={(v: number) => currency(v)}
+                cursor={{ fill: "var(--muted)" }}
+              />
+              <Bar dataKey="recebido" name="Recebido" fill="#34d399" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="gasto" name="Gasto" fill="#f87171" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {envelopesChart.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
+            Para onde vai o dinheiro comprometido
+          </p>
+          <div className="flex items-center gap-4">
+            <ResponsiveContainer width="100%" height={160}>
+              <PieChart>
+                <Pie data={envelopesChart} dataKey="value" nameKey="name" innerRadius={40} outerRadius={70} paddingAngle={2}>
+                  {envelopesChart.map((_, i) => (
+                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => currency(v)} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+            {envelopesChart.map((e, i) => (
+              <li key={e.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                {e.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Row({ label, value, valueClass, bold }: { label: string; value: string; valueClass?: string; bold?: boolean }) {
   return (
     <div className="flex items-center justify-between">
@@ -294,9 +389,11 @@ function Row({ label, value, valueClass, bold }: { label: string; value: string;
 
 function SituacaoAtual({
   situacao,
+  envelopes,
   onChange,
 }: {
   situacao: Overview["situacao"];
+  envelopes: Envelope[];
   onChange: () => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -341,6 +438,16 @@ function SituacaoAtual({
         )}
       </div>
       <Row label="Já comprometido" value={`-${currency(situacao.committed)}`} valueClass="text-rose-500" />
+      {envelopes.length > 0 && (
+        <ul className="space-y-1 border-l border-border/60 pl-2.5">
+          {envelopes.map((e) => (
+            <li key={e.id} className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>{e.name}</span>
+              <span className="tabular-nums">{currency(e.allocated)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
       <div className="my-1 border-t border-border/60" />
       <div>
         <span className="text-muted-foreground">Disponível de verdade</span>

@@ -12,7 +12,7 @@ export function DeleteButton({ onDelete, label }: { onDelete: () => Promise<void
   return (
     <button
       onClick={handle}
-      className="shrink-0 text-muted-foreground/60 transition-colors hover:text-rose-500"
+      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-rose-500/10 hover:text-rose-500"
       aria-label={`Excluir ${label}`}
     >
       <Trash2 className="h-3.5 w-3.5" />

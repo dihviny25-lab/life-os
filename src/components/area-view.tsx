@@ -162,7 +162,7 @@ export function AreaView({ area }: { area: string }) {
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         <EditProjectDialog project={p} onSaved={load} />
-                        <button onClick={() => archiveProject(p.id)} className="text-muted-foreground/60 transition-colors hover:text-foreground" aria-label={`Arquivar ${p.name}`}>
+                        <button onClick={() => archiveProject(p.id)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={`Arquivar ${p.name}`}>
                           <Archive className="h-3.5 w-3.5" />
                         </button>
                         <DeleteButton label={p.name} onDelete={() => deleteProject(p.id)} />

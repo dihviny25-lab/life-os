@@ -37,7 +37,9 @@ export async function GET(req: NextRequest) {
   const in30Days = endOfDay(new Date(now.getTime() + 30 * 86400000));
   const last30DaysStart = startOfDay(new Date(now.getTime() - 30 * 86400000));
 
-  const [finance, envelopes, weeklyBudgets, unpaidBills, weekIncome, weekExpense, recentIncome] = await Promise.all([
+  const historyStart = startOfDay(new Date(weekStart.getTime() - 5 * 7 * 86400000));
+
+  const [finance, envelopes, weeklyBudgets, unpaidBills, weekIncome, weekExpense, recentIncome, historyTx] = await Promise.all([
     db.finance.findUnique({ where: { userId } }),
     db.envelope.findMany({ where: { userId } }),
     db.weeklyBudget.findMany({ where: { userId } }),
@@ -45,6 +47,7 @@ export async function GET(req: NextRequest) {
     db.transaction.findMany({ where: { userId, type: "income", date: { gte: weekStart, lte: weekEnd } } }),
     db.transaction.findMany({ where: { userId, type: "expense", date: { gte: weekStart, lte: weekEnd } } }),
     db.transaction.findMany({ where: { userId, type: "income", date: { gte: last30DaysStart, lte: now } } }),
+    db.transaction.findMany({ where: { userId, date: { gte: historyStart, lte: weekEnd } } }),
   ]);
 
   const currentBalance = finance?.currentBalance ?? 0;
@@ -93,6 +96,20 @@ export async function GET(req: NextRequest) {
   const contas30d = unpaidBills.filter((b) => b.dueDate <= in30Days).reduce((sum, b) => sum + b.amount, 0);
   const margem30d = entradas30d - contas30d;
 
+  const weekLabelFmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" });
+  const historico = Array.from({ length: 6 }, (_, i) => {
+    const wStart = new Date(historyStart.getTime() + i * 7 * 86400000);
+    const wEnd = endOfDay(new Date(wStart.getTime() + 6 * 86400000));
+    const inWeek = historyTx.filter((t) => t.date >= wStart && t.date <= wEnd);
+    return {
+      semana: weekLabelFmt.format(wStart),
+      recebido: inWeek.filter((t) => t.type === "income").reduce((sum, t) => sum + t.amount, 0),
+      gasto: inWeek.filter((t) => t.type === "expense").reduce((sum, t) => sum + t.amount, 0),
+    };
+  });
+
+  const envelopesChart = envelopes.filter((e) => e.allocated > 0).map((e) => ({ name: e.name, value: e.allocated }));
+
   return ok({
     situacao: { currentBalance, committed, free, status: free < 0 ? "atencao" : "ok" },
     atencao,
@@ -105,5 +122,7 @@ export async function GET(req: NextRequest) {
     },
     excedente,
     projecao30d: { entradas: entradas30d, contas: contas30d, margem: margem30d },
+    historico,
+    envelopesChart,
   });
 }

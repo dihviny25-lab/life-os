@@ -24,7 +24,7 @@ import type { Commitment, Bill, Project } from "@/lib/types";
 interface DashboardData {
   today: { commitments: Commitment[]; bills: Bill[] };
   upcomingCommitments: Commitment[];
-  finance: { currentBalance: number; committed: number; free: number };
+  finance: { currentBalance: number; committed: number; free: number; envelopes: { name: string; allocated: number }[] };
   projects: Project[];
   church: Project[];
   dev: { needsDecision: number; alerts: number };
@@ -258,9 +258,21 @@ function FinanceSection({ finance }: { finance: DashboardData["finance"] }) {
             {currency(finance.free)}
           </p>
         </div>
-        <div className="flex items-center justify-between border-t border-border/70 pt-2.5">
-          <span className="text-muted-foreground">Já comprometido</span>
-          <span className="font-medium tabular-nums text-muted-foreground">{currency(finance.committed)}</span>
+        <div className="border-t border-border/70 pt-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Já comprometido</span>
+            <span className="font-medium tabular-nums text-muted-foreground">{currency(finance.committed)}</span>
+          </div>
+          {finance.envelopes.length > 0 && (
+            <ul className="mt-1.5 space-y-1 border-l border-border/70 pl-2.5">
+              {finance.envelopes.map((e) => (
+                <li key={e.name} className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{e.name}</span>
+                  <span className="tabular-nums">{currency(e.allocated)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <Link
           href="/app/areas/financas"
@@ -350,7 +362,7 @@ function ProjectGroup({
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <EditProjectDialog project={p} onSaved={onChange} />
-                <button onClick={() => archive(p.id)} className="text-muted-foreground/60 transition-colors hover:text-foreground" aria-label={`Arquivar ${p.name}`}>
+                <button onClick={() => archive(p.id)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={`Arquivar ${p.name}`}>
                   <Archive className="h-3.5 w-3.5" />
                 </button>
                 <DeleteButton label={p.name} onDelete={() => deleteProject(p.id)} />

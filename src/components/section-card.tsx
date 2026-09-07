@@ -17,7 +17,7 @@ export function SectionCard({
 }) {
   return (
     <div
-      className="overflow-hidden rounded-xl border border-border bg-card shadow-[0_1px_2px_rgba(38,33,23,0.04)]"
+      className="overflow-hidden rounded-xl border border-border bg-card shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
       style={{ borderLeft: `3px solid ${color}` }}
     >
       <div className="flex items-center justify-between gap-2 border-b border-border/70 px-4 py-3">

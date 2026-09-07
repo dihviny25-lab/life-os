@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
   return ok({
     today: { commitments: todayCommitments, bills: billsToday },
     upcomingCommitments,
-    finance: { currentBalance, committed, free },
+    finance: { currentBalance, committed, free, envelopes: envelopes.map((e) => ({ name: e.name, allocated: e.allocated })) },
     projects: projects.filter((p) => p.area !== "igreja_ministerio"),
     church: churchProjects,
     dev: { needsDecision: devNeedsDecision, alerts: devAlerts },

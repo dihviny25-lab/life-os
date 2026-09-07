@@ -26,7 +26,7 @@ import type { Commitment, Bill, Project } from "@/lib/types";
 
 function EditTrigger({ label }: { label: string }) {
   return (
-    <button className="text-muted-foreground/60 transition-colors hover:text-foreground" aria-label={`Editar ${label}`}>
+    <button className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={`Editar ${label}`}>
       <Pencil className="h-3.5 w-3.5" />
     </button>
   );
