@@ -71,7 +71,7 @@ export default function RootLayout({
       <body
         className={`${fraunces.variable} ${karla.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground`}
       >
-        <ThemeProvider attribute="class" forcedTheme="light" disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
           <QueryProvider>
             {children}
             <Toaster richColors position="bottom-right" closeButton />

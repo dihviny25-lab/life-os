@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Home,
@@ -15,6 +16,8 @@ import {
   BookOpen,
   FolderKanban,
   MoreHorizontal,
+  Sun,
+  Moon,
   X,
   LogOut,
 } from "lucide-react";
@@ -73,8 +76,9 @@ export function Sidebar() {
 
   return (
     <>
-      <div className="sticky top-0 z-30 flex w-full items-center border-b border-sidebar-border bg-sidebar/95 px-4 py-3 backdrop-blur-sm md:hidden">
+      <div className="sticky top-0 z-30 flex w-full items-center justify-between border-b border-sidebar-border bg-sidebar/95 px-4 py-3 backdrop-blur-sm md:hidden">
         <span className="font-display text-base font-semibold tracking-tight">Central</span>
+        <ThemeToggle />
       </div>
 
       <nav
@@ -115,8 +119,8 @@ export function Sidebar() {
       </AnimatePresence>
 
       <aside className="relative hidden w-60 shrink-0 overflow-hidden border-r border-sidebar-border bg-sidebar md:flex md:flex-col">
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[46%] bg-[url('/sidebar-mountains.jpg')] bg-cover bg-center opacity-55" aria-hidden="true" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sidebar via-sidebar/95 to-[#061426]/55" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[46%] bg-[url('/sidebar-mountains.jpg')] bg-cover bg-center opacity-25 dark:opacity-55" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sidebar via-sidebar/90 to-sidebar" aria-hidden="true" />
         <div className="relative z-10 border-b border-sidebar-border px-5 py-4">
           <span className="font-display text-lg font-semibold tracking-tight">Central</span>
         </div>
@@ -149,11 +153,33 @@ function SidebarContent({ items, pathname, email, onLogout }: { items: typeof NA
 
       <div className="border-t border-sidebar-border px-3 pt-3">
         {email && <p className="truncate px-3 pb-2 text-xs text-muted-foreground">{email}</p>}
-        <button onClick={onLogout} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground">
-          <LogOut className="h-4 w-4" />
-          Sair
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button onClick={onLogout} className="flex flex-1 items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground">
+            <LogOut className="h-4 w-4" />
+            Sair
+          </button>
+          <ThemeToggle />
+        </div>
       </div>
     </div>
+  );
+}
+
+function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) return <div className="h-8 w-8 shrink-0" />;
+
+  const isDark = resolvedTheme === "dark";
+  return (
+    <button
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+      aria-label={isDark ? "Mudar para tema claro" : "Mudar para tema escuro"}
+    >
+      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
   );
 }
