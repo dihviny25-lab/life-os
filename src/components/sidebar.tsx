@@ -13,7 +13,7 @@ import {
   Church,
   User,
   BookOpen,
-  Menu,
+  MoreHorizontal,
   X,
   LogOut,
 } from "lucide-react";
@@ -35,6 +35,11 @@ const NAV_ITEMS = [
   { key: "hoje", href: "/app", name: "Hoje", icon: Home, color: "#f59e0b" },
   ...AREAS.map((a) => ({ key: a.key, href: `/app/areas/${a.key}`, name: a.name, icon: AREA_ICONS[a.key] || Home, color: a.color })),
 ];
+
+// Only room for a handful of tabs on a phone — the rest live behind "Mais".
+const BOTTOM_NAV_KEYS = ["hoje", "financas", "familia", "igreja_ministerio"];
+const BOTTOM_NAV_ITEMS = NAV_ITEMS.filter((i) => BOTTOM_NAV_KEYS.includes(i.key));
+const MORE_NAV_ITEMS = NAV_ITEMS.filter((i) => !BOTTOM_NAV_KEYS.includes(i.key));
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -64,18 +69,39 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile top bar */}
-      <div className="sticky top-0 z-30 flex items-center justify-between border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur-sm md:hidden">
+      <div className="sticky top-0 z-30 flex w-full items-center border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur-sm md:hidden">
         <span className="text-sm font-bold tracking-tight">Central</span>
-        <button
-          onClick={() => setMobileOpen(true)}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-          aria-label="Abrir menu"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
       </div>
 
-      {/* Mobile drawer */}
+      {/* Mobile bottom tab bar */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-30 flex items-stretch justify-around border-t border-border/60 bg-background/95 backdrop-blur-sm md:hidden"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        {BOTTOM_NAV_ITEMS.map((item) => {
+          const active = pathname === item.href;
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              className="flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px]"
+            >
+              <Icon className="h-5 w-5" style={{ color: active ? item.color : "var(--muted-foreground)" }} />
+              <span className={active ? "font-medium text-foreground" : "text-muted-foreground"}>{item.name}</span>
+            </Link>
+          );
+        })}
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] text-muted-foreground"
+        >
+          <MoreHorizontal className="h-5 w-5" />
+          Mais
+        </button>
+      </nav>
+
+      {/* "Mais" sheet */}
       <AnimatePresence>
         {mobileOpen && (
           <>
@@ -88,15 +114,16 @@ export function Sidebar() {
               className="fixed inset-0 z-40 bg-black/40 md:hidden"
             />
             <motion.div
-              key="drawer"
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
+              key="sheet"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="fixed inset-y-0 left-0 z-50 w-64 bg-background md:hidden"
+              className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-background md:hidden"
+              style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
             >
               <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
-                <span className="text-sm font-bold tracking-tight">Central</span>
+                <span className="text-sm font-bold tracking-tight">Mais opções</span>
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -105,7 +132,7 @@ export function Sidebar() {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <SidebarContent pathname={pathname} email={email} onLogout={handleLogout} />
+              <SidebarContent items={MORE_NAV_ITEMS} pathname={pathname} email={email} onLogout={handleLogout} />
             </motion.div>
           </>
         )}
@@ -116,17 +143,19 @@ export function Sidebar() {
         <div className="border-b border-border/60 px-5 py-4">
           <span className="text-base font-bold tracking-tight">Central</span>
         </div>
-        <SidebarContent pathname={pathname} email={email} onLogout={handleLogout} />
+        <SidebarContent items={NAV_ITEMS} pathname={pathname} email={email} onLogout={handleLogout} />
       </aside>
     </>
   );
 }
 
 function SidebarContent({
+  items,
   pathname,
   email,
   onLogout,
 }: {
+  items: typeof NAV_ITEMS;
   pathname: string;
   email: string | null;
   onLogout: () => void;
@@ -134,7 +163,7 @@ function SidebarContent({
   return (
     <div className="flex flex-1 flex-col justify-between overflow-y-auto py-4">
       <nav className="space-y-0.5 px-3">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const active = pathname === item.href;
           const Icon = item.icon;
           return (

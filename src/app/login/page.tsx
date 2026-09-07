@@ -4,12 +4,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Brain, ArrowRight, Shield, Check, Loader2, QrCode, X, Lock, Mail, PlayCircle, Zap } from "lucide-react";
+import { Brain, ArrowRight, Shield, Check, Loader2, QrCode, X, Lock, Mail, Wallet, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type Step = "auth" | "verify" | "qr-confirm" | "done";
-const DEMO_EMAIL = "demo@gmail.com";
-const DEMO_PASSWORD = "Password123";
 
 export default function LoginPage() {
   const [step, setStep] = useState<Step>("auth");
@@ -73,13 +71,6 @@ export default function LoginPage() {
     finally { setLoading(false); }
   }
 
-  function fillDemoCredentials() {
-    setMode("login");
-    setEmail(DEMO_EMAIL);
-    setPassword(DEMO_PASSWORD);
-    setError("");
-  }
-
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background">
       {/* Animated background — floating orbs + grid pattern */}
@@ -114,8 +105,8 @@ export default function LoginPage() {
           >
             <Brain className="h-8 w-8 text-white" />
           </motion.div>
-          <h1 className="text-3xl font-bold tracking-tight">Life OS</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">Seu cérebro digital, protegido.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Central</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">O que precisa da sua atenção, num só lugar.</p>
         </div>
 
         <motion.div
@@ -200,31 +191,14 @@ export default function LoginPage() {
                       </>
                     )}
                   </Button>
-                  {mode === "login" && (
-                    <div className="space-y-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={loading}
-                        onClick={fillDemoCredentials}
-                        className="h-11 w-full gap-2"
-                      >
-                        <PlayCircle className="h-4 w-4" />
-                        Preencher credenciais de demonstração
-                      </Button>
-                      <p className="text-center text-[10px] text-muted-foreground">
-                        Usa demo@gmail.com com a senha Password123
-                      </p>
-                    </div>
-                  )}
                 </form>
 
                 {/* Features list */}
                 <div className="mt-6 space-y-2 border-t border-border/40 pt-4">
                   {[
-                    { icon: Lock, color: "#10b981", text: "Seus dados ficam no seu servidor" },
-                    { icon: Brain, color: "#a78bfa", text: "Links bidirecionais — tudo se conecta" },
-                    { icon: Zap, color: "#f59e0b", text: "Captura rápida com ⌘K em qualquer lugar" },
+                    { icon: Wallet, color: "#10b981", text: "Saldo real: o que já está comprometido, o que é livre de verdade" },
+                    { icon: Brain, color: "#a78bfa", text: "Cada área da sua vida, no seu lugar" },
+                    { icon: BookOpen, color: "#8b5cf6", text: "Um versículo por dia pra guardar no coração" },
                   ].map((f, i) => (
                     <motion.div
                       key={i}
@@ -329,7 +303,7 @@ export default function LoginPage() {
                 >
                   <Check className="h-8 w-8" strokeWidth={3} />
                 </motion.div>
-                <h2 className="text-xl font-bold">Bem-vindo ao Life OS</h2>
+                <h2 className="text-xl font-bold">Bem-vindo à Central</h2>
                 <p className="mt-1.5 text-sm text-muted-foreground">Abrindo seu cérebro digital…</p>
                 <Loader2 className="mx-auto mt-4 h-5 w-5 animate-spin text-muted-foreground" />
               </motion.div>
