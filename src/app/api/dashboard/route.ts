@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
 
-  const [allCommitments, billsToday, finance, envelopes, weeklyBudgets, projects, verses] = await Promise.all([
+  const [allCommitments, billsToday, finance, envelopes, weeklyBudgets, projects, verses, checkin] = await Promise.all([
     db.commitment.findMany({ where: { userId, archived: false } }),
     db.bill.findMany({ where: { userId, paid: false, dueDate: { gte: todayStart, lte: todayEnd } } }),
     db.finance.findUnique({ where: { userId } }),
@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
     db.weeklyBudget.findMany({ where: { userId } }),
     db.project.findMany({ where: { userId, archived: false }, orderBy: { createdAt: "asc" }, include: { tasks: { orderBy: { createdAt: "asc" } } } }),
     db.verse.findMany({ where: { userId }, orderBy: { order: "asc" } }),
+    db.checkin.findUnique({ where: { userId_date: { userId, date: todayStart } } }),
   ]);
 
   const verseOfDay = verses.length > 0 ? verses[verseOfDayIndex(now, verses.length)] : null;
@@ -63,5 +64,6 @@ export async function GET(req: NextRequest) {
     church: churchProjects,
     dev: { needsDecision: devNeedsDecision, alerts: devAlerts },
     verseOfDay: verseOfDay ? { reference: verseOfDay.reference, text: verseOfDay.text } : null,
+    checkin: checkin ? { mood: checkin.mood } : null,
   });
 }

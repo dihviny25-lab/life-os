@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sun, CalendarClock, Wallet, FolderKanban, Church, Code2, AlertTriangle, ArrowRight, Check, Archive, Repeat, BookOpen } from "lucide-react";
+import { Sun, CalendarClock, Wallet, FolderKanban, Church, Code2, AlertTriangle, ArrowRight, Check, Archive, Repeat, BookOpen, Smile } from "lucide-react";
+import { MOODS } from "@/lib/moods";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionCard } from "@/components/section-card";
 import {
@@ -28,6 +29,7 @@ interface DashboardData {
   church: Project[];
   dev: { needsDecision: number; alerts: number };
   verseOfDay: { reference: string; text: string | null } | null;
+  checkin: { mood: string } | null;
 }
 
 const currency = (v: number) =>
@@ -80,6 +82,9 @@ export function Dashboard() {
 
       <div className="space-y-5">
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
+          <CheckinSection checkin={data.checkin} onChange={load} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 }}>
           <TodaySection data={data} onChange={load} />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
@@ -104,6 +109,49 @@ export function Dashboard() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+function CheckinSection({ checkin, onChange }: { checkin: DashboardData["checkin"]; onChange: () => void }) {
+  const [editing, setEditing] = useState(!checkin);
+  const current = MOODS.find((m) => m.key === checkin?.mood);
+
+  async function pick(moodKey: string) {
+    await fetch("/api/checkin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mood: moodKey }),
+    });
+    setEditing(false);
+    onChange();
+  }
+
+  return (
+    <SectionCard title="Como você está?" icon={Smile} color="#f59e0b">
+      {!editing && current ? (
+        <button
+          onClick={() => setEditing(true)}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <span className="text-lg">{current.emoji}</span>
+          Hoje: <span className="font-medium text-foreground">{current.label}</span>
+          <span className="text-xs">(mudar)</span>
+        </button>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {MOODS.map((m) => (
+            <button
+              key={m.key}
+              onClick={() => pick(m.key)}
+              className="flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1.5 text-sm transition-colors hover:bg-muted"
+            >
+              <span>{m.emoji}</span>
+              {m.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </SectionCard>
   );
 }
 
