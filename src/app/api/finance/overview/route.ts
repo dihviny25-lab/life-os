@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { ok, bad } from "@/lib/api";
 import { getUserFromRequest } from "@/lib/auth";
+import { startOfWeekMonday, computeExcedente } from "@/lib/finance";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -13,13 +14,6 @@ function startOfDay(d: Date) {
 function endOfDay(d: Date) {
   const x = new Date(d);
   x.setHours(23, 59, 59, 999);
-  return x;
-}
-function startOfWeekMonday(d: Date) {
-  const x = startOfDay(d);
-  const day = x.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  x.setDate(x.getDate() + diff);
   return x;
 }
 
@@ -54,8 +48,11 @@ export async function GET(req: NextRequest) {
   ]);
 
   const currentBalance = finance?.currentBalance ?? 0;
-  const weeklyBudgetTotal = weeklyBudgets.reduce((sum, w) => sum + w.amount, 0);
-  const committed = envelopes.reduce((sum, e) => sum + e.allocated, 0) + weeklyBudgetTotal;
+  const weeklyBaseIncome = finance?.weeklyBaseIncome ?? 1500;
+  const fixedTotal = weeklyBudgets.filter((w) => w.kind === "fixed").reduce((sum, w) => sum + w.amount, 0);
+  const ceilingTotal = weeklyBudgets.filter((w) => w.kind !== "fixed").reduce((sum, w) => sum + w.amount, 0);
+  const weeklyBudgetTotal = fixedTotal + ceilingTotal;
+  const committed = envelopes.reduce((sum, e) => sum + e.allocated, 0);
   const free = currentBalance - committed;
 
   const billsWithStatus = unpaidBills.map((b) => {
@@ -82,8 +79,15 @@ export async function GET(req: NextRequest) {
   const gastoSemana = weekExpense.reduce((sum, t) => sum + t.amount, 0);
   const contasSemana = unpaidBills
     .filter((b) => b.dueDate >= weekStart && b.dueDate <= weekEnd)
-    .reduce((sum, b) => sum + b.amount, 0);
-  const livreSemana = recebidoSemana - gastoSemana - contasSemana - weeklyBudgetTotal;
+    .map((b) => ({ title: b.title, amount: b.amount }));
+
+  const excedente = computeExcedente({
+    weeklyBaseIncome,
+    recebidoSemana,
+    fixedTotal,
+    ceilingTotal,
+    contasProximas: contasSemana,
+  });
 
   const entradas30d = recentIncome.reduce((sum, t) => sum + t.amount, 0);
   const contas30d = unpaidBills.filter((b) => b.dueDate <= in30Days).reduce((sum, b) => sum + b.amount, 0);
@@ -97,10 +101,9 @@ export async function GET(req: NextRequest) {
       weekEnd,
       recebido: recebidoSemana,
       gasto: gastoSemana,
-      contas: contasSemana,
       orcamentoSemanal: weeklyBudgetTotal,
-      livre: livreSemana,
     },
+    excedente,
     projecao30d: { entradas: entradas30d, contas: contas30d, margem: margem30d },
   });
 }

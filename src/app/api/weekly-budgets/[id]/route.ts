@@ -17,6 +17,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const data: Record<string, any> = {};
   if (typeof body.name === "string") data.name = body.name;
   if (body.amount !== undefined) data.amount = Number(body.amount) || 0;
+  if (body.kind === "fixed" || body.kind === "ceiling") data.kind = body.kind;
+  if (body.actualThisWeek !== undefined) {
+    data.actualThisWeek = Number(body.actualThisWeek) || 0;
+    data.weekOf = new Date();
+  }
 
   const weeklyBudget = await db.weeklyBudget.update({ where: { id }, data });
   return ok(weeklyBudget);

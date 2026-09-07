@@ -14,6 +14,7 @@ import {
   AddWeeklyBudgetDialog,
   EditEnvelopeDialog,
   EditWeeklyBudgetDialog,
+  LogActualDialog,
 } from "@/components/finance-dialogs";
 import { AddBillDialog, EditBillDialog } from "@/components/entry-dialogs";
 import { DeleteButton } from "@/components/delete-button";
@@ -33,6 +34,8 @@ interface WeeklyBudgetItem {
   id: string;
   name: string;
   amount: number;
+  kind: string;
+  actualThisWeek: number;
 }
 interface BillWithStatus extends Bill {
   separated: number;
@@ -40,10 +43,20 @@ interface BillWithStatus extends Bill {
   status: "pago" | "atrasado" | "separado" | "parcial" | "sem_cobertura";
   priority: string;
 }
+interface Excedente {
+  weeklyBaseIncome: number;
+  recebidoSemana: number;
+  dizimoSemana: number;
+  liquidoSemana: number;
+  necessidadesFixas: number;
+  sobraOuDeficit: number;
+  sugestao: { label: string; amount: number }[] | null;
+}
 interface Overview {
   situacao: { currentBalance: number; committed: number; free: number; status: "atencao" | "ok" };
   atencao: BillWithStatus[];
-  semana: { recebido: number; gasto: number; contas: number; orcamentoSemanal: number; livre: number };
+  semana: { recebido: number; gasto: number; orcamentoSemanal: number };
+  excedente: Excedente;
   projecao30d: { entradas: number; contas: number; margem: number };
 }
 
@@ -163,16 +176,29 @@ export function FinanceView() {
             }
           >
             <div className="space-y-2 text-sm">
-              <Row label="Recebido" value={currency(overview.semana.recebido)} />
-              <Row label="Gastos" value={currency(overview.semana.gasto)} valueClass="text-rose-500" />
-              <Row label="Contas da semana" value={currency(overview.semana.contas)} valueClass="text-rose-500" />
-              <Row label="Orçamento semanal" value={currency(overview.semana.orcamentoSemanal)} valueClass="text-rose-500" />
+              <Row label={`Recebido (base planejada: ${currency(overview.excedente.weeklyBaseIncome)})`} value={currency(overview.excedente.recebidoSemana)} />
+              <Row label="Dízimo (10%, separado automaticamente)" value={`-${currency(overview.excedente.dizimoSemana)}`} valueClass="text-rose-500" />
+              <Row label="Líquido" value={currency(overview.excedente.liquidoSemana)} />
+              <Row label="Necessidades fixas (carro+casa+teto)" value={`-${currency(overview.excedente.necessidadesFixas)}`} valueClass="text-rose-500" />
+              <div className="my-1 border-t border-border/60" />
               <Row
-                label="Livre"
-                value={currency(overview.semana.livre)}
-                valueClass={overview.semana.livre >= 0 ? "text-emerald-600" : "text-rose-500"}
+                label={overview.excedente.sobraOuDeficit >= 0 ? "Excedente da semana" : "Déficit da semana"}
+                value={currency(overview.excedente.sobraOuDeficit)}
+                valueClass={overview.excedente.sobraOuDeficit >= 0 ? "text-emerald-600" : "text-rose-500"}
                 bold
               />
+              {overview.excedente.sugestao && (
+                <div className="mt-2 space-y-1 rounded-lg bg-muted/40 p-2.5">
+                  <p className="text-xs font-semibold text-muted-foreground">Sugestão pra esse excedente:</p>
+                  {overview.excedente.sugestao.map((s, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">{s.label}</span>
+                      <span className="font-medium tabular-nums">{currency(s.amount)}</span>
+                    </div>
+                  ))}
+                  <p className="pt-1 text-[11px] text-muted-foreground">Isso é só sugestão — você decide onde de fato colocar (envelope, adiantar conta, etc.)</p>
+                </div>
+              )}
             </div>
           </SectionCard>
         </motion.div>
@@ -226,13 +252,26 @@ export function FinanceView() {
             ) : (
               <ul className="space-y-1.5">
                 {weeklyBudgets.map((w) => (
-                  <li key={w.id} className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-sm">
-                    <span className="font-medium">{w.name}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold tabular-nums">{currency(w.amount)}/semana</span>
-                      <EditWeeklyBudgetDialog weeklyBudget={w} onSaved={load} />
-                      <DeleteButton label={w.name} onDelete={async () => { await fetch(`/api/weekly-budgets/${w.id}`, { method: "DELETE" }); load(); }} />
+                  <li key={w.id} className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">
+                        {w.name}
+                        <span className="ml-1.5 rounded-full bg-background px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                          {w.kind === "fixed" ? "fixo" : "teto"}
+                        </span>
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold tabular-nums">{currency(w.amount)}/semana</span>
+                        <EditWeeklyBudgetDialog weeklyBudget={w} onSaved={load} />
+                        <DeleteButton label={w.name} onDelete={async () => { await fetch(`/api/weekly-budgets/${w.id}`, { method: "DELETE" }); load(); }} />
+                      </div>
                     </div>
+                    {w.kind !== "fixed" && (
+                      <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+                        <span>Executado: {currency(w.actualThisWeek)} de {currency(w.amount)}</span>
+                        <LogActualDialog weeklyBudget={w} onSaved={load} />
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>

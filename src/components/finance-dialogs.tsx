@@ -89,10 +89,28 @@ function EditTrigger({ label }: { label: string }) {
   );
 }
 
+function KindSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <Label>Tipo</Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ceiling">Teto (ex: mercado, combustível — sobra não é livre)</SelectItem>
+          <SelectItem value="fixed">Fixo (ex: provisão de carro/casa — sempre comprometido)</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 export function AddWeeklyBudgetDialog({ onAdded }: { onAdded: () => void }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
+  const [kind, setKind] = useState("ceiling");
 
   async function submit() {
     const value = Number(amount.replace(",", "."));
@@ -103,11 +121,12 @@ export function AddWeeklyBudgetDialog({ onAdded }: { onAdded: () => void }) {
     await fetch("/api/weekly-budgets", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, amount: value }),
+      body: JSON.stringify({ name, amount: value, kind }),
     });
     setOpen(false);
     setName("");
     setAmount("");
+    setKind("ceiling");
     onAdded();
   }
 
@@ -131,6 +150,7 @@ export function AddWeeklyBudgetDialog({ onAdded }: { onAdded: () => void }) {
             <Label>Valor por semana</Label>
             <Input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" inputMode="decimal" />
           </div>
+          <KindSelect value={kind} onChange={setKind} />
         </div>
         <DialogFooter>
           <Button onClick={submit}>Adicionar</Button>
@@ -144,12 +164,13 @@ export function EditWeeklyBudgetDialog({
   weeklyBudget,
   onSaved,
 }: {
-  weeklyBudget: { id: string; name: string; amount: number };
+  weeklyBudget: { id: string; name: string; amount: number; kind: string };
   onSaved: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(weeklyBudget.name);
   const [amount, setAmount] = useState(String(weeklyBudget.amount));
+  const [kind, setKind] = useState(weeklyBudget.kind);
 
   async function submit() {
     const value = Number(amount.replace(",", "."));
@@ -160,7 +181,7 @@ export function EditWeeklyBudgetDialog({
     await fetch(`/api/weekly-budgets/${weeklyBudget.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, amount: value }),
+      body: JSON.stringify({ name, amount: value, kind }),
     });
     setOpen(false);
     onSaved();
@@ -183,6 +204,57 @@ export function EditWeeklyBudgetDialog({
           <div>
             <Label>Valor por semana</Label>
             <Input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" />
+          </div>
+          <KindSelect value={kind} onChange={setKind} />
+        </div>
+        <DialogFooter>
+          <Button onClick={submit}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function LogActualDialog({
+  weeklyBudget,
+  onSaved,
+}: {
+  weeklyBudget: { id: string; name: string; amount: number; actualThisWeek: number };
+  onSaved: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [actual, setActual] = useState(String(weeklyBudget.actualThisWeek || ""));
+
+  async function submit() {
+    const value = Number(actual.replace(",", "."));
+    if (Number.isNaN(value) || value < 0) {
+      notify.error("Valor inválido");
+      return;
+    }
+    await fetch(`/api/weekly-budgets/${weeklyBudget.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ actualThisWeek: value }),
+    });
+    setOpen(false);
+    onSaved();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+          Já gastei
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Quanto já gastou com {weeklyBudget.name} essa semana?</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Valor gasto (planejado: {weeklyBudget.amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })})</Label>
+            <Input autoFocus value={actual} onChange={(e) => setActual(e.target.value)} placeholder="0,00" inputMode="decimal" />
           </div>
         </div>
         <DialogFooter>

@@ -118,16 +118,21 @@ model Task {
   @@index([projectId])
 }
 
-// A recurring weekly spending category without a fixed due date
-// (mercado, combustível...) — money that already has a destination,
-// even before it's spent. Counted into "comprometido" alongside envelopes.
+// A recurring weekly spending category without a fixed due date.
+// kind "fixed" (carro, casa) always counts fully into "comprometido" —
+// it's savings toward a real obligation. kind "ceiling" (mercado,
+// combustível...) is a budget cap: only what's left unspent this week
+// counts as committed, so under-spending doesn't get lost as "free".
 model WeeklyBudget {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name      String
-  amount    Float
-  createdAt DateTime @default(now())
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  amount         Float
+  kind           String   @default("ceiling") // fixed | ceiling
+  actualThisWeek Float    @default(0)
+  weekOf         DateTime @default(now())
+  createdAt      DateTime @default(now())
   @@index([userId])
 }
 
@@ -159,8 +164,9 @@ model Checkin {
 // Saldo atual (bancário) — não é o mesmo que dinheiro livre.
 // Livre = currentBalance - soma dos Envelope.allocated.
 model Finance {
-  userId         String   @id
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  currentBalance Float    @default(0)
-  updatedAt      DateTime @updatedAt
+  userId           String   @id
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentBalance   Float    @default(0)
+  weeklyBaseIncome Float    @default(1500)
+  updatedAt        DateTime @updatedAt
 }

@@ -39,5 +39,13 @@ export async function POST(req: NextRequest) {
       date: body.date ? new Date(body.date) : new Date(),
     },
   });
+
+  if (body.type === "income") {
+    const dizimo = Math.round(amount * 0.1 * 100) / 100;
+    await db.envelope.create({
+      data: { userId: session.userId, name: `Dízimo (${body.title})`, allocated: dizimo },
+    });
+  }
+
   return ok(transaction);
 }
