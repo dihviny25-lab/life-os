@@ -108,7 +108,7 @@ export function FinanceView() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
-      <h1 className="mb-6 text-2xl font-bold tracking-tight" style={{ color: financasColor }}>
+      <h1 className="mb-6 font-display text-[26px] font-semibold tracking-tight" style={{ color: financasColor }}>
         Financeiro
       </h1>
 
@@ -303,12 +303,12 @@ function SituacaoAtual({
       </div>
       <Row label="Já comprometido" value={`-${currency(situacao.committed)}`} valueClass="text-rose-500" />
       <div className="my-1 border-t border-border/60" />
-      <Row
-        label="Disponível de verdade"
-        value={currency(situacao.free)}
-        valueClass={situacao.free >= 0 ? "text-emerald-600" : "text-rose-500"}
-        bold
-      />
+      <div>
+        <span className="text-muted-foreground">Disponível de verdade</span>
+        <p className={`font-display text-3xl font-semibold tabular-nums ${situacao.free >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
+          {currency(situacao.free)}
+        </p>
+      </div>
       <span
         className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${
           situacao.status === "atencao" ? "bg-rose-500/10 text-rose-600 dark:text-rose-400" : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"

@@ -78,7 +78,7 @@ export function Dashboard() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
-      <h1 className="mb-6 text-2xl font-bold tracking-tight">O que precisa da minha atenção?</h1>
+      <h1 className="mb-6 font-display text-[26px] font-semibold italic tracking-tight">O que precisa da minha atenção?</h1>
 
       <div className="space-y-5">
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
@@ -259,12 +259,14 @@ function VerseOfDaySection({ verse }: { verse: { reference: string; text: string
 function FinanceSection({ finance }: { finance: DashboardData["finance"] }) {
   return (
     <SectionCard title="Financeiro" icon={Wallet} color={financasColor}>
-      <div className="space-y-2 text-sm">
-        <div className="flex items-center justify-between">
+      <div className="space-y-3 text-sm">
+        <div>
           <span className="text-muted-foreground">Disponível de verdade</span>
-          <span className={`text-base font-bold tabular-nums ${finance.free >= 0 ? "text-emerald-600" : "text-rose-500"}`}>{currency(finance.free)}</span>
+          <p className={`font-display text-3xl font-semibold tabular-nums ${finance.free >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
+            {currency(finance.free)}
+          </p>
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between border-t border-border/70 pt-2.5">
           <span className="text-muted-foreground">Já comprometido</span>
           <span className="font-medium tabular-nums text-muted-foreground">{currency(finance.committed)}</span>
         </div>

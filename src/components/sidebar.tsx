@@ -69,13 +69,13 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile top bar */}
-      <div className="sticky top-0 z-30 flex w-full items-center border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur-sm md:hidden">
-        <span className="text-sm font-bold tracking-tight">Central</span>
+      <div className="sticky top-0 z-30 flex w-full items-center border-b border-sidebar-border bg-sidebar/95 px-4 py-3 backdrop-blur-sm md:hidden">
+        <span className="font-display text-base font-semibold tracking-tight">Central</span>
       </div>
 
       {/* Mobile bottom tab bar */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 flex items-stretch justify-around border-t border-border/60 bg-background/95 backdrop-blur-sm md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 flex items-stretch justify-around border-t border-sidebar-border bg-sidebar/95 backdrop-blur-sm md:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {BOTTOM_NAV_ITEMS.map((item) => {
@@ -119,11 +119,11 @@ export function Sidebar() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-background md:hidden"
+              className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-sidebar md:hidden"
               style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
             >
-              <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
-                <span className="text-sm font-bold tracking-tight">Mais opções</span>
+              <div className="flex items-center justify-between border-b border-sidebar-border px-4 py-3">
+                <span className="font-display text-base font-semibold tracking-tight">Mais opções</span>
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -139,9 +139,9 @@ export function Sidebar() {
       </AnimatePresence>
 
       {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 border-r border-border/60 bg-background md:flex md:flex-col">
-        <div className="border-b border-border/60 px-5 py-4">
-          <span className="text-base font-bold tracking-tight">Central</span>
+      <aside className="hidden w-60 shrink-0 border-r border-sidebar-border bg-sidebar md:flex md:flex-col">
+        <div className="border-b border-sidebar-border px-5 py-4">
+          <span className="font-display text-lg font-semibold tracking-tight">Central</span>
         </div>
         <SidebarContent items={NAV_ITEMS} pathname={pathname} email={email} onLogout={handleLogout} />
       </aside>
@@ -171,7 +171,7 @@ function SidebarContent({
               {active && (
                 <motion.div
                   layoutId="sidebar-active"
-                  className="absolute inset-0 rounded-lg bg-muted"
+                  className="absolute inset-0 rounded-lg bg-sidebar-accent"
                   transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
                 />
               )}
@@ -189,11 +189,11 @@ function SidebarContent({
         })}
       </nav>
 
-      <div className="border-t border-border/60 px-3 pt-3">
+      <div className="border-t border-sidebar-border px-3 pt-3">
         {email && <p className="truncate px-3 pb-2 text-xs text-muted-foreground">{email}</p>}
         <button
           onClick={onLogout}
-          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
         >
           <LogOut className="h-4 w-4" />
           Sair

@@ -16,8 +16,11 @@ export function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
-      <div className="flex items-center justify-between gap-2 border-b border-border/60 bg-muted/30 px-4 py-3">
+    <div
+      className="overflow-hidden rounded-xl border border-border bg-card shadow-[0_1px_2px_rgba(38,33,23,0.04)]"
+      style={{ borderLeft: `3px solid ${color}` }}
+    >
+      <div className="flex items-center justify-between gap-2 border-b border-border/70 px-4 py-3">
         <div className="flex items-center gap-2.5">
           <span
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
@@ -25,7 +28,7 @@ export function SectionCard({
           >
             <Icon className="h-4 w-4" />
           </span>
-          <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
+          <h2 className="font-display text-[15px] font-semibold tracking-tight">{title}</h2>
         </div>
         {actions}
       </div>
