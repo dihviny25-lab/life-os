@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sun, CalendarClock, Wallet, FolderKanban, Church, Code2, AlertTriangle, ArrowRight, Check, Archive, Repeat } from "lucide-react";
+import { Sun, CalendarClock, Wallet, FolderKanban, Church, Code2, AlertTriangle, ArrowRight, Check, Archive, Repeat, BookOpen } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionCard } from "@/components/section-card";
 import {
@@ -27,6 +27,7 @@ interface DashboardData {
   projects: Project[];
   church: Project[];
   dev: { needsDecision: number; alerts: number };
+  verseOfDay: { reference: string; text: string | null } | null;
 }
 
 const currency = (v: number) =>
@@ -84,6 +85,11 @@ export function Dashboard() {
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <UpcomingSection commitments={data.upcomingCommitments} onChange={load} />
         </motion.div>
+        {data.verseOfDay && (
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+            <VerseOfDaySection verse={data.verseOfDay} />
+          </motion.div>
+        )}
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <FinanceSection finance={data.finance} />
         </motion.div>
@@ -189,6 +195,15 @@ function UpcomingSection({ commitments, onChange }: { commitments: Commitment[];
           ))}
         </ul>
       )}
+    </SectionCard>
+  );
+}
+
+function VerseOfDaySection({ verse }: { verse: { reference: string; text: string | null } }) {
+  return (
+    <SectionCard title="Versículo do dia" icon={BookOpen} color="#8b5cf6">
+      <p className="text-sm italic leading-relaxed">{verse.text ?? "Texto não cadastrado."}</p>
+      <p className="mt-2 text-xs font-medium text-muted-foreground">{verse.reference} (ARC)</p>
     </SectionCard>
   );
 }

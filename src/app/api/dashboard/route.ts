@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { ok, bad } from "@/lib/api";
 import { getUserFromRequest } from "@/lib/auth";
 import { projectCommitment } from "@/lib/recurrence";
+import { verseOfDayIndex } from "@/lib/verse";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -26,14 +27,17 @@ export async function GET(req: NextRequest) {
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
 
-  const [allCommitments, billsToday, finance, envelopes, weeklyBudgets, projects] = await Promise.all([
+  const [allCommitments, billsToday, finance, envelopes, weeklyBudgets, projects, verses] = await Promise.all([
     db.commitment.findMany({ where: { userId, archived: false } }),
     db.bill.findMany({ where: { userId, paid: false, dueDate: { gte: todayStart, lte: todayEnd } } }),
     db.finance.findUnique({ where: { userId } }),
     db.envelope.findMany({ where: { userId } }),
     db.weeklyBudget.findMany({ where: { userId } }),
     db.project.findMany({ where: { userId, archived: false }, orderBy: { createdAt: "asc" }, include: { tasks: { orderBy: { createdAt: "asc" } } } }),
+    db.verse.findMany({ where: { userId }, orderBy: { order: "asc" } }),
   ]);
+
+  const verseOfDay = verses.length > 0 ? verses[verseOfDayIndex(now, verses.length)] : null;
 
   const projected = allCommitments
     .map((c) => projectCommitment(c, now))
@@ -58,5 +62,6 @@ export async function GET(req: NextRequest) {
     projects: projects.filter((p) => p.area !== "igreja_ministerio"),
     church: churchProjects,
     dev: { needsDecision: devNeedsDecision, alerts: devAlerts },
+    verseOfDay: verseOfDay ? { reference: verseOfDay.reference, text: verseOfDay.text } : null,
   });
 }

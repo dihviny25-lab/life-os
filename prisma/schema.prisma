@@ -25,6 +25,7 @@ model User {
   transactions Transaction[]
   envelopes    Envelope[]
   weeklyBudgets WeeklyBudget[]
+  verses       Verse[]
 }
 
 model Commitment {
@@ -127,6 +128,19 @@ model WeeklyBudget {
   amount    Float
   createdAt DateTime @default(now())
   @@index([userId])
+}
+
+// A verse from the memorization list — one is shown per day, picked
+// deterministically so it stays the same all day and rotates daily.
+model Verse {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reference String
+  text      String?
+  order     Int
+  createdAt DateTime @default(now())
+  @@index([userId, order])
 }
 
 // Saldo atual (bancário) — não é o mesmo que dinheiro livre.
