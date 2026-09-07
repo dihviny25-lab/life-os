@@ -16,6 +16,7 @@ import {
 } from "@/components/entry-dialogs";
 import { ProjectTasks } from "@/components/project-tasks";
 import { DeleteButton } from "@/components/delete-button";
+import { MediaLists } from "@/components/media-lists";
 import { AREAS } from "@/lib/areas";
 import type { Commitment, Bill, Project } from "@/lib/types";
 
@@ -174,6 +175,12 @@ export function AreaView({ area }: { area: string }) {
             )}
           </SectionCard>
         </motion.div>
+
+        {area === "pessoal" && (
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <MediaLists />
+          </motion.div>
+        )}
       </div>
     </div>
   );

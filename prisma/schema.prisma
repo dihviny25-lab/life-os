@@ -27,6 +27,7 @@ model User {
   weeklyBudgets WeeklyBudget[]
   verses       Verse[]
   checkins     Checkin[]
+  mediaItems   MediaItem[]
 }
 
 model Commitment {
@@ -134,6 +135,21 @@ model WeeklyBudget {
   weekOf         DateTime @default(now())
   createdAt      DateTime @default(now())
   @@index([userId])
+}
+
+// Personal reading/watching list — livro or filme_serie, tracked through
+// three real states (a plain done/not-done checklist can't tell "lendo"
+// from "próximo"), unlike the generic Project/Task checklist elsewhere.
+model MediaItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String // livro | filme_serie
+  title     String
+  status    String   @default("proximo") // proximo | andamento | concluido
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId, kind, status])
 }
 
 // A verse from the memorization list — one is shown per day, picked
