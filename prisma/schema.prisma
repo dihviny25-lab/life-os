@@ -1,6 +1,4 @@
 // Central — schema
-// Auth data lives in Postgres (Neon). The app's dashboard data (commitments,
-// bills, projects, finance) lives in Notion — see src/lib/notion.ts.
 
 generator client {
   provider = "prisma-client-js"
@@ -20,4 +18,149 @@ model User {
   totpVerified Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  commitments  Commitment[]
+  bills        Bill[]
+  projects     Project[]
+  finance      Finance?
+  transactions Transaction[]
+  envelopes    Envelope[]
+  weeklyBudgets WeeklyBudget[]
+  verses       Verse[]
+  checkins     Checkin[]
+}
+
+model Commitment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  startAt   DateTime
+  location  String?
+  area      String?
+  recurring String?  // daily | weekdays | weekly | monthly | null (one-off)
+  archived  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  @@index([userId, startAt])
+  @@index([userId, area])
+}
+
+model Bill {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  amount    Float
+  dueDate   DateTime
+  paid      Boolean    @default(false)
+  priority  String     @default("normal") // critico | importante | normal | opcional
+  recurring String?    // monthly | weekly | null (one-off)
+  area      String?
+  createdAt DateTime   @default(now())
+  envelopes Envelope[]
+  @@index([userId, dueDate])
+  @@index([userId, area])
+}
+
+// Something that happened: money in or out.
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // income | expense
+  title     String
+  amount    Float
+  date      DateTime
+  createdAt DateTime @default(now())
+  @@index([userId, date])
+  @@index([userId, type])
+}
+
+// Money already set aside for a purpose (optionally toward a specific Bill).
+model Envelope {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  allocated Float    @default(0)
+  billId    String?
+  bill      Bill?    @relation(fields: [billId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId])
+}
+
+model Project {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  area       String
+  statusNote String?
+  status     String   @default("em_andamento") // ideia | em_andamento | aguardando_decisao | concluido
+  hasAlert   Boolean  @default(false)
+  archived   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tasks      Task[]
+  @@index([userId, area])
+  @@index([userId, status])
+}
+
+// A step inside a Project — Área → Projeto → Tarefas, per the roadmap.
+model Task {
+  id        String    @id @default(cuid())
+  projectId String
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title     String
+  done      Boolean   @default(false)
+  doneAt    DateTime?
+  createdAt DateTime  @default(now())
+  @@index([projectId])
+}
+
+// A recurring weekly spending category without a fixed due date
+// (mercado, combustível...) — money that already has a destination,
+// even before it's spent. Counted into "comprometido" alongside envelopes.
+model WeeklyBudget {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  amount    Float
+  createdAt DateTime @default(now())
+  @@index([userId])
+}
+
+// A verse from the memorization list — one is shown per day, picked
+// deterministically so it stays the same all day and rotates daily.
+model Verse {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reference String
+  text      String?
+  order     Int
+  createdAt DateTime @default(now())
+  @@index([userId, order])
+}
+
+// Daily "how are you feeling" check-in — one per user per day.
+model Checkin {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime // truncated to midnight, one row per day
+  mood      String
+  note      String?
+  createdAt DateTime @default(now())
+  @@unique([userId, date])
+}
+
+// Saldo atual (bancário) — não é o mesmo que dinheiro livre.
+// Livre = currentBalance - soma dos Envelope.allocated.
+model Finance {
+  userId         String   @id
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentBalance Float    @default(0)
+  updatedAt      DateTime @updatedAt
 }

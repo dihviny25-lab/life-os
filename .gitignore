@@ -28,6 +28,9 @@ bun.lockb
 # IDE
 .vscode/
 .idea/
+
+# TypeScript build cache
+*.tsbuildinfo
 *.swp
 *.swo
 *~

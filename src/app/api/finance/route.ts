@@ -1,24 +1,26 @@
+import { db } from "@/lib/db";
 import { ok, bad, parseBody } from "@/lib/api";
 import { getUserFromRequest } from "@/lib/auth";
-import { notionQuery, notionCreatePage, notionUpdatePage, DB, title, numberProp, dateProp, plainNumber } from "@/lib/notion";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
-
-async function latestFinanceRow() {
-  const pages = await notionQuery(DB.finance, {
-    sorts: [{ timestamp: "created_time", direction: "descending" }],
-    page_size: 1,
-  });
-  return pages[0] || null;
-}
 
 export async function GET(req: NextRequest) {
   const session = await getUserFromRequest(req);
   if (!session) return bad("Unauthorized", 401);
 
-  const row = await latestFinanceRow();
-  return ok({ availableBalance: row ? plainNumber(row.properties["Disponível"]) : 0 });
+  const [finance, envelopes, weeklyBudgets] = await Promise.all([
+    db.finance.findUnique({ where: { userId: session.userId } }),
+    db.envelope.findMany({ where: { userId: session.userId } }),
+    db.weeklyBudget.findMany({ where: { userId: session.userId } }),
+  ]);
+
+  const currentBalance = finance?.currentBalance ?? 0;
+  const committed =
+    envelopes.reduce((sum, e) => sum + e.allocated, 0) + weeklyBudgets.reduce((sum, w) => sum + w.amount, 0);
+  const free = currentBalance - committed;
+
+  return ok({ currentBalance, committed, free });
 }
 
 export async function PUT(req: NextRequest) {
@@ -26,22 +28,13 @@ export async function PUT(req: NextRequest) {
   if (!session) return bad("Unauthorized", 401);
 
   const body = await parseBody(req);
-  const availableBalance = Number(body.availableBalance);
-  if (Number.isNaN(availableBalance)) return bad("availableBalance must be a number");
+  const currentBalance = Number(body.currentBalance);
+  if (Number.isNaN(currentBalance)) return bad("currentBalance must be a number");
 
-  const now = new Date();
-  const row = await latestFinanceRow();
-  if (row) {
-    await notionUpdatePage(row.id, {
-      "Disponível": numberProp(availableBalance),
-      "Atualizado em": dateProp(now.toISOString()),
-    });
-  } else {
-    await notionCreatePage(DB.finance, {
-      Semana: title(now.toISOString().slice(0, 10)),
-      "Disponível": numberProp(availableBalance),
-      "Atualizado em": dateProp(now.toISOString()),
-    });
-  }
-  return ok({ availableBalance });
+  const finance = await db.finance.upsert({
+    where: { userId: session.userId },
+    update: { currentBalance },
+    create: { userId: session.userId, currentBalance },
+  });
+  return ok(finance);
 }

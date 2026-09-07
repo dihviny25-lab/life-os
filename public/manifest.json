@@ -1,25 +1,39 @@
 {
-  "name": "Central de Comando",
+  "name": "Central",
   "short_name": "Central",
-  "description": "Sua central pessoal para organizar o que precisa da sua atenção.",
+  "description": "O que precisa da sua atenção, num só lugar.",
   "id": "/",
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#07111f",
-  "theme_color": "#0b1f3a",
+  "background_color": "#f6f1e6",
+  "theme_color": "#33415c",
   "orientation": "any",
   "categories": ["productivity", "utilities"],
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%2307111f'/%3E%3Ccircle cx='96' cy='96' r='56' fill='none' stroke='%23eaf2ff' stroke-width='18' stroke-dasharray='275 77' transform='rotate(-42 96 96)'/%3E%3Cpath d='M110 80l-12 30-30 14 14-30 28-14z' fill='%2338a9ff'/%3E%3Cpath d='M110 80L82 94l16 16z' fill='%23f8fbff'/%3E%3C/svg%3E",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%2307111f'/%3E%3Ccircle cx='256' cy='256' r='150' fill='none' stroke='%23eaf2ff' stroke-width='48' stroke-dasharray='737 204' transform='rotate(-42 256 256)'/%3E%3Cpath d='M294 213l-34 81-80 37 37-80 77-38z' fill='%2338a9ff'/%3E%3Cpath d='M294 213l-77 38 43 43z' fill='%23f8fbff'/%3E%3C/svg%3E",
+      "src": "/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

@@ -1,6 +1,6 @@
+import { db } from "@/lib/db";
 import { ok, bad, parseBody } from "@/lib/api";
 import { getUserFromRequest } from "@/lib/auth";
-import { notionUpdatePage, notionArchivePage, title, richText, selectProp, checkboxProp } from "@/lib/notion";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -10,16 +10,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!session) return bad("Unauthorized", 401);
   const { id } = await params;
 
-  const body = await parseBody(req);
-  const properties: Record<string, any> = {};
-  if (typeof body.name === "string") properties["Nome"] = title(body.name);
-  if (typeof body.area === "string") properties["Área"] = selectProp(body.area);
-  if (body.statusNote !== undefined) properties["Status"] = richText(body.statusNote || "");
-  if (typeof body.needsDecision === "boolean") properties["Precisa decisão"] = checkboxProp(body.needsDecision);
-  if (typeof body.hasAlert === "boolean") properties["Tem alerta"] = checkboxProp(body.hasAlert);
+  const existing = await db.project.findFirst({ where: { id, userId: session.userId } });
+  if (!existing) return bad("Not found", 404);
 
-  await notionUpdatePage(id, properties);
-  return ok({ updated: true });
+  const body = await parseBody(req);
+  const data: Record<string, any> = {};
+  if (typeof body.name === "string") data.name = body.name;
+  if (typeof body.area === "string") data.area = body.area;
+  if (body.statusNote !== undefined) data.statusNote = body.statusNote || null;
+  if (typeof body.status === "string") data.status = body.status;
+  if (typeof body.hasAlert === "boolean") data.hasAlert = body.hasAlert;
+  if (typeof body.archived === "boolean") data.archived = body.archived;
+
+  const project = await db.project.update({ where: { id }, data });
+  return ok(project);
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -27,6 +31,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (!session) return bad("Unauthorized", 401);
   const { id } = await params;
 
-  await notionArchivePage(id);
+  const existing = await db.project.findFirst({ where: { id, userId: session.userId } });
+  if (!existing) return bad("Not found", 404);
+
+  await db.project.delete({ where: { id } });
   return ok({ deleted: true });
 }

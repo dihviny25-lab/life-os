@@ -1,28 +1,21 @@
+import { db } from "@/lib/db";
 import { ok, bad, parseBody } from "@/lib/api";
 import { getUserFromRequest } from "@/lib/auth";
-import { notionQuery, notionCreatePage, DB, title, dateProp, numberProp, plainTitle, plainDate, plainNumber, plainCheckbox } from "@/lib/notion";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
-
-function toBill(page: any) {
-  return {
-    id: page.id,
-    title: plainTitle(page.properties["Título"]),
-    amount: plainNumber(page.properties["Valor"]),
-    dueDate: plainDate(page.properties["Vencimento"]),
-    paid: plainCheckbox(page.properties["Paga"]),
-  };
-}
 
 export async function GET(req: NextRequest) {
   const session = await getUserFromRequest(req);
   if (!session) return bad("Unauthorized", 401);
 
-  const pages = await notionQuery(DB.bills, {
-    sorts: [{ property: "Vencimento", direction: "ascending" }],
+  const area = req.nextUrl.searchParams.get("area");
+
+  const bills = await db.bill.findMany({
+    where: { userId: session.userId, ...(area ? { area } : {}) },
+    orderBy: { dueDate: "asc" },
   });
-  return ok({ bills: pages.map(toBill) });
+  return ok({ bills });
 }
 
 export async function POST(req: NextRequest) {
@@ -33,10 +26,16 @@ export async function POST(req: NextRequest) {
   if (!body.title) return bad("title is required");
   if (!body.dueDate) return bad("dueDate is required");
 
-  const page = await notionCreatePage(DB.bills, {
-    "Título": title(body.title),
-    "Valor": numberProp(Number(body.amount) || 0),
-    "Vencimento": dateProp(new Date(body.dueDate).toISOString()),
+  const bill = await db.bill.create({
+    data: {
+      userId: session.userId,
+      title: body.title,
+      amount: Number(body.amount) || 0,
+      dueDate: new Date(body.dueDate),
+      area: body.area || null,
+      priority: body.priority || "normal",
+      recurring: body.recurring || null,
+    },
   });
-  return ok(toBill(page));
+  return ok(bill);
 }

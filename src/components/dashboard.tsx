@@ -2,56 +2,34 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Sun, CalendarClock, Wallet, FolderKanban, Church, Code2, AlertTriangle, ArrowRight, Check, Archive, Repeat, BookOpen, Smile } from "lucide-react";
+import { MOODS } from "@/lib/moods";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SectionCard } from "@/components/section-card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { notify } from "@/lib/toast";
+  AddCommitmentDialog,
+  AddBillDialog,
+  AddProjectDialog,
+  EditCommitmentDialog,
+  EditBillDialog,
+  EditProjectDialog,
+} from "@/components/entry-dialogs";
+import { ProjectTasks } from "@/components/project-tasks";
+import { DeleteButton } from "@/components/delete-button";
 import { AREAS } from "@/lib/areas";
+import type { Commitment, Bill, Project } from "@/lib/types";
 
-interface Commitment {
-  id: string;
-  title: string;
-  startAt: string;
-  location: string | null;
-}
-interface Bill {
-  id: string;
-  title: string;
-  amount: number;
-  dueDate: string;
-  paid: boolean;
-}
-interface Project {
-  id: string;
-  name: string;
-  area: string;
-  statusNote: string | null;
-  needsDecision: boolean;
-  hasAlert: boolean;
-}
 interface DashboardData {
   today: { commitments: Commitment[]; bills: Bill[] };
   upcomingCommitments: Commitment[];
-  finance: { availableBalance: number; billsUntilSunday: number; projectedAfterCommitments: number };
+  finance: { currentBalance: number; committed: number; free: number };
   projects: Project[];
   church: Project[];
   dev: { needsDecision: number; alerts: number };
+  verseOfDay: { reference: string; text: string | null } | null;
+  checkin: { mood: string } | null;
 }
 
 const currency = (v: number) =>
@@ -66,9 +44,12 @@ function dayLabel(iso: string) {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
+const financasColor = AREAS.find((a) => a.key === "financas")!.color;
+const igrejaColor = AREAS.find((a) => a.key === "igreja_ministerio")!.color;
+const devColor = AREAS.find((a) => a.key === "desenvolvimento")!.color;
+
 export function Dashboard() {
   const router = useRouter();
-  const [email, setEmail] = useState<string | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -84,55 +65,94 @@ export function Dashboard() {
   }, [router]);
 
   useEffect(() => {
-    fetch("/api/auth/session")
-      .then((r) => r.json())
-      .then((d) => {
-        if (!d.authenticated) router.replace("/login");
-        else setEmail(d.email);
-      });
     load();
-  }, [router, load]);
-
-  async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    notify.success("Sessão encerrada");
-    router.replace("/login");
-  }
+  }, [load]);
 
   if (loading || !data) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">
+      <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">
         Carregando…
       </div>
     );
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-2xl bg-background px-4 py-8 text-foreground">
-      <header className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-bold">O que precisa da minha atenção?</h1>
-          {email && <p className="text-xs text-muted-foreground">{email}</p>}
-        </div>
-        <Button variant="ghost" size="sm" onClick={handleLogout}>
-          Sair
-        </Button>
-      </header>
+    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+      <h1 className="mb-6 font-display text-[26px] font-semibold italic tracking-tight">O que precisa da minha atenção?</h1>
 
-      <div className="space-y-8">
-        <TodaySection data={data} onChange={load} />
-        <UpcomingSection commitments={data.upcomingCommitments} />
-        <FinanceSection finance={data.finance} onChange={load} />
-        <ProjectsSection title="PROJETOS" projects={data.projects} onChange={load} />
-        <ProjectsSection title="IGREJA & MINISTÉRIO" projects={data.church} onChange={load} defaultArea="igreja_ministerio" />
-        <DevSection dev={data.dev} />
+      <div className="space-y-5">
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
+          <CheckinSection checkin={data.checkin} onChange={load} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 }}>
+          <TodaySection data={data} onChange={load} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <UpcomingSection commitments={data.upcomingCommitments} onChange={load} />
+        </motion.div>
+        {data.verseOfDay && (
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+            <VerseOfDaySection verse={data.verseOfDay} />
+          </motion.div>
+        )}
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <FinanceSection finance={data.finance} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <ProjectsSection title="Projetos" icon={FolderKanban} color="#71717a" projects={data.projects} onChange={load} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <ProjectsSection title="Igreja & Ministério" icon={Church} color={igrejaColor} projects={data.church} onChange={load} defaultArea="igreja_ministerio" />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+          <DevSection dev={data.dev} />
+        </motion.div>
       </div>
     </div>
   );
 }
 
-function SectionTitle({ children }: { children: string }) {
-  return <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{children}</h2>;
+function CheckinSection({ checkin, onChange }: { checkin: DashboardData["checkin"]; onChange: () => void }) {
+  const [editing, setEditing] = useState(!checkin);
+  const current = MOODS.find((m) => m.key === checkin?.mood);
+
+  async function pick(moodKey: string) {
+    await fetch("/api/checkin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mood: moodKey }),
+    });
+    setEditing(false);
+    onChange();
+  }
+
+  return (
+    <SectionCard title="Como você está?" icon={Smile} color="#f59e0b">
+      {!editing && current ? (
+        <button
+          onClick={() => setEditing(true)}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <span className="text-lg">{current.emoji}</span>
+          Hoje: <span className="font-medium text-foreground">{current.label}</span>
+          <span className="text-xs">(mudar)</span>
+        </button>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {MOODS.map((m) => (
+            <button
+              key={m.key}
+              onClick={() => pick(m.key)}
+              className="flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1.5 text-sm transition-colors hover:bg-muted"
+            >
+              <span>{m.emoji}</span>
+              {m.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </SectionCard>
+  );
 }
 
 function TodaySection({ data, onChange }: { data: DashboardData; onChange: () => void }) {
@@ -148,360 +168,202 @@ function TodaySection({ data, onChange }: { data: DashboardData; onChange: () =>
     onChange();
   }
 
+  async function deleteCommitment(id: string) {
+    await fetch(`/api/commitments/${id}`, { method: "DELETE" });
+    onChange();
+  }
+
+  async function deleteBill(id: string) {
+    await fetch(`/api/bills/${id}`, { method: "DELETE" });
+    onChange();
+  }
+
   return (
-    <section>
-      <div className="mb-2 flex items-center justify-between">
-        <SectionTitle>Hoje</SectionTitle>
+    <SectionCard
+      title="Hoje"
+      icon={Sun}
+      color="#f59e0b"
+      actions={
         <div className="flex gap-1">
           <AddCommitmentDialog onAdded={onChange} />
           <AddBillDialog onAdded={onChange} />
         </div>
-      </div>
+      }
+    >
       {empty ? (
         <p className="text-sm text-muted-foreground">Nada marcado para hoje.</p>
       ) : (
         <ul className="space-y-1.5">
           {commitments.map((c) => (
-            <li key={c.id} className="flex items-center gap-3 text-sm">
+            <li key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
               <span className="w-12 shrink-0 tabular-nums text-muted-foreground">{timeFmt.format(new Date(c.startAt))}</span>
-              <span>{c.title}</span>
+              <span className="flex-1 font-medium">{c.title}</span>
+              {c.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
+              <EditCommitmentDialog commitment={c} onSaved={onChange} />
+              <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
             </li>
           ))}
           {bills.map((b) => (
-            <li key={b.id} className="flex items-center gap-3 text-sm">
+            <li key={b.id} className="flex items-center gap-3 rounded-lg border border-rose-500/20 bg-rose-500/5 px-3 py-2 text-sm">
               <Checkbox className="shrink-0" onCheckedChange={() => markPaid(b.id)} />
-              <span className="font-bold text-rose-500">!</span>
-              <span>Conta {b.title.toLowerCase()} vence hoje</span>
+              <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500" />
+              <span className="flex-1 font-medium">Conta {b.title.toLowerCase()} vence hoje</span>
+              <EditBillDialog bill={b} onSaved={onChange} />
+              <DeleteButton label={b.title} onDelete={() => deleteBill(b.id)} />
             </li>
           ))}
         </ul>
       )}
-    </section>
+    </SectionCard>
   );
 }
 
-function UpcomingSection({ commitments }: { commitments: Commitment[] }) {
+function UpcomingSection({ commitments, onChange }: { commitments: Commitment[]; onChange: () => void }) {
+  async function deleteCommitment(id: string) {
+    await fetch(`/api/commitments/${id}`, { method: "DELETE" });
+    onChange();
+  }
+
   return (
-    <section>
-      <SectionTitle>Próximos compromissos</SectionTitle>
+    <SectionCard title="Próximos compromissos" icon={CalendarClock} color="#0ea5e9">
       {commitments.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nenhum compromisso futuro marcado.</p>
       ) : (
         <ul className="space-y-1.5">
           {commitments.map((c) => (
-            <li key={c.id} className="flex items-center gap-3 text-sm">
+            <li key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
               <span className="w-28 shrink-0 text-muted-foreground">
                 {dayLabel(c.startAt)} {timeFmt.format(new Date(c.startAt))}
               </span>
-              <span>{c.title}</span>
+              <span className="flex-1 font-medium">{c.title}</span>
+              {c.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
+              <EditCommitmentDialog commitment={c} onSaved={onChange} />
+              <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
             </li>
           ))}
         </ul>
       )}
-    </section>
+    </SectionCard>
   );
 }
 
-function FinanceSection({ finance, onChange }: { finance: DashboardData["finance"]; onChange: () => void }) {
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(String(finance.availableBalance));
-
-  async function save() {
-    const availableBalance = Number(value.replace(",", "."));
-    if (Number.isNaN(availableBalance)) {
-      notify.error("Valor inválido");
-      return;
-    }
-    await fetch("/api/finance", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ availableBalance }),
-    });
-    setEditing(false);
-    onChange();
-  }
-
+function VerseOfDaySection({ verse }: { verse: { reference: string; text: string | null } }) {
   return (
-    <section>
-      <SectionTitle>Financeiro</SectionTitle>
-      <div className="space-y-1.5 text-sm">
-        <div className="flex items-center justify-between">
-          <span>Disponível esta semana</span>
-          {editing ? (
-            <div className="flex items-center gap-1.5">
-              <Input
-                autoFocus
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                className="h-7 w-28 text-right"
-                inputMode="decimal"
-              />
-              <Button size="sm" className="h-7 px-2" onClick={save}>
-                Salvar
-              </Button>
-            </div>
-          ) : (
-            <button className="font-medium hover:underline" onClick={() => setEditing(true)}>
-              {currency(finance.availableBalance)}
-            </button>
-          )}
+    <SectionCard title="Versículo do dia" icon={BookOpen} color="#8b5cf6">
+      <p className="text-sm italic leading-relaxed">{verse.text ?? "Texto não cadastrado."}</p>
+      <p className="mt-2 text-xs font-medium text-muted-foreground">{verse.reference} (ARC)</p>
+    </SectionCard>
+  );
+}
+
+function FinanceSection({ finance }: { finance: DashboardData["finance"] }) {
+  return (
+    <SectionCard title="Financeiro" icon={Wallet} color={financasColor}>
+      <div className="space-y-3 text-sm">
+        <div>
+          <span className="text-muted-foreground">Disponível de verdade</span>
+          <p className={`font-display text-3xl font-semibold tabular-nums ${finance.free >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
+            {currency(finance.free)}
+          </p>
         </div>
-        <div className="flex items-center justify-between">
-          <span>Contas até domingo</span>
-          <span className="font-medium text-rose-500">{currency(finance.billsUntilSunday)}</span>
+        <div className="flex items-center justify-between border-t border-border/70 pt-2.5">
+          <span className="text-muted-foreground">Já comprometido</span>
+          <span className="font-medium tabular-nums text-muted-foreground">{currency(finance.committed)}</span>
         </div>
-        <div className="flex items-center justify-between">
-          <span>Previsto após compromissos</span>
-          <span className={`font-medium ${finance.projectedAfterCommitments >= 0 ? "text-emerald-600" : "text-rose-500"}`}>
-            {currency(finance.projectedAfterCommitments)}
-          </span>
-        </div>
+        <Link
+          href="/app/areas/financas"
+          className="mt-1 inline-flex items-center gap-1 text-xs font-medium hover:underline"
+          style={{ color: financasColor }}
+        >
+          Abrir financeiro <ArrowRight className="h-3 w-3" />
+        </Link>
       </div>
-    </section>
+    </SectionCard>
   );
 }
 
 function ProjectsSection({
   title,
+  icon,
+  color,
   projects,
   onChange,
   defaultArea,
 }: {
   title: string;
+  icon: React.ComponentProps<typeof SectionCard>["icon"];
+  color: string;
   projects: Project[];
   onChange: () => void;
   defaultArea?: string;
 }) {
+  async function archive(id: string) {
+    await fetch(`/api/projects/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ archived: true }),
+    });
+    onChange();
+  }
+
+  async function deleteProject(id: string) {
+    await fetch(`/api/projects/${id}`, { method: "DELETE" });
+    onChange();
+  }
+
   return (
-    <section>
-      <div className="mb-2 flex items-center justify-between">
-        <SectionTitle>{title}</SectionTitle>
-        <AddProjectDialog onAdded={onChange} defaultArea={defaultArea} />
-      </div>
+    <SectionCard title={title} icon={icon} color={color} actions={<AddProjectDialog onAdded={onChange} defaultArea={defaultArea} />}>
       {projects.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nada por aqui ainda.</p>
       ) : (
         <ul className="space-y-2">
           {projects.map((p) => (
-            <li key={p.id} className="text-sm">
-              <p className="font-medium">{p.name}</p>
-              {p.statusNote && <p className="text-muted-foreground">→ {p.statusNote}</p>}
+            <li key={p.id} className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{p.name}</p>
+                  {p.statusNote && <p className="text-muted-foreground">→ {p.statusNote}</p>}
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <EditProjectDialog project={p} onSaved={onChange} />
+                  <button onClick={() => archive(p.id)} className="text-muted-foreground/60 transition-colors hover:text-foreground" aria-label={`Arquivar ${p.name}`}>
+                    <Archive className="h-3.5 w-3.5" />
+                  </button>
+                  <DeleteButton label={p.name} onDelete={() => deleteProject(p.id)} />
+                </div>
+              </div>
+              <ProjectTasks projectId={p.id} tasks={p.tasks} onChange={onChange} />
             </li>
           ))}
         </ul>
       )}
-    </section>
+    </SectionCard>
   );
 }
 
 function DevSection({ dev }: { dev: DashboardData["dev"] }) {
-  if (dev.needsDecision === 0 && dev.alerts === 0) {
-    return (
-      <section>
-        <SectionTitle>Desenvolvimento</SectionTitle>
-        <p className="text-sm text-muted-foreground">Nada pendente.</p>
-      </section>
-    );
-  }
   return (
-    <section>
-      <SectionTitle>Desenvolvimento</SectionTitle>
-      <ul className="space-y-1 text-sm">
-        {dev.needsDecision > 0 && (
-          <li>
-            {dev.needsDecision} {dev.needsDecision === 1 ? "projeto precisa" : "projetos precisam"} de decisão
-          </li>
-        )}
-        {dev.alerts > 0 && (
-          <li>
-            {dev.alerts} {dev.alerts === 1 ? "deploy com problema" : "deploys com problema"}
-          </li>
-        )}
-      </ul>
-    </section>
-  );
-}
-
-function AddCommitmentDialog({ onAdded }: { onAdded: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-
-  async function submit() {
-    if (!title || !date || !time) {
-      notify.error("Preencha título, data e hora");
-      return;
-    }
-    await fetch("/api/commitments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, startAt: new Date(`${date}T${time}`).toISOString() }),
-    });
-    setOpen(false);
-    setTitle("");
-    setDate("");
-    setTime("");
-    onAdded();
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-          + Compromisso
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Novo compromisso</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label>Título</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Reunião com cliente" />
-          </div>
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <Label>Data</Label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </div>
-            <div className="flex-1">
-              <Label>Hora</Label>
-              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button onClick={submit}>Adicionar</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function AddBillDialog({ onAdded }: { onAdded: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [amount, setAmount] = useState("");
-  const [dueDate, setDueDate] = useState("");
-
-  async function submit() {
-    if (!title || !dueDate) {
-      notify.error("Preencha título e vencimento");
-      return;
-    }
-    await fetch("/api/bills", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, amount: Number(amount.replace(",", ".")) || 0, dueDate }),
-    });
-    setOpen(false);
-    setTitle("");
-    setAmount("");
-    setDueDate("");
-    onAdded();
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-          + Conta
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Nova conta</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label>Título</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: energia" />
-          </div>
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <Label>Valor</Label>
-              <Input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" inputMode="decimal" />
-            </div>
-            <div className="flex-1">
-              <Label>Vencimento</Label>
-              <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button onClick={submit}>Adicionar</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function AddProjectDialog({ onAdded, defaultArea }: { onAdded: () => void; defaultArea?: string }) {
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [area, setArea] = useState(defaultArea || AREAS[0].key);
-  const [statusNote, setStatusNote] = useState("");
-
-  async function submit() {
-    if (!name) {
-      notify.error("Preencha o nome do projeto");
-      return;
-    }
-    await fetch("/api/projects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, area, statusNote }),
-    });
-    setOpen(false);
-    setName("");
-    setStatusNote("");
-    onAdded();
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-          + Adicionar
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Novo projeto</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label>Nome</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Central de Comando" />
-          </div>
-          {!defaultArea && (
-            <div>
-              <Label>Área</Label>
-              <Select value={area} onValueChange={setArea}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {AREAS.map((a) => (
-                    <SelectItem key={a.key} value={a.key}>
-                      {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+    <SectionCard title="Desenvolvimento" icon={Code2} color={devColor}>
+      {dev.needsDecision === 0 && dev.alerts === 0 ? (
+        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Check className="h-4 w-4 text-emerald-500" /> Nada pendente.
+        </p>
+      ) : (
+        <ul className="space-y-1.5 text-sm">
+          {dev.needsDecision > 0 && (
+            <li className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-400">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              {dev.needsDecision} {dev.needsDecision === 1 ? "projeto precisa" : "projetos precisam"} de decisão
+            </li>
           )}
-          <div>
-            <Label>Status</Label>
-            <Input value={statusNote} onChange={(e) => setStatusNote(e.target.value)} placeholder="Ex: aguardando validação" />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button onClick={submit}>Adicionar</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          {dev.alerts > 0 && (
+            <li className="flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-2 text-rose-600 dark:text-rose-400">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              {dev.alerts} {dev.alerts === 1 ? "deploy com problema" : "deploys com problema"}
+            </li>
+          )}
+        </ul>
+      )}
+    </SectionCard>
   );
 }

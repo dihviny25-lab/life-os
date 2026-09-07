@@ -4,12 +4,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Brain, ArrowRight, Shield, Check, Loader2, QrCode, X, Lock, Mail, PlayCircle, Zap } from "lucide-react";
+import { Compass, User, ArrowRight, Shield, Check, Loader2, QrCode, X, Lock, Mail, Wallet, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type Step = "auth" | "verify" | "qr-confirm" | "done";
-const DEMO_EMAIL = "demo@gmail.com";
-const DEMO_PASSWORD = "Password123";
 
 export default function LoginPage() {
   const [step, setStep] = useState<Step>("auth");
@@ -73,34 +71,13 @@ export default function LoginPage() {
     finally { setLoading(false); }
   }
 
-  function fillDemoCredentials() {
-    setMode("login");
-    setEmail(DEMO_EMAIL);
-    setPassword(DEMO_PASSWORD);
-    setError("");
-  }
-
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background">
       {/* Animated background — floating orbs + grid pattern */}
       <div className="pointer-events-none absolute inset-0">
-        {/* gradient orbs */}
-        <div className="absolute -left-20 top-10 h-96 w-96 animate-pulse rounded-full bg-emerald-500/15 blur-3xl dark:bg-emerald-500/10" style={{ animationDuration: "4s" }} />
-        <div className="absolute -right-20 bottom-10 h-96 w-96 animate-pulse rounded-full bg-violet-500/15 blur-3xl dark:bg-violet-500/10" style={{ animationDuration: "6s", animationDelay: "1s" }} />
-        <div className="absolute bottom-0 left-1/2 h-80 w-80 -translate-x-1/2 animate-pulse rounded-full bg-cyan-500/10 blur-3xl dark:bg-cyan-500/5" style={{ animationDuration: "5s" }} />
-        {/* subtle grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
-          style={{
-            backgroundImage: `linear-gradient(var(--foreground) 1px, transparent 1px), linear-gradient(90deg, var(--foreground) 1px, transparent 1px)`,
-            backgroundSize: "40px 40px",
-          }}
-        />
-        {/* floating habit dots */}
-        <div className="absolute left-[10%] top-[20%] h-3 w-3 animate-bounce rounded-full bg-emerald-500/30" style={{ animationDuration: "3s", animationDelay: "0s" }} />
-        <div className="absolute right-[15%] top-[30%] h-2 w-2 animate-bounce rounded-full bg-violet-500/30" style={{ animationDuration: "4s", animationDelay: "1s" }} />
-        <div className="absolute left-[20%] bottom-[25%] h-2.5 w-2.5 animate-bounce rounded-full bg-amber-500/30" style={{ animationDuration: "5s", animationDelay: "0.5s" }} />
-        <div className="absolute right-[25%] bottom-[20%] h-3 w-3 animate-bounce rounded-full bg-cyan-500/30" style={{ animationDuration: "3.5s", animationDelay: "2s" }} />
+        {/* two soft washes of color, nothing more */}
+        <div className="absolute -left-24 top-0 h-96 w-96 rounded-full bg-[#33415c]/[0.06] blur-3xl" />
+        <div className="absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-amber-500/[0.08] blur-3xl" />
       </div>
 
       <div className="relative z-10 flex w-full max-w-md flex-col px-6">
@@ -110,12 +87,12 @@ export default function LoginPage() {
             initial={{ scale: 0, rotate: -20 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", delay: 0.1 }}
-            className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-xl shadow-emerald-500/20"
+            className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#3d4f6e] to-[#242f42] shadow-xl shadow-[#33415c]/20"
           >
-            <Brain className="h-8 w-8 text-white" />
+            <Compass className="h-8 w-8 text-white" />
           </motion.div>
-          <h1 className="text-3xl font-bold tracking-tight">Life OS</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">Seu cérebro digital, protegido.</p>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Central</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">O que precisa da sua atenção, num só lugar.</p>
         </div>
 
         <motion.div
@@ -149,7 +126,7 @@ export default function LoginPage() {
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
                       <Label className="mb-1.5 block text-xs font-semibold text-muted-foreground">Nome</Label>
                       <div className="relative">
-                        <Brain className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
+                        <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
                         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" className="h-11 pl-10" />
                       </div>
                     </motion.div>
@@ -191,7 +168,7 @@ export default function LoginPage() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="h-11 w-full gap-2 bg-gradient-to-br from-emerald-500 to-teal-600 text-base text-white shadow-lg shadow-emerald-500/20 hover:from-emerald-600 hover:to-teal-700"
+                    className="h-11 w-full gap-2 bg-gradient-to-br from-[#3d4f6e] to-[#242f42] text-base text-white shadow-lg shadow-[#33415c]/20 hover:from-[#465a7c] hover:to-[#2b384f]"
                   >
                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                       <>
@@ -200,31 +177,14 @@ export default function LoginPage() {
                       </>
                     )}
                   </Button>
-                  {mode === "login" && (
-                    <div className="space-y-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={loading}
-                        onClick={fillDemoCredentials}
-                        className="h-11 w-full gap-2"
-                      >
-                        <PlayCircle className="h-4 w-4" />
-                        Preencher credenciais de demonstração
-                      </Button>
-                      <p className="text-center text-[10px] text-muted-foreground">
-                        Usa demo@gmail.com com a senha Password123
-                      </p>
-                    </div>
-                  )}
                 </form>
 
                 {/* Features list */}
                 <div className="mt-6 space-y-2 border-t border-border/40 pt-4">
                   {[
-                    { icon: Lock, color: "#10b981", text: "Seus dados ficam no seu servidor" },
-                    { icon: Brain, color: "#a78bfa", text: "Links bidirecionais — tudo se conecta" },
-                    { icon: Zap, color: "#f59e0b", text: "Captura rápida com ⌘K em qualquer lugar" },
+                    { icon: Wallet, color: "#10b981", text: "Saldo real: o que já está comprometido, o que é livre de verdade" },
+                    { icon: Compass, color: "#a78bfa", text: "Cada área da sua vida, no seu lugar" },
+                    { icon: BookOpen, color: "#8b5cf6", text: "Um versículo por dia pra guardar no coração" },
                   ].map((f, i) => (
                     <motion.div
                       key={i}
@@ -248,7 +208,7 @@ export default function LoginPage() {
                   <div className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/15">
                     <Shield className="h-7 w-7 text-emerald-500" />
                   </div>
-                  <h2 className="text-xl font-bold">Verificação em duas etapas</h2>
+                  <h2 className="font-display text-xl font-semibold">Verificação em duas etapas</h2>
                   <p className="mt-1.5 text-sm text-muted-foreground">Digite o código de 6 dígitos do seu app autenticador</p>
                 </div>
                 <form onSubmit={handleVerify} className="space-y-4">
@@ -262,7 +222,7 @@ export default function LoginPage() {
                     autoFocus
                   />
                   {error && <p className="text-center text-sm text-rose-500">{error}</p>}
-                  <Button type="submit" disabled={loading || verifyCode.length !== 6} className="h-11 w-full gap-2 bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+                  <Button type="submit" disabled={loading || verifyCode.length !== 6} className="h-11 w-full gap-2 bg-gradient-to-br from-[#3d4f6e] to-[#242f42] text-white">
                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Verificar <ArrowRight className="h-5 w-5" /></>}
                   </Button>
                 </form>
@@ -279,7 +239,7 @@ export default function LoginPage() {
                   <div className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/15">
                     <QrCode className="h-7 w-7 text-violet-500" />
                   </div>
-                  <h2 className="text-xl font-bold">Confirmar login</h2>
+                  <h2 className="font-display text-xl font-semibold">Confirmar login</h2>
                   <p className="mt-1.5 text-sm text-muted-foreground">Digite suas credenciais para entrar neste dispositivo</p>
                 </div>
                 <form onSubmit={async (e) => {
@@ -308,7 +268,7 @@ export default function LoginPage() {
                     <Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="h-11 pl-10" />
                   </div>
                   {error && <p className="text-sm text-rose-500">{error}</p>}
-                  <Button type="submit" disabled={loading} className="h-11 w-full gap-2 bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white">
+                  <Button type="submit" disabled={loading} className="h-11 w-full gap-2 bg-gradient-to-br from-[#3d4f6e] to-[#242f42] text-white">
                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Confirmar login <ArrowRight className="h-5 w-5" /></>}
                   </Button>
                 </form>
@@ -325,11 +285,11 @@ export default function LoginPage() {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.1, type: "spring" }}
-                  className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-xl shadow-emerald-500/20"
+                  className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#3d4f6e] to-[#242f42] text-white shadow-xl shadow-[#33415c]/20"
                 >
                   <Check className="h-8 w-8" strokeWidth={3} />
                 </motion.div>
-                <h2 className="text-xl font-bold">Bem-vindo ao Life OS</h2>
+                <h2 className="font-display text-xl font-semibold">Bem-vindo à Central</h2>
                 <p className="mt-1.5 text-sm text-muted-foreground">Abrindo seu cérebro digital…</p>
                 <Loader2 className="mx-auto mt-4 h-5 w-5 animate-spin text-muted-foreground" />
               </motion.div>
