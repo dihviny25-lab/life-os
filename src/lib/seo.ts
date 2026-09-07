@@ -1,6 +1,6 @@
 export const siteConfig = {
-  name: "Central",
-  title: "Central",
-  description: "Sua central pessoal, do jeito que você precisa.",
-  keywords: ["central", "produtividade", "organização pessoal"],
+  name: "Central de Comando",
+  title: "Central de Comando",
+  description: "Sua central pessoal para organizar o que precisa da sua atenção.",
+  keywords: ["central de comando", "produtividade", "organização pessoal", "planejamento pessoal"],
 };
