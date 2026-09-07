@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -80,6 +81,14 @@ export function AddTransactionDialog({ type, onAdded }: { type: "income" | "expe
   );
 }
 
+function EditTrigger({ label }: { label: string }) {
+  return (
+    <button className="text-muted-foreground/60 transition-colors hover:text-foreground" aria-label={`Editar ${label}`}>
+      <Pencil className="h-3.5 w-3.5" />
+    </button>
+  );
+}
+
 export function AddWeeklyBudgetDialog({ onAdded }: { onAdded: () => void }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -125,6 +134,59 @@ export function AddWeeklyBudgetDialog({ onAdded }: { onAdded: () => void }) {
         </div>
         <DialogFooter>
           <Button onClick={submit}>Adicionar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function EditWeeklyBudgetDialog({
+  weeklyBudget,
+  onSaved,
+}: {
+  weeklyBudget: { id: string; name: string; amount: number };
+  onSaved: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState(weeklyBudget.name);
+  const [amount, setAmount] = useState(String(weeklyBudget.amount));
+
+  async function submit() {
+    const value = Number(amount.replace(",", "."));
+    if (!name || !value || value <= 0) {
+      notify.error("Preencha nome e um valor válido");
+      return;
+    }
+    await fetch(`/api/weekly-budgets/${weeklyBudget.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, amount: value }),
+    });
+    setOpen(false);
+    onSaved();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <EditTrigger label={weeklyBudget.name} />
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar custo semanal</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Nome</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div>
+            <Label>Valor por semana</Label>
+            <Input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={submit}>Salvar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -193,6 +255,77 @@ export function AddEnvelopeDialog({ bills, onAdded }: { bills: Bill[]; onAdded: 
         </div>
         <DialogFooter>
           <Button onClick={submit}>Separar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function EditEnvelopeDialog({
+  envelope,
+  bills,
+  onSaved,
+}: {
+  envelope: { id: string; name: string; allocated: number; billId: string | null };
+  bills: Bill[];
+  onSaved: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState(envelope.name);
+  const [allocated, setAllocated] = useState(String(envelope.allocated));
+  const [billId, setBillId] = useState(envelope.billId || "");
+
+  async function submit() {
+    if (!name) {
+      notify.error("Preencha o nome do envelope");
+      return;
+    }
+    await fetch(`/api/envelopes/${envelope.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, allocated: Number(allocated.replace(",", ".")) || 0, billId: billId || null }),
+    });
+    setOpen(false);
+    onSaved();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <EditTrigger label={envelope.name} />
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar dinheiro separado</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Nome</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div>
+            <Label>Valor separado</Label>
+            <Input value={allocated} onChange={(e) => setAllocated(e.target.value)} inputMode="decimal" />
+          </div>
+          <div>
+            <Label>Para qual conta? (opcional)</Label>
+            <Select value={billId || "none"} onValueChange={(v) => setBillId(v === "none" ? "" : v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhuma</SelectItem>
+                {bills.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={submit}>Salvar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

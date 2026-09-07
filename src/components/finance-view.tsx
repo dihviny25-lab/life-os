@@ -6,9 +6,16 @@ import { motion } from "framer-motion";
 import { Wallet, AlertTriangle, CalendarDays, TrendingUp, PiggyBank, Repeat } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { SectionCard } from "@/components/section-card";
-import { AddTransactionDialog, AddEnvelopeDialog, AddWeeklyBudgetDialog } from "@/components/finance-dialogs";
-import { AddBillDialog } from "@/components/entry-dialogs";
+import {
+  AddTransactionDialog,
+  AddEnvelopeDialog,
+  AddWeeklyBudgetDialog,
+  EditEnvelopeDialog,
+  EditWeeklyBudgetDialog,
+} from "@/components/finance-dialogs";
+import { AddBillDialog, EditBillDialog } from "@/components/entry-dialogs";
 import { DeleteButton } from "@/components/delete-button";
 import { notify } from "@/lib/toast";
 import { AREAS } from "@/lib/areas";
@@ -81,6 +88,20 @@ export function FinanceView() {
     load();
   }, [load]);
 
+  async function markBillPaid(id: string) {
+    await fetch(`/api/bills/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paid: true }),
+    });
+    load();
+  }
+
+  async function deleteBill(id: string) {
+    await fetch(`/api/bills/${id}`, { method: "DELETE" });
+    load();
+  }
+
   if (loading || !overview) {
     return <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">Carregando…</div>;
   }
@@ -108,9 +129,12 @@ export function FinanceView() {
                   const s = STATUS_LABEL[b.status];
                   return (
                     <li key={b.id} className={`rounded-lg border p-3 text-sm ${s?.bg}`}>
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{b.title}</span>
+                      <div className="flex items-center gap-2">
+                        <Checkbox className="shrink-0" onCheckedChange={() => markBillPaid(b.id)} />
+                        <span className="flex-1 font-medium">{b.title}</span>
                         <span className="font-semibold tabular-nums">{currency(b.amount)}</span>
+                        <EditBillDialog bill={b} onSaved={load} />
+                        <DeleteButton label={b.title} onDelete={() => deleteBill(b.id)} />
                       </div>
                       <div className="mt-1 flex items-center justify-between text-xs">
                         <span className="text-muted-foreground">{dateFmt.format(new Date(b.dueDate))}</span>
@@ -184,6 +208,7 @@ export function FinanceView() {
                       </span>
                       <div className="flex items-center gap-2">
                         <span className="font-semibold tabular-nums">{currency(e.allocated)}</span>
+                        <EditEnvelopeDialog envelope={e} bills={bills} onSaved={load} />
                         <DeleteButton label={e.name} onDelete={async () => { await fetch(`/api/envelopes/${e.id}`, { method: "DELETE" }); load(); }} />
                       </div>
                     </li>
@@ -205,6 +230,7 @@ export function FinanceView() {
                     <span className="font-medium">{w.name}</span>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold tabular-nums">{currency(w.amount)}/semana</span>
+                      <EditWeeklyBudgetDialog weeklyBudget={w} onSaved={load} />
                       <DeleteButton label={w.name} onDelete={async () => { await fetch(`/api/weekly-budgets/${w.id}`, { method: "DELETE" }); load(); }} />
                     </div>
                   </li>

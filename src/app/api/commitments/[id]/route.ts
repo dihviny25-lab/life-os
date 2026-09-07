@@ -19,6 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.startAt) data.startAt = new Date(body.startAt);
   if (body.location !== undefined) data.location = body.location || null;
   if (body.area !== undefined) data.area = body.area || null;
+  if (body.recurring !== undefined) data.recurring = body.recurring || null;
   if (typeof body.archived === "boolean") data.archived = body.archived;
 
   const commitment = await db.commitment.update({ where: { id }, data });

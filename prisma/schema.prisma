@@ -35,6 +35,7 @@ model Commitment {
   startAt   DateTime
   location  String?
   area      String?
+  recurring String?  // daily | weekdays | weekly | monthly | null (one-off)
   archived  Boolean  @default(false)
   createdAt DateTime @default(now())
   @@index([userId, startAt])

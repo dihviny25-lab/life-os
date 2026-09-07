@@ -4,10 +4,17 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sun, CalendarClock, Wallet, FolderKanban, Church, Code2, AlertTriangle, ArrowRight, Check, Archive } from "lucide-react";
+import { Sun, CalendarClock, Wallet, FolderKanban, Church, Code2, AlertTriangle, ArrowRight, Check, Archive, Repeat } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionCard } from "@/components/section-card";
-import { AddCommitmentDialog, AddBillDialog, AddProjectDialog } from "@/components/entry-dialogs";
+import {
+  AddCommitmentDialog,
+  AddBillDialog,
+  AddProjectDialog,
+  EditCommitmentDialog,
+  EditBillDialog,
+  EditProjectDialog,
+} from "@/components/entry-dialogs";
 import { ProjectTasks } from "@/components/project-tasks";
 import { DeleteButton } from "@/components/delete-button";
 import { AREAS } from "@/lib/areas";
@@ -137,6 +144,8 @@ function TodaySection({ data, onChange }: { data: DashboardData; onChange: () =>
             <li key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
               <span className="w-12 shrink-0 tabular-nums text-muted-foreground">{timeFmt.format(new Date(c.startAt))}</span>
               <span className="flex-1 font-medium">{c.title}</span>
+              {c.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
+              <EditCommitmentDialog commitment={c} onSaved={onChange} />
               <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
             </li>
           ))}
@@ -145,6 +154,7 @@ function TodaySection({ data, onChange }: { data: DashboardData; onChange: () =>
               <Checkbox className="shrink-0" onCheckedChange={() => markPaid(b.id)} />
               <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500" />
               <span className="flex-1 font-medium">Conta {b.title.toLowerCase()} vence hoje</span>
+              <EditBillDialog bill={b} onSaved={onChange} />
               <DeleteButton label={b.title} onDelete={() => deleteBill(b.id)} />
             </li>
           ))}
@@ -172,6 +182,8 @@ function UpcomingSection({ commitments, onChange }: { commitments: Commitment[];
                 {dayLabel(c.startAt)} {timeFmt.format(new Date(c.startAt))}
               </span>
               <span className="flex-1 font-medium">{c.title}</span>
+              {c.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
+              <EditCommitmentDialog commitment={c} onSaved={onChange} />
               <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
             </li>
           ))}
@@ -248,6 +260,7 @@ function ProjectsSection({
                   {p.statusNote && <p className="text-muted-foreground">→ {p.statusNote}</p>}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
+                  <EditProjectDialog project={p} onSaved={onChange} />
                   <button onClick={() => archive(p.id)} className="text-muted-foreground/60 transition-colors hover:text-foreground" aria-label={`Arquivar ${p.name}`}>
                     <Archive className="h-3.5 w-3.5" />
                   </button>

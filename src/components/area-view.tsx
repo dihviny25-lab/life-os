@@ -3,10 +3,17 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { CalendarClock, Receipt, FolderKanban, Archive } from "lucide-react";
+import { CalendarClock, Receipt, FolderKanban, Archive, Repeat } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionCard } from "@/components/section-card";
-import { AddCommitmentDialog, AddBillDialog, AddProjectDialog } from "@/components/entry-dialogs";
+import {
+  AddCommitmentDialog,
+  AddBillDialog,
+  AddProjectDialog,
+  EditCommitmentDialog,
+  EditBillDialog,
+  EditProjectDialog,
+} from "@/components/entry-dialogs";
 import { ProjectTasks } from "@/components/project-tasks";
 import { DeleteButton } from "@/components/delete-button";
 import { AREAS } from "@/lib/areas";
@@ -108,6 +115,8 @@ export function AreaView({ area }: { area: string }) {
                       {dateFmt.format(new Date(c.startAt))} · {timeFmt.format(new Date(c.startAt))}
                     </span>
                     <span className="flex-1 font-medium">{c.title}</span>
+                    {c.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
+                    <EditCommitmentDialog commitment={c} onSaved={load} />
                     <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
                   </li>
                 ))}
@@ -128,6 +137,7 @@ export function AreaView({ area }: { area: string }) {
                     <span className="flex-1 font-medium">{b.title}</span>
                     <span className="text-muted-foreground">{dateFmt.format(new Date(b.dueDate))}</span>
                     <span className="font-semibold tabular-nums text-rose-500">{currency(b.amount)}</span>
+                    <EditBillDialog bill={b} onSaved={load} />
                     <DeleteButton label={b.title} onDelete={() => deleteBill(b.id)} />
                   </li>
                 ))}
@@ -150,6 +160,7 @@ export function AreaView({ area }: { area: string }) {
                         {p.statusNote && <p className="text-muted-foreground">→ {p.statusNote}</p>}
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
+                        <EditProjectDialog project={p} onSaved={load} />
                         <button onClick={() => archiveProject(p.id)} className="text-muted-foreground/60 transition-colors hover:text-foreground" aria-label={`Arquivar ${p.name}`}>
                           <Archive className="h-3.5 w-3.5" />
                         </button>

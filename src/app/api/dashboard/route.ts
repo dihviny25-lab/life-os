@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { ok, bad } from "@/lib/api";
 import { getUserFromRequest } from "@/lib/auth";
+import { projectCommitment } from "@/lib/recurrence";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -25,15 +26,20 @@ export async function GET(req: NextRequest) {
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
 
-  const [todayCommitments, upcomingCommitments, billsToday, finance, envelopes, weeklyBudgets, projects] = await Promise.all([
-    db.commitment.findMany({ where: { userId, archived: false, startAt: { gte: todayStart, lte: todayEnd } }, orderBy: { startAt: "asc" } }),
-    db.commitment.findMany({ where: { userId, archived: false, startAt: { gt: todayEnd } }, orderBy: { startAt: "asc" }, take: 10 }),
+  const [allCommitments, billsToday, finance, envelopes, weeklyBudgets, projects] = await Promise.all([
+    db.commitment.findMany({ where: { userId, archived: false } }),
     db.bill.findMany({ where: { userId, paid: false, dueDate: { gte: todayStart, lte: todayEnd } } }),
     db.finance.findUnique({ where: { userId } }),
     db.envelope.findMany({ where: { userId } }),
     db.weeklyBudget.findMany({ where: { userId } }),
     db.project.findMany({ where: { userId, archived: false }, orderBy: { createdAt: "asc" }, include: { tasks: { orderBy: { createdAt: "asc" } } } }),
   ]);
+
+  const projected = allCommitments
+    .map((c) => projectCommitment(c, now))
+    .sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
+  const todayCommitments = projected.filter((c) => c.startAt >= todayStart && c.startAt <= todayEnd);
+  const upcomingCommitments = projected.filter((c) => c.startAt > todayEnd).slice(0, 10);
 
   const currentBalance = finance?.currentBalance ?? 0;
   const committed =

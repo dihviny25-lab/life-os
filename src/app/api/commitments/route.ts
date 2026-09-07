@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { ok, bad, parseBody } from "@/lib/api";
 import { getUserFromRequest } from "@/lib/auth";
+import { projectCommitment } from "@/lib/recurrence";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -11,10 +12,11 @@ export async function GET(req: NextRequest) {
 
   const area = req.nextUrl.searchParams.get("area");
 
-  const commitments = await db.commitment.findMany({
+  const raw = await db.commitment.findMany({
     where: { userId: session.userId, archived: false, ...(area ? { area } : {}) },
-    orderBy: { startAt: "asc" },
   });
+  const now = new Date();
+  const commitments = raw.map((c) => projectCommitment(c, now)).sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
   return ok({ commitments });
 }
 
@@ -33,6 +35,7 @@ export async function POST(req: NextRequest) {
       startAt: new Date(body.startAt),
       location: body.location || null,
       area: body.area || null,
+      recurring: body.recurring || null,
     },
   });
   return ok(commitment);
