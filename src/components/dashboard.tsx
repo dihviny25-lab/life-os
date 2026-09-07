@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sun, CalendarClock, Wallet, FolderKanban, Church, Code2, AlertTriangle, ArrowRight, Check, Archive, Repeat, BookOpen, Smile } from "lucide-react";
+import { Sun, Wallet, FolderKanban, AlertTriangle, ArrowRight, Archive, Repeat, Smile } from "lucide-react";
 import { MOODS } from "@/lib/moods";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionCard } from "@/components/section-card";
@@ -46,7 +46,6 @@ function dayLabel(iso: string) {
 
 const financasColor = AREAS.find((a) => a.key === "financas")!.color;
 const igrejaColor = AREAS.find((a) => a.key === "igreja_ministerio")!.color;
-const devColor = AREAS.find((a) => a.key === "desenvolvimento")!.color;
 
 export function Dashboard() {
   const router = useRouter();
@@ -81,83 +80,32 @@ export function Dashboard() {
       <h1 className="mb-6 font-display text-[26px] font-semibold italic tracking-tight">O que precisa da minha atenção?</h1>
 
       <div className="space-y-5">
+        {/* Prioridade 1: o que é urgente agora e o dinheiro. */}
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
-          <CheckinSection checkin={data.checkin} onChange={load} />
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 }}>
-          <TodaySection data={data} onChange={load} />
+          <AgendaSection data={data} onChange={load} />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <UpcomingSection commitments={data.upcomingCommitments} onChange={load} />
-        </motion.div>
-        {data.verseOfDay && (
-          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-            <VerseOfDaySection verse={data.verseOfDay} />
-          </motion.div>
-        )}
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <FinanceSection finance={data.finance} />
         </motion.div>
+
+        {/* Prioridade 2: projetos, agrupados em vez de espalhados em cards repetidos. */}
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <ProjectsOverviewSection data={data} onChange={load} />
+        </motion.div>
+
+        {/* Ritual do dia — calmo, não é urgência, por isso fica por último. */}
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <ProjectsSection title="Projetos" icon={FolderKanban} color="#71717a" projects={data.projects} onChange={load} />
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <ProjectsSection title="Igreja & Ministério" icon={Church} color={igrejaColor} projects={data.church} onChange={load} defaultArea="igreja_ministerio" />
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-          <DevSection dev={data.dev} />
+          <DailyRitualSection data={data} onChange={load} />
         </motion.div>
       </div>
     </div>
   );
 }
 
-function CheckinSection({ checkin, onChange }: { checkin: DashboardData["checkin"]; onChange: () => void }) {
-  const [editing, setEditing] = useState(!checkin);
-  const current = MOODS.find((m) => m.key === checkin?.mood);
-
-  async function pick(moodKey: string) {
-    await fetch("/api/checkin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mood: moodKey }),
-    });
-    setEditing(false);
-    onChange();
-  }
-
-  return (
-    <SectionCard title="Como você está?" icon={Smile} color="#f59e0b">
-      {!editing && current ? (
-        <button
-          onClick={() => setEditing(true)}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <span className="text-lg">{current.emoji}</span>
-          Hoje: <span className="font-medium text-foreground">{current.label}</span>
-          <span className="text-xs">(mudar)</span>
-        </button>
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          {MOODS.map((m) => (
-            <button
-              key={m.key}
-              onClick={() => pick(m.key)}
-              className="flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1.5 text-sm transition-colors hover:bg-muted"
-            >
-              <span>{m.emoji}</span>
-              {m.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </SectionCard>
-  );
-}
-
-function TodaySection({ data, onChange }: { data: DashboardData; onChange: () => void }) {
+function AgendaSection({ data, onChange }: { data: DashboardData; onChange: () => void }) {
   const { commitments, bills } = data.today;
-  const empty = commitments.length === 0 && bills.length === 0;
+  const upcoming = data.upcomingCommitments;
+  const empty = commitments.length === 0 && bills.length === 0 && upcoming.length === 0;
 
   async function markPaid(id: string) {
     await fetch(`/api/bills/${id}`, {
@@ -180,7 +128,7 @@ function TodaySection({ data, onChange }: { data: DashboardData; onChange: () =>
 
   return (
     <SectionCard
-      title="Hoje"
+      title="Agenda"
       icon={Sun}
       color="#f59e0b"
       actions={
@@ -191,68 +139,112 @@ function TodaySection({ data, onChange }: { data: DashboardData; onChange: () =>
       }
     >
       {empty ? (
-        <p className="text-sm text-muted-foreground">Nada marcado para hoje.</p>
+        <p className="text-sm text-muted-foreground">Nada marcado.</p>
       ) : (
-        <ul className="space-y-1.5">
-          {commitments.map((c) => (
-            <li key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
-              <span className="w-12 shrink-0 tabular-nums text-muted-foreground">{timeFmt.format(new Date(c.startAt))}</span>
-              <span className="flex-1 font-medium">{c.title}</span>
-              {c.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
-              <EditCommitmentDialog commitment={c} onSaved={onChange} />
-              <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
-            </li>
-          ))}
-          {bills.map((b) => (
-            <li key={b.id} className="flex items-center gap-3 rounded-lg border border-rose-500/20 bg-rose-500/5 px-3 py-2 text-sm">
-              <Checkbox className="shrink-0" onCheckedChange={() => markPaid(b.id)} />
-              <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500" />
-              <span className="flex-1 font-medium">Conta {b.title.toLowerCase()} vence hoje</span>
-              <EditBillDialog bill={b} onSaved={onChange} />
-              <DeleteButton label={b.title} onDelete={() => deleteBill(b.id)} />
-            </li>
-          ))}
-        </ul>
+        <div className="space-y-4">
+          {(commitments.length > 0 || bills.length > 0) && (
+            <div>
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Hoje</p>
+              <ul className="space-y-1.5">
+                {commitments.map((c) => (
+                  <li key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+                    <span className="w-12 shrink-0 tabular-nums text-muted-foreground">{timeFmt.format(new Date(c.startAt))}</span>
+                    <span className="flex-1 font-medium">{c.title}</span>
+                    {c.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
+                    <EditCommitmentDialog commitment={c} onSaved={onChange} />
+                    <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
+                  </li>
+                ))}
+                {bills.map((b) => (
+                  <li key={b.id} className="flex items-center gap-3 rounded-lg border border-rose-500/20 bg-rose-500/5 px-3 py-2 text-sm">
+                    <Checkbox className="shrink-0" onCheckedChange={() => markPaid(b.id)} />
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500" />
+                    <span className="flex-1 font-medium">Conta {b.title.toLowerCase()} vence hoje</span>
+                    <EditBillDialog bill={b} onSaved={onChange} />
+                    <DeleteButton label={b.title} onDelete={() => deleteBill(b.id)} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {upcoming.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Próximos</p>
+              <ul className="space-y-1.5">
+                {upcoming.map((c) => (
+                  <li key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+                    <span className="w-28 shrink-0 text-muted-foreground">
+                      {dayLabel(c.startAt)} {timeFmt.format(new Date(c.startAt))}
+                    </span>
+                    <span className="flex-1 font-medium">{c.title}</span>
+                    {c.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
+                    <EditCommitmentDialog commitment={c} onSaved={onChange} />
+                    <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       )}
     </SectionCard>
   );
 }
 
-function UpcomingSection({ commitments, onChange }: { commitments: Commitment[]; onChange: () => void }) {
-  async function deleteCommitment(id: string) {
-    await fetch(`/api/commitments/${id}`, { method: "DELETE" });
+function DailyRitualSection({ data, onChange }: { data: DashboardData; onChange: () => void }) {
+  if (!data.verseOfDay && !data.checkin) return null;
+  return (
+    <SectionCard title="Antes de seguir" icon={Smile} color="#f59e0b">
+      <div className="space-y-4">
+        <CheckinBlock checkin={data.checkin} onChange={onChange} />
+        {data.verseOfDay && (
+          <div className="border-t border-border/70 pt-3.5">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Versículo do dia</p>
+            <p className="text-sm italic leading-relaxed">{data.verseOfDay.text ?? "Texto não cadastrado."}</p>
+            <p className="mt-1.5 text-xs font-medium text-muted-foreground">{data.verseOfDay.reference} (ARC)</p>
+          </div>
+        )}
+      </div>
+    </SectionCard>
+  );
+}
+
+function CheckinBlock({ checkin, onChange }: { checkin: DashboardData["checkin"]; onChange: () => void }) {
+  const [editing, setEditing] = useState(!checkin);
+  const current = MOODS.find((m) => m.key === checkin?.mood);
+
+  async function pick(moodKey: string) {
+    await fetch("/api/checkin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mood: moodKey }),
+    });
+    setEditing(false);
     onChange();
   }
 
-  return (
-    <SectionCard title="Próximos compromissos" icon={CalendarClock} color="#0ea5e9">
-      {commitments.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nenhum compromisso futuro marcado.</p>
-      ) : (
-        <ul className="space-y-1.5">
-          {commitments.map((c) => (
-            <li key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
-              <span className="w-28 shrink-0 text-muted-foreground">
-                {dayLabel(c.startAt)} {timeFmt.format(new Date(c.startAt))}
-              </span>
-              <span className="flex-1 font-medium">{c.title}</span>
-              {c.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
-              <EditCommitmentDialog commitment={c} onSaved={onChange} />
-              <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
-            </li>
-          ))}
-        </ul>
-      )}
-    </SectionCard>
-  );
-}
-
-function VerseOfDaySection({ verse }: { verse: { reference: string; text: string | null } }) {
-  return (
-    <SectionCard title="Versículo do dia" icon={BookOpen} color="#8b5cf6">
-      <p className="text-sm italic leading-relaxed">{verse.text ?? "Texto não cadastrado."}</p>
-      <p className="mt-2 text-xs font-medium text-muted-foreground">{verse.reference} (ARC)</p>
-    </SectionCard>
+  return !editing && current ? (
+    <button onClick={() => setEditing(true)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+      <span className="text-lg">{current.emoji}</span>
+      Como você está: <span className="font-medium text-foreground">{current.label}</span>
+      <span className="text-xs">(mudar)</span>
+    </button>
+  ) : (
+    <div>
+      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Como você está?</p>
+      <div className="flex flex-wrap gap-2">
+        {MOODS.map((m) => (
+          <button
+            key={m.key}
+            onClick={() => pick(m.key)}
+            className="flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1.5 text-sm transition-colors hover:bg-muted"
+          >
+            <span>{m.emoji}</span>
+            {m.label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -282,21 +274,52 @@ function FinanceSection({ finance }: { finance: DashboardData["finance"] }) {
   );
 }
 
-function ProjectsSection({
-  title,
-  icon,
+function ProjectsOverviewSection({ data, onChange }: { data: DashboardData; onChange: () => void }) {
+  const { dev } = data;
+  const hasDevAlert = dev.needsDecision > 0 || dev.alerts > 0;
+  const isEmpty = !hasDevAlert && data.projects.length === 0 && data.church.length === 0;
+
+  return (
+    <SectionCard title="Projetos" icon={FolderKanban} color="#71717a" actions={<AddProjectDialog onAdded={onChange} />}>
+      {isEmpty && <p className="text-sm text-muted-foreground">Nada por aqui ainda.</p>}
+      <div className="space-y-4">
+        {hasDevAlert && (
+          <div className="space-y-1.5">
+            {dev.needsDecision > 0 && (
+              <div className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                {dev.needsDecision} {dev.needsDecision === 1 ? "projeto precisa" : "projetos precisam"} de decisão
+              </div>
+            )}
+            {dev.alerts > 0 && (
+              <div className="flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-400">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                {dev.alerts} {dev.alerts === 1 ? "deploy com problema" : "deploys com problema"}
+              </div>
+            )}
+          </div>
+        )}
+
+        <ProjectGroup label="Geral" projects={data.projects} onChange={onChange} />
+        <ProjectGroup label="Igreja & Ministério" color={igrejaColor} projects={data.church} onChange={onChange} />
+      </div>
+    </SectionCard>
+  );
+}
+
+function ProjectGroup({
+  label,
   color,
   projects,
   onChange,
-  defaultArea,
 }: {
-  title: string;
-  icon: React.ComponentProps<typeof SectionCard>["icon"];
-  color: string;
+  label: string;
+  color?: string;
   projects: Project[];
   onChange: () => void;
-  defaultArea?: string;
 }) {
+  if (projects.length === 0) return null;
+
   async function archive(id: string) {
     await fetch(`/api/projects/${id}`, {
       method: "PATCH",
@@ -312,58 +335,31 @@ function ProjectsSection({
   }
 
   return (
-    <SectionCard title={title} icon={icon} color={color} actions={<AddProjectDialog onAdded={onChange} defaultArea={defaultArea} />}>
-      {projects.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nada por aqui ainda.</p>
-      ) : (
-        <ul className="space-y-2">
-          {projects.map((p) => (
-            <li key={p.id} className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium">{p.name}</p>
-                  {p.statusNote && <p className="text-muted-foreground">→ {p.statusNote}</p>}
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <EditProjectDialog project={p} onSaved={onChange} />
-                  <button onClick={() => archive(p.id)} className="text-muted-foreground/60 transition-colors hover:text-foreground" aria-label={`Arquivar ${p.name}`}>
-                    <Archive className="h-3.5 w-3.5" />
-                  </button>
-                  <DeleteButton label={p.name} onDelete={() => deleteProject(p.id)} />
-                </div>
+    <div>
+      <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
+        {color && <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />}
+        {label}
+      </p>
+      <ul className="space-y-2">
+        {projects.map((p) => (
+          <li key={p.id} className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">{p.name}</p>
+                {p.statusNote && <p className="text-muted-foreground">→ {p.statusNote}</p>}
               </div>
-              <ProjectTasks projectId={p.id} tasks={p.tasks} onChange={onChange} />
-            </li>
-          ))}
-        </ul>
-      )}
-    </SectionCard>
-  );
-}
-
-function DevSection({ dev }: { dev: DashboardData["dev"] }) {
-  return (
-    <SectionCard title="Desenvolvimento" icon={Code2} color={devColor}>
-      {dev.needsDecision === 0 && dev.alerts === 0 ? (
-        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <Check className="h-4 w-4 text-emerald-500" /> Nada pendente.
-        </p>
-      ) : (
-        <ul className="space-y-1.5 text-sm">
-          {dev.needsDecision > 0 && (
-            <li className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-400">
-              <AlertTriangle className="h-4 w-4 shrink-0" />
-              {dev.needsDecision} {dev.needsDecision === 1 ? "projeto precisa" : "projetos precisam"} de decisão
-            </li>
-          )}
-          {dev.alerts > 0 && (
-            <li className="flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-2 text-rose-600 dark:text-rose-400">
-              <AlertTriangle className="h-4 w-4 shrink-0" />
-              {dev.alerts} {dev.alerts === 1 ? "deploy com problema" : "deploys com problema"}
-            </li>
-          )}
-        </ul>
-      )}
-    </SectionCard>
+              <div className="flex shrink-0 items-center gap-2">
+                <EditProjectDialog project={p} onSaved={onChange} />
+                <button onClick={() => archive(p.id)} className="text-muted-foreground/60 transition-colors hover:text-foreground" aria-label={`Arquivar ${p.name}`}>
+                  <Archive className="h-3.5 w-3.5" />
+                </button>
+                <DeleteButton label={p.name} onDelete={() => deleteProject(p.id)} />
+              </div>
+            </div>
+            <ProjectTasks projectId={p.id} tasks={p.tasks} onChange={onChange} />
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
