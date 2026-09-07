@@ -41,8 +41,11 @@ model Commitment {
   recurring String?  // daily | weekdays | weekly | monthly | null (one-off)
   archived  Boolean  @default(false)
   createdAt DateTime @default(now())
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
   @@index([userId, startAt])
   @@index([userId, area])
+  @@index([projectId])
 }
 
 model Bill {
@@ -58,8 +61,11 @@ model Bill {
   area      String?
   createdAt DateTime   @default(now())
   envelopes Envelope[]
+  projectId String?
+  project   Project?   @relation(fields: [projectId], references: [id], onDelete: SetNull)
   @@index([userId, dueDate])
   @@index([userId, area])
+  @@index([projectId])
 }
 
 // Something that happened: money in or out.
@@ -72,8 +78,11 @@ model Transaction {
   amount    Float
   date      DateTime
   createdAt DateTime @default(now())
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
   @@index([userId, date])
   @@index([userId, type])
+  @@index([projectId])
 }
 
 // Money already set aside for a purpose (optionally toward a specific Bill).
@@ -90,32 +99,83 @@ model Envelope {
   @@index([userId])
 }
 
+// A project has a beginning, a goal and an end — unlike a Commitment (fixed
+// time) or a Bill (fixed due date). "Próxima ação" is computed as the first
+// undone Task, in stage/task order — not stored, so it can't drift from reality.
 model Project {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name       String
-  area       String
-  statusNote String?
-  status     String   @default("em_andamento") // ideia | em_andamento | aguardando_decisao | concluido
-  hasAlert   Boolean  @default(false)
-  archived   Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  tasks      Task[]
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  area            String
+  objetivo        String?
+  statusNote      String?
+  status          String   @default("planejado") // planejado | ativo | esperando | bloqueado | concluido
+  esperandoMotivo String?
+  prioridade      String   @default("media") // baixa | media | alta
+  prazo           DateTime?
+  orcamento       Float?
+  hasAlert        Boolean  @default(false)
+  archived        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  stages          Stage[]
+  tasks           Task[]
+  notes           Note[]
+  decisions       Decision[]
+  commitments     Commitment[]
+  bills           Bill[]
+  transactions    Transaction[]
   @@index([userId, area])
   @@index([userId, status])
 }
 
-// A step inside a Project — Área → Projeto → Tarefas, per the roadmap.
+// A named group of tasks inside a Project (e.g. "Reserva", "Preparação") —
+// lets a project's checklist show structure instead of one long flat list.
+model Stage {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  tasks     Task[]
+  @@index([projectId])
+}
+
+// A step inside a Project — Área → Projeto → Etapa → Tarefas, per the roadmap.
 model Task {
   id        String    @id @default(cuid())
   projectId String
   project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  stageId   String?
+  stage     Stage?    @relation(fields: [stageId], references: [id], onDelete: SetNull)
   title     String
   done      Boolean   @default(false)
   doneAt    DateTime?
+  order     Int       @default(0)
   createdAt DateTime  @default(now())
+  @@index([projectId])
+  @@index([stageId])
+}
+
+// A freeform thought about a Project that isn't actionable — not a Task.
+model Note {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
+  @@index([projectId])
+}
+
+// A recorded decision on a Project, so the "why" survives past the outcome.
+model Decision {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
   @@index([projectId])
 }
 

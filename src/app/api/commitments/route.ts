@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
       location: body.location || null,
       area: body.area || null,
       recurring: body.recurring || null,
+      projectId: body.projectId || null,
     },
   });
   return ok(commitment);

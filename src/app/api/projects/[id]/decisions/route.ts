@@ -14,10 +14,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!project) return bad("Not found", 404);
 
   const body = await parseBody(req);
-  if (!body.title) return bad("title is required");
+  if (!body.body) return bad("body is required");
 
-  const stageId = typeof body.stageId === "string" ? body.stageId : null;
-  const count = await db.task.count({ where: { projectId, stageId } });
-  const task = await db.task.create({ data: { projectId, stageId, title: body.title, order: count } });
-  return ok(task);
+  const decision = await db.decision.create({ data: { projectId, body: body.body } });
+  return ok(decision);
 }

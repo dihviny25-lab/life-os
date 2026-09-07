@@ -362,11 +362,27 @@ export function EditBillDialog({ bill, onSaved }: { bill: Bill; onSaved: () => v
   );
 }
 
+const PROJECT_STATUSES = [
+  { value: "planejado", label: "Planejado" },
+  { value: "ativo", label: "Ativo" },
+  { value: "esperando", label: "Esperando" },
+  { value: "bloqueado", label: "Bloqueado" },
+  { value: "concluido", label: "Concluído" },
+];
+
+const PRIORITIES = [
+  { value: "baixa", label: "Baixa" },
+  { value: "media", label: "Média" },
+  { value: "alta", label: "Alta" },
+];
+
 export function AddProjectDialog({ onAdded, defaultArea }: { onAdded: () => void; defaultArea?: string }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [area, setArea] = useState(defaultArea || AREAS[0].key);
-  const [statusNote, setStatusNote] = useState("");
+  const [objetivo, setObjetivo] = useState("");
+  const [prioridade, setPrioridade] = useState("media");
+  const [prazo, setPrazo] = useState("");
 
   async function submit() {
     if (!name) {
@@ -376,11 +392,12 @@ export function AddProjectDialog({ onAdded, defaultArea }: { onAdded: () => void
     await fetch("/api/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, area, statusNote }),
+      body: JSON.stringify({ name, area, objetivo, prioridade, prazo: prazo || null }),
     });
     setOpen(false);
     setName("");
-    setStatusNote("");
+    setObjetivo("");
+    setPrazo("");
     onAdded();
   }
 
@@ -398,12 +415,33 @@ export function AddProjectDialog({ onAdded, defaultArea }: { onAdded: () => void
         <div className="space-y-3">
           <div>
             <Label>Nome</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Central de Comando" />
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Viagem em família" />
           </div>
           {!defaultArea && <AreaSelect value={area} onChange={setArea} allowNone={false} />}
           <div>
-            <Label>Status</Label>
-            <Input value={statusNote} onChange={(e) => setStatusNote(e.target.value)} placeholder="Ex: aguardando validação" />
+            <Label>Objetivo (opcional)</Label>
+            <Input value={objetivo} onChange={(e) => setObjetivo(e.target.value)} placeholder="O que você quer alcançar com isso?" />
+          </div>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <Label>Prioridade</Label>
+              <Select value={prioridade} onValueChange={setPrioridade}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRIORITIES.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>
+                      {p.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1">
+              <Label>Prazo (opcional)</Label>
+              <Input type="date" value={prazo} onChange={(e) => setPrazo(e.target.value)} />
+            </div>
           </div>
         </div>
         <DialogFooter>
@@ -414,19 +452,16 @@ export function AddProjectDialog({ onAdded, defaultArea }: { onAdded: () => void
   );
 }
 
-const PROJECT_STATUSES = [
-  { value: "ideia", label: "Ideia" },
-  { value: "em_andamento", label: "Em andamento" },
-  { value: "aguardando_decisao", label: "Aguardando decisão" },
-  { value: "concluido", label: "Concluído" },
-];
-
 export function EditProjectDialog({ project, onSaved }: { project: Project; onSaved: () => void }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(project.name);
   const [area, setArea] = useState(project.area);
-  const [statusNote, setStatusNote] = useState(project.statusNote || "");
+  const [objetivo, setObjetivo] = useState(project.objetivo || "");
   const [status, setStatus] = useState(project.status);
+  const [esperandoMotivo, setEsperandoMotivo] = useState(project.esperandoMotivo || "");
+  const [prioridade, setPrioridade] = useState(project.prioridade || "media");
+  const [prazo, setPrazo] = useState(project.prazo ? project.prazo.slice(0, 10) : "");
+  const [orcamento, setOrcamento] = useState(project.orcamento != null ? String(project.orcamento) : "");
 
   async function submit() {
     if (!name) {
@@ -436,7 +471,16 @@ export function EditProjectDialog({ project, onSaved }: { project: Project; onSa
     await fetch(`/api/projects/${project.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, area, statusNote, status }),
+      body: JSON.stringify({
+        name,
+        area,
+        objetivo,
+        status,
+        esperandoMotivo: status === "esperando" ? esperandoMotivo : "",
+        prioridade,
+        prazo: prazo || null,
+        orcamento: orcamento ? Number(orcamento.replace(",", ".")) : null,
+      }),
     });
     setOpen(false);
     onSaved();
@@ -458,23 +502,56 @@ export function EditProjectDialog({ project, onSaved }: { project: Project; onSa
           </div>
           <AreaSelect value={area} onChange={setArea} allowNone={false} />
           <div>
-            <Label>Status</Label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PROJECT_STATUSES.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>
-                    {s.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Objetivo</Label>
+            <Input value={objetivo} onChange={(e) => setObjetivo(e.target.value)} placeholder="O que você quer alcançar com isso?" />
           </div>
-          <div>
-            <Label>Nota</Label>
-            <Input value={statusNote} onChange={(e) => setStatusNote(e.target.value)} placeholder="Ex: aguardando validação" />
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <Label>Status</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROJECT_STATUSES.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>
+                      {s.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1">
+              <Label>Prioridade</Label>
+              <Select value={prioridade} onValueChange={setPrioridade}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRIORITIES.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>
+                      {p.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {status === "esperando" && (
+            <div>
+              <Label>Esperando o quê?</Label>
+              <Input value={esperandoMotivo} onChange={(e) => setEsperandoMotivo(e.target.value)} placeholder="Ex: validação do PR" />
+            </div>
+          )}
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <Label>Prazo (opcional)</Label>
+              <Input type="date" value={prazo} onChange={(e) => setPrazo(e.target.value)} />
+            </div>
+            <div className="flex-1">
+              <Label>Orçamento (opcional)</Label>
+              <Input value={orcamento} onChange={(e) => setOrcamento(e.target.value)} placeholder="Ex: 1500" inputMode="decimal" />
+            </div>
           </div>
         </div>
         <DialogFooter>

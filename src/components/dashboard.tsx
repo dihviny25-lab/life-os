@@ -4,30 +4,32 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sun, Wallet, FolderKanban, AlertTriangle, ArrowRight, Archive, Repeat, Smile } from "lucide-react";
+import { Sun, Wallet, FolderKanban, AlertTriangle, ArrowRight, Repeat, Smile } from "lucide-react";
 import { MOODS } from "@/lib/moods";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionCard } from "@/components/section-card";
 import {
   AddCommitmentDialog,
   AddBillDialog,
-  AddProjectDialog,
   EditCommitmentDialog,
   EditBillDialog,
-  EditProjectDialog,
 } from "@/components/entry-dialogs";
-import { ProjectTasks } from "@/components/project-tasks";
 import { DeleteButton } from "@/components/delete-button";
 import { AREAS } from "@/lib/areas";
+import { STATUS_LABEL } from "@/lib/projects";
 import type { Commitment, Bill, Project } from "@/lib/types";
+
+interface ProjectAttention extends Project {
+  progress: { total: number; done: number; percent: number; nextAction: { id: string; title: string } | null };
+}
 
 interface DashboardData {
   today: { commitments: Commitment[]; bills: Bill[] };
   upcomingCommitments: Commitment[];
   finance: { currentBalance: number; committed: number; free: number; envelopes: { name: string; allocated: number }[] };
-  projects: Project[];
-  church: Project[];
-  dev: { needsDecision: number; alerts: number };
+  projectsAttention: ProjectAttention[];
+  projectsTotal: number;
+  dev: { alerts: number };
   verseOfDay: { reference: string; text: string | null } | null;
   checkin: { mood: string } | null;
 }
@@ -45,7 +47,6 @@ function dayLabel(iso: string) {
 }
 
 const financasColor = AREAS.find((a) => a.key === "financas")!.color;
-const igrejaColor = AREAS.find((a) => a.key === "igreja_ministerio")!.color;
 
 export function Dashboard() {
   const router = useRouter();
@@ -90,7 +91,7 @@ export function Dashboard() {
 
         {/* Prioridade 2: projetos, agrupados em vez de espalhados em cards repetidos. */}
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <ProjectsOverviewSection data={data} onChange={load} />
+          <ProjectsOverviewSection data={data} />
         </motion.div>
 
         {/* Ritual do dia — calmo, não é urgência, por isso fica por último. */}
@@ -286,92 +287,62 @@ function FinanceSection({ finance }: { finance: DashboardData["finance"] }) {
   );
 }
 
-function ProjectsOverviewSection({ data, onChange }: { data: DashboardData; onChange: () => void }) {
-  const { dev } = data;
-  const hasDevAlert = dev.needsDecision > 0 || dev.alerts > 0;
-  const isEmpty = !hasDevAlert && data.projects.length === 0 && data.church.length === 0;
+const prazoFmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
+
+function ProjectsOverviewSection({ data }: { data: DashboardData }) {
+  const { dev, projectsAttention, projectsTotal } = data;
 
   return (
-    <SectionCard title="Projetos" icon={FolderKanban} color="#71717a" actions={<AddProjectDialog onAdded={onChange} />}>
-      {isEmpty && <p className="text-sm text-muted-foreground">Nada por aqui ainda.</p>}
-      <div className="space-y-4">
-        {hasDevAlert && (
-          <div className="space-y-1.5">
-            {dev.needsDecision > 0 && (
-              <div className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
-                <AlertTriangle className="h-4 w-4 shrink-0" />
-                {dev.needsDecision} {dev.needsDecision === 1 ? "projeto precisa" : "projetos precisam"} de decisão
-              </div>
-            )}
-            {dev.alerts > 0 && (
-              <div className="flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-400">
-                <AlertTriangle className="h-4 w-4 shrink-0" />
-                {dev.alerts} {dev.alerts === 1 ? "deploy com problema" : "deploys com problema"}
-              </div>
-            )}
-          </div>
-        )}
-
-        <ProjectGroup label="Geral" projects={data.projects} onChange={onChange} />
-        <ProjectGroup label="Igreja & Ministério" color={igrejaColor} projects={data.church} onChange={onChange} />
-      </div>
+    <SectionCard
+      title="Projetos que precisam de atenção"
+      icon={FolderKanban}
+      color="#71717a"
+      actions={
+        <Link href="/app/projects" className="text-xs font-medium text-muted-foreground hover:text-foreground">
+          Ver todos ({projectsTotal})
+        </Link>
+      }
+    >
+      {dev.alerts > 0 && (
+        <div className="mb-3 flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-400">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          {dev.alerts} {dev.alerts === 1 ? "deploy com problema" : "deploys com problema"}
+        </div>
+      )}
+      {projectsAttention.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nada precisando de atenção agora.</p>
+      ) : (
+        <ul className="space-y-2">
+          {projectsAttention.map((p) => {
+            const areaMeta = AREAS.find((a) => a.key === p.area);
+            return (
+              <li key={p.id}>
+                <Link href={`/app/projects/${p.id}`} className="block rounded-lg bg-muted/40 px-3 py-2 text-sm transition-colors hover:bg-muted">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium">{p.name}</p>
+                    <span className="shrink-0 text-xs" style={{ color: areaMeta?.color }}>
+                      {areaMeta?.name || p.area}
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground">
+                    {p.status === "esperando" || p.status === "bloqueado" ? (
+                      <>
+                        {STATUS_LABEL[p.status]}
+                        {p.esperandoMotivo ? ` — ${p.esperandoMotivo}` : ""}
+                      </>
+                    ) : p.progress.nextAction ? (
+                      <>→ {p.progress.nextAction.title}</>
+                    ) : (
+                      "Sem próxima ação definida"
+                    )}
+                    {p.prazo && <span className="ml-1.5 text-xs text-muted-foreground/70">· {prazoFmt.format(new Date(p.prazo))}</span>}
+                  </p>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </SectionCard>
-  );
-}
-
-function ProjectGroup({
-  label,
-  color,
-  projects,
-  onChange,
-}: {
-  label: string;
-  color?: string;
-  projects: Project[];
-  onChange: () => void;
-}) {
-  if (projects.length === 0) return null;
-
-  async function archive(id: string) {
-    await fetch(`/api/projects/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ archived: true }),
-    });
-    onChange();
-  }
-
-  async function deleteProject(id: string) {
-    await fetch(`/api/projects/${id}`, { method: "DELETE" });
-    onChange();
-  }
-
-  return (
-    <div>
-      <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
-        {color && <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />}
-        {label}
-      </p>
-      <ul className="space-y-2">
-        {projects.map((p) => (
-          <li key={p.id} className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">{p.name}</p>
-                {p.statusNote && <p className="text-muted-foreground">→ {p.statusNote}</p>}
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <EditProjectDialog project={p} onSaved={onChange} />
-                <button onClick={() => archive(p.id)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={`Arquivar ${p.name}`}>
-                  <Archive className="h-3.5 w-3.5" />
-                </button>
-                <DeleteButton label={p.name} onDelete={() => deleteProject(p.id)} />
-              </div>
-            </div>
-            <ProjectTasks projectId={p.id} tasks={p.tasks} onChange={onChange} />
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }

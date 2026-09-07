@@ -3,6 +3,7 @@ import { ok, bad } from "@/lib/api";
 import { getUserFromRequest } from "@/lib/auth";
 import { projectCommitment } from "@/lib/recurrence";
 import { verseOfDayIndex } from "@/lib/verse";
+import { computeProjectProgress } from "@/lib/projects";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
     db.bill.findMany({ where: { userId, paid: false, dueDate: { gte: todayStart, lte: todayEnd } } }),
     db.finance.findUnique({ where: { userId } }),
     db.envelope.findMany({ where: { userId } }),
-    db.project.findMany({ where: { userId, archived: false }, orderBy: { createdAt: "asc" }, include: { tasks: { orderBy: { createdAt: "asc" } } } }),
+    db.project.findMany({ where: { userId, archived: false }, orderBy: { createdAt: "asc" }, include: { tasks: true, stages: true } }),
     db.verse.findMany({ where: { userId }, orderBy: { order: "asc" } }),
     db.checkin.findUnique({ where: { userId_date: { userId, date: todayStart } } }),
   ]);
@@ -49,18 +50,32 @@ export async function GET(req: NextRequest) {
   const committed = envelopes.reduce((sum, e) => sum + e.allocated, 0);
   const free = currentBalance - committed;
 
-  const churchProjects = projects.filter((p) => p.area === "igreja_ministerio");
-  const devProjects = projects.filter((p) => p.area === "desenvolvimento");
-  const devNeedsDecision = devProjects.filter((p) => p.status === "aguardando_decisao").length;
-  const devAlerts = devProjects.filter((p) => p.hasAlert).length;
+  const devAlerts = projects.filter((p) => p.area === "desenvolvimento" && p.hasAlert).length;
+
+  const STATUS_WEIGHT: Record<string, number> = { bloqueado: 0, esperando: 1, ativo: 2, planejado: 3, concluido: 4 };
+  const projectsAttention = projects
+    .filter((p) => p.status !== "concluido")
+    .map((p) => {
+      const { tasks, stages, ...rest } = p;
+      return { ...rest, progress: computeProjectProgress(tasks, stages) };
+    })
+    .sort((a, b) => {
+      const w = (STATUS_WEIGHT[a.status] ?? 5) - (STATUS_WEIGHT[b.status] ?? 5);
+      if (w !== 0) return w;
+      if (a.prazo && b.prazo) return a.prazo.getTime() - b.prazo.getTime();
+      if (a.prazo) return -1;
+      if (b.prazo) return 1;
+      return 0;
+    })
+    .slice(0, 5);
 
   return ok({
     today: { commitments: todayCommitments, bills: billsToday },
     upcomingCommitments,
     finance: { currentBalance, committed, free, envelopes: envelopes.map((e) => ({ name: e.name, allocated: e.allocated })) },
-    projects: projects.filter((p) => p.area !== "igreja_ministerio"),
-    church: churchProjects,
-    dev: { needsDecision: devNeedsDecision, alerts: devAlerts },
+    projectsAttention,
+    projectsTotal: projects.length,
+    dev: { alerts: devAlerts },
     verseOfDay: verseOfDay ? { reference: verseOfDay.reference, text: verseOfDay.text } : null,
     checkin: checkin ? { mood: checkin.mood } : null,
   });

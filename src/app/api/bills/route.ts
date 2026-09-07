@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
       area: body.area || null,
       priority: body.priority || "normal",
       recurring: body.recurring || null,
+      projectId: body.projectId || null,
     },
   });
   return ok(bill);

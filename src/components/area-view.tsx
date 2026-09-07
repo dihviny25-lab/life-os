@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { CalendarClock, Receipt, FolderKanban, Archive, Repeat } from "lucide-react";
+import { CalendarClock, Receipt, FolderKanban, Repeat, ArrowRight } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionCard } from "@/components/section-card";
 import {
@@ -12,11 +13,10 @@ import {
   AddProjectDialog,
   EditCommitmentDialog,
   EditBillDialog,
-  EditProjectDialog,
 } from "@/components/entry-dialogs";
-import { ProjectTasks } from "@/components/project-tasks";
 import { DeleteButton } from "@/components/delete-button";
 import { MediaLists } from "@/components/media-lists";
+import { STATUS_LABEL } from "@/lib/projects";
 import { AREAS } from "@/lib/areas";
 import type { Commitment, Bill, Project } from "@/lib/types";
 
@@ -70,20 +70,6 @@ export function AreaView({ area }: { area: string }) {
 
   async function deleteBill(id: string) {
     await fetch(`/api/bills/${id}`, { method: "DELETE" });
-    load();
-  }
-
-  async function archiveProject(id: string) {
-    await fetch(`/api/projects/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ archived: true }),
-    });
-    load();
-  }
-
-  async function deleteProject(id: string) {
-    await fetch(`/api/projects/${id}`, { method: "DELETE" });
     load();
   }
 
@@ -148,27 +134,32 @@ export function AreaView({ area }: { area: string }) {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <SectionCard title="Projetos" icon={FolderKanban} color={color} actions={<AddProjectDialog onAdded={load} defaultArea={area} />}>
+          <SectionCard
+            title="Projetos"
+            icon={FolderKanban}
+            color={color}
+            actions={
+              <div className="flex items-center gap-1">
+                <AddProjectDialog onAdded={load} defaultArea={area} />
+                <Link href={`/app/projects?area=${area}`} className="flex items-center gap-1 px-1 text-xs font-medium text-muted-foreground hover:text-foreground">
+                  Ver todos <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+            }
+          >
             {data.projects.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nada por aqui ainda.</p>
             ) : (
-              <ul className="space-y-2">
+              <ul className="space-y-1.5">
                 {data.projects.map((p) => (
-                  <li key={p.id} className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium">{p.name}</p>
-                        {p.statusNote && <p className="text-muted-foreground">→ {p.statusNote}</p>}
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <EditProjectDialog project={p} onSaved={load} />
-                        <button onClick={() => archiveProject(p.id)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={`Arquivar ${p.name}`}>
-                          <Archive className="h-3.5 w-3.5" />
-                        </button>
-                        <DeleteButton label={p.name} onDelete={() => deleteProject(p.id)} />
-                      </div>
-                    </div>
-                    <ProjectTasks projectId={p.id} tasks={p.tasks} onChange={load} />
+                  <li key={p.id}>
+                    <Link href={`/app/projects/${p.id}`} className="block rounded-lg bg-muted/40 px-3 py-2 text-sm transition-colors hover:bg-muted">
+                      <p className="font-medium">{p.name}</p>
+                      <p className="text-muted-foreground">
+                        {STATUS_LABEL[p.status] || p.status}
+                        {p.statusNote ? ` — ${p.statusNote}` : ""}
+                      </p>
+                    </Link>
                   </li>
                 ))}
               </ul>

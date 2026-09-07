@@ -13,6 +13,7 @@ import {
   Church,
   User,
   BookOpen,
+  FolderKanban,
   MoreHorizontal,
   X,
   LogOut,
@@ -33,8 +34,13 @@ const AREA_ICONS: Record<string, typeof Users> = {
 
 const NAV_ITEMS = [
   { key: "hoje", href: "/app", name: "Hoje", icon: Home, color: "#f59e0b" },
+  { key: "projetos", href: "/app/projects", name: "Projetos", icon: FolderKanban, color: "#3b82f6" },
   ...AREAS.map((a) => ({ key: a.key, href: `/app/areas/${a.key}`, name: a.name, icon: AREA_ICONS[a.key] || Home, color: a.color })),
 ];
+
+function isActive(pathname: string, href: string) {
+  return href === "/app" ? pathname === href : pathname.startsWith(href);
+}
 
 // Only room for a handful of tabs on a phone — the rest live behind "Mais".
 const BOTTOM_NAV_KEYS = ["hoje", "financas", "familia", "igreja_ministerio"];
@@ -79,7 +85,7 @@ export function Sidebar() {
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {BOTTOM_NAV_ITEMS.map((item) => {
-          const active = pathname === item.href;
+          const active = isActive(pathname, item.href);
           const Icon = item.icon;
           return (
             <Link
@@ -164,7 +170,7 @@ function SidebarContent({
     <div className="flex flex-1 flex-col justify-between overflow-y-auto py-4">
       <nav className="space-y-0.5 px-3">
         {items.map((item) => {
-          const active = pathname === item.href;
+          const active = isActive(pathname, item.href);
           const Icon = item.icon;
           return (
             <Link key={item.key} href={item.href} className="relative block">

@@ -25,8 +25,13 @@ export interface Project {
   id: string;
   name: string;
   area: string;
+  objetivo: string | null;
   statusNote: string | null;
   status: string;
+  esperandoMotivo: string | null;
+  prioridade: string;
+  prazo: string | null;
+  orcamento: number | null;
   hasAlert: boolean;
   archived?: boolean;
   tasks: Task[];
