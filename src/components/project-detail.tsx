@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Plus, Check, Clock3, Archive, ExternalLink } from "lucide-react";
+import { ArrowLeft, Plus, Check, Clock3, Archive, ExternalLink, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { EditProjectDialog, EditBillDialog } from "@/components/entry-dialogs";
+import { EditProjectDialog, EditBillDialog, EditCommitmentDialog } from "@/components/entry-dialogs";
+import { EditEnvelopeDialog } from "@/components/finance-dialogs";
 import { DeleteButton } from "@/components/delete-button";
 import { AREAS } from "@/lib/areas";
 import { STATUS_LABEL, PRIORITY_LABEL } from "@/lib/projects";
@@ -49,6 +50,10 @@ interface CommitmentRow {
   id: string;
   title: string;
   startAt: string;
+  location: string | null;
+  area: string | null;
+  recurring: string | null;
+  done?: boolean;
 }
 interface BillRow {
   id: string;
@@ -65,6 +70,7 @@ interface EnvelopeRow {
   id: string;
   name: string;
   allocated: number;
+  billId: string | null;
 }
 interface LinkRow {
   id: string;
@@ -129,6 +135,21 @@ export function ProjectDetail({ id }: { id: string }) {
 
   async function deleteBill(billId: string) {
     await fetch(`/api/bills/${billId}`, { method: "DELETE" });
+    load();
+  }
+
+  async function deleteCommitment(commitmentId: string) {
+    await fetch(`/api/commitments/${commitmentId}`, { method: "DELETE" });
+    load();
+  }
+
+  async function deleteTask(taskId: string) {
+    await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
+    load();
+  }
+
+  async function deleteStage(stageId: string) {
+    await fetch(`/api/stages/${stageId}`, { method: "DELETE" });
     load();
   }
 
@@ -209,10 +230,10 @@ export function ProjectDetail({ id }: { id: string }) {
       <Section title="Etapas">
         <div className="space-y-4">
           {stages.map((s) => (
-            <StageBlock key={s.id} stage={s} projectId={id} onToggle={toggleTask} onChange={load} />
+            <StageBlock key={s.id} stage={s} projectId={id} onToggle={toggleTask} onDeleteTask={deleteTask} onDeleteStage={deleteStage} onChange={load} />
           ))}
           {tasksSemEtapa.length > 0 && (
-            <StageBlock stage={{ id: "", name: "Geral", order: 0, tasks: tasksSemEtapa }} projectId={id} onToggle={toggleTask} onChange={load} />
+            <StageBlock stage={{ id: "", name: "Geral", order: 0, tasks: tasksSemEtapa }} projectId={id} onToggle={toggleTask} onDeleteTask={deleteTask} onChange={load} />
           )}
           <AddStage projectId={id} onAdded={load} />
         </div>
@@ -266,7 +287,7 @@ export function ProjectDetail({ id }: { id: string }) {
             <p className="mt-1 text-[11px] text-muted-foreground">Falta guardar: {currency(financeiro.faltaGuardar)}</p>
           </div>
         )}
-        <EnvelopesList items={envelopes} projectId={id} onChange={load} />
+        <EnvelopesList items={envelopes} bills={bills} projectId={id} onChange={load} />
       </Section>
 
       {/* Links */}
@@ -279,9 +300,13 @@ export function ProjectDetail({ id }: { id: string }) {
         <Section title="Agenda">
           <ul className="space-y-1">
             {commitments.map((c) => (
-              <li key={c.id} className="flex items-center justify-between text-sm">
-                <span>{c.title}</span>
-                <span className="text-xs text-muted-foreground">{dateTimeFmt.format(new Date(c.startAt))}</span>
+              <li key={c.id} className="flex min-w-0 items-center gap-2 text-sm">
+                <span className="min-w-0 flex-1 truncate">{c.title}</span>
+                <span className="shrink-0 text-xs text-muted-foreground">{dateTimeFmt.format(new Date(c.startAt))}</span>
+                <span className="flex shrink-0 items-center">
+                  <EditCommitmentDialog commitment={c} onSaved={load} />
+                  <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
+                </span>
               </li>
             ))}
           </ul>
@@ -319,6 +344,108 @@ function Row({ label, value, valueClass, bold }: { label: string; value: string;
   );
 }
 
+function EditIconButton({ label }: { label: string }) {
+  return (
+    <button className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={`Editar ${label}`}>
+      <Pencil className="h-3.5 w-3.5" />
+    </button>
+  );
+}
+
+function EditTextDialog({
+  title,
+  label,
+  value,
+  triggerLabel,
+  onSaved,
+}: {
+  title: string;
+  label: string;
+  value: string;
+  triggerLabel: string;
+  onSaved: (value: string) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState(value);
+
+  async function submit() {
+    if (!text.trim()) {
+      notify.error("Preencha o campo");
+      return;
+    }
+    await onSaved(text.trim());
+    setOpen(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) setText(value); }}>
+      <DialogTrigger asChild>
+        <EditIconButton label={triggerLabel} />
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>{label}</Label>
+            <Input autoFocus value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={submit}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditLinkDialog({ link, onSaved }: { link: LinkRow; onSaved: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [url, setUrl] = useState(link.url);
+  const [label, setLabel] = useState(link.label || "");
+
+  async function submit() {
+    if (!url.trim()) {
+      notify.error("Preencha a URL");
+      return;
+    }
+    await fetch(`/api/links/${link.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: url.trim(), label: label.trim() || null }),
+    });
+    setOpen(false);
+    onSaved();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <EditIconButton label={link.label || link.url} />
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar link</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>URL</Label>
+            <Input autoFocus value={url} onChange={(e) => setUrl(e.target.value)} />
+          </div>
+          <div>
+            <Label>Nome (opcional)</Label>
+            <Input value={label} onChange={(e) => setLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={submit}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-5">
@@ -332,11 +459,15 @@ function StageBlock({
   stage,
   projectId,
   onToggle,
+  onDeleteTask,
+  onDeleteStage,
   onChange,
 }: {
   stage: StageRow;
   projectId: string;
   onToggle: (taskId: string, done: boolean) => void;
+  onDeleteTask: (taskId: string) => Promise<void>;
+  onDeleteStage?: (stageId: string) => Promise<void>;
   onChange: () => void;
 }) {
   const [adding, setAdding] = useState(false);
@@ -357,14 +488,44 @@ function StageBlock({
     onChange();
   }
 
+  async function renameTask(taskId: string, newTitle: string) {
+    await fetch(`/api/tasks/${taskId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: newTitle }),
+    });
+    onChange();
+  }
+
+  async function renameStage(newName: string) {
+    await fetch(`/api/stages/${stage.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newName }),
+    });
+    onChange();
+  }
+
   return (
     <div>
-      <p className="mb-1.5 text-xs font-medium text-muted-foreground">{stage.name}</p>
+      <div className="mb-1.5 flex items-center gap-2">
+        <p className="min-w-0 flex-1 truncate text-xs font-medium text-muted-foreground">{stage.name}</p>
+        {stage.id && onDeleteStage && (
+          <span className="flex shrink-0 items-center">
+            <EditTextDialog title="Editar etapa" label="Nome" value={stage.name} triggerLabel={stage.name} onSaved={renameStage} />
+            <DeleteButton label={stage.name} onDelete={() => onDeleteStage(stage.id)} />
+          </span>
+        )}
+      </div>
       <ul className="space-y-1">
         {stage.tasks.map((t) => (
           <li key={t.id} className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-1.5 text-sm">
             <Checkbox checked={t.done} onCheckedChange={(c) => onToggle(t.id, !!c)} />
-            <span className={t.done ? "flex-1 text-muted-foreground line-through" : "flex-1"}>{t.title}</span>
+            <span className={t.done ? "min-w-0 flex-1 truncate text-muted-foreground line-through" : "min-w-0 flex-1 truncate"}>{t.title}</span>
+            <span className="flex shrink-0 items-center">
+              <EditTextDialog title="Editar tarefa" label="Título" value={t.title} triggerLabel={t.title} onSaved={(v) => renameTask(t.id, v)} />
+              <DeleteButton label={t.title} onDelete={() => onDeleteTask(t.id)} />
+            </span>
           </li>
         ))}
       </ul>
@@ -447,12 +608,24 @@ function NotesList({ items, projectId, onChange }: { items: NoteRow[]; projectId
     onChange();
   }
 
+  async function rename(noteId: string, body: string) {
+    await fetch(`/api/notes/${noteId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body }),
+    });
+    onChange();
+  }
+
   return (
     <div className="space-y-2">
       {items.map((n) => (
         <div key={n.id} className="flex items-start justify-between gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm">
-          <p className="flex-1">{n.body}</p>
-          <DeleteButton label="nota" onDelete={() => remove(n.id)} />
+          <p className="min-w-0 flex-1">{n.body}</p>
+          <span className="flex shrink-0 items-center">
+            <EditTextDialog title="Editar nota" label="Nota" value={n.body} triggerLabel="nota" onSaved={(v) => rename(n.id, v)} />
+            <DeleteButton label="nota" onDelete={() => remove(n.id)} />
+          </span>
         </div>
       ))}
       {adding ? (
@@ -474,7 +647,7 @@ function NotesList({ items, projectId, onChange }: { items: NoteRow[]; projectId
   );
 }
 
-function EnvelopesList({ items, projectId, onChange }: { items: EnvelopeRow[]; projectId: string; onChange: () => void }) {
+function EnvelopesList({ items, bills, projectId, onChange }: { items: EnvelopeRow[]; bills: BillRow[]; projectId: string; onChange: () => void }) {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
 
@@ -515,6 +688,7 @@ function EnvelopesList({ items, projectId, onChange }: { items: EnvelopeRow[]; p
           <div className="flex shrink-0 items-center gap-2">
             <span className="font-semibold tabular-nums">{currency(e.allocated)}</span>
             <ContributeDialog envelope={e} onContribute={(v) => addContribution(e, v)} />
+            <EditEnvelopeDialog envelope={e} bills={bills} onSaved={onChange} />
             <DeleteButton label={e.name} onDelete={() => remove(e.id)} />
           </div>
         </div>
@@ -613,7 +787,10 @@ function LinksList({ items, projectId, onChange }: { items: LinkRow[]; projectId
             <ExternalLink className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{l.label || l.url}</span>
           </a>
-          <DeleteButton label={l.label || l.url} onDelete={() => remove(l.id)} />
+          <span className="flex shrink-0 items-center">
+            <EditLinkDialog link={l} onSaved={onChange} />
+            <DeleteButton label={l.label || l.url} onDelete={() => remove(l.id)} />
+          </span>
         </div>
       ))}
       {adding ? (
@@ -657,15 +834,27 @@ function DecisionsList({ items, projectId, onChange }: { items: NoteRow[]; proje
     onChange();
   }
 
+  async function rename(decisionId: string, body: string) {
+    await fetch(`/api/decisions/${decisionId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body }),
+    });
+    onChange();
+  }
+
   return (
     <div className="space-y-2">
       {items.map((d) => (
         <div key={d.id} className="flex items-start justify-between gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm">
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <p className="text-[11px] text-muted-foreground">{dateFmt.format(new Date(d.createdAt))}</p>
             <p>{d.body}</p>
           </div>
-          <DeleteButton label="decisão" onDelete={() => remove(d.id)} />
+          <span className="flex shrink-0 items-center">
+            <EditTextDialog title="Editar decisão" label="Decisão" value={d.body} triggerLabel="decisão" onSaved={(v) => rename(d.id, v)} />
+            <DeleteButton label="decisão" onDelete={() => remove(d.id)} />
+          </span>
         </div>
       ))}
       {adding ? (
