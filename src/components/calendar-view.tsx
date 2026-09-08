@@ -174,7 +174,7 @@ export function CalendarView() {
       ) : view === "month" && gridStart && gridEnd ? (
         <MonthGrid gridStart={gridStart} gridEnd={gridEnd} monthRef={cursor} events={events} onPickDay={(d) => { setCursor(d); setView("day"); }} />
       ) : view === "week" ? (
-        <WeekList weekStart={startOfWeekMonday(cursor)} events={events} onPickDay={(d) => { setCursor(d); setView("day"); }} onMarkDone={markCommitmentDone} onChange={load} />
+        <WeekList weekStart={startOfWeekMonday(cursor)} events={events} onPickDay={(d) => { setCursor(d); setView("day"); }} onMarkDone={markCommitmentDone} onDeleteCommitment={deleteCommitment} onDeleteBill={deleteBill} onChange={load} />
       ) : (
         <DayAgenda day={cursor} events={events} onDeleteCommitment={deleteCommitment} onDeleteBill={deleteBill} onMarkDone={markCommitmentDone} onChange={load} />
       )}
@@ -250,7 +250,23 @@ function MonthGrid({
   );
 }
 
-function WeekList({ weekStart, events, onPickDay, onMarkDone, onChange }: { weekStart: Date; events: CalEvent[]; onPickDay: (d: Date) => void; onMarkDone: (id: string) => Promise<void>; onChange: () => void }) {
+function WeekList({
+  weekStart,
+  events,
+  onPickDay,
+  onMarkDone,
+  onDeleteCommitment,
+  onDeleteBill,
+  onChange,
+}: {
+  weekStart: Date;
+  events: CalEvent[];
+  onPickDay: (d: Date) => void;
+  onMarkDone: (id: string) => Promise<void>;
+  onDeleteCommitment: (id: string) => Promise<void>;
+  onDeleteBill: (id: string) => Promise<void>;
+  onChange: () => void;
+}) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const today = new Date();
   const dayLabelFmt = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "short" });
@@ -274,7 +290,7 @@ function WeekList({ weekStart, events, onPickDay, onMarkDone, onChange }: { week
                   return (
                     <li
                       key={e.id + e.date}
-                      className={`flex items-center gap-1.5 text-sm rounded px-2 py-1 ${atrasado ? "border border-rose-500/20 bg-rose-500/5" : ""}`}
+                      className={`flex flex-wrap items-center gap-1.5 text-sm rounded px-2 py-1 ${atrasado ? "border border-rose-500/20 bg-rose-500/5" : ""}`}
                     >
                       {e.type === "commitment" && !e.recurring && (
                         <Checkbox
@@ -287,11 +303,37 @@ function WeekList({ weekStart, events, onPickDay, onMarkDone, onChange }: { week
                         />
                       )}
                       <EventDot event={e} />
-                      <span className={`truncate ${e.done ? "line-through text-muted-foreground" : ""}`}>{e.title}</span>
+                      <span className={`min-w-0 truncate ${e.done ? "line-through text-muted-foreground" : ""}`}>{e.title}</span>
                       {e.type === "commitment" && e.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
                       {atrasado && <span className="shrink-0 text-xs font-medium text-rose-500">Atrasado</span>}
                       {e.type === "commitment" && <span className="ml-auto shrink-0 text-xs text-muted-foreground">{timeFmt.format(new Date(e.date))}</span>}
                       {e.type === "bill" && <span className="ml-auto shrink-0 text-xs text-rose-500">{currency(e.amount || 0)}</span>}
+                      <span className="flex shrink-0 items-center" onClick={(event) => event.stopPropagation()}>
+                        {e.type === "commitment" ? (
+                          <>
+                            <EditCommitmentDialog commitment={{ id: e.id, title: e.title, startAt: e.date, location: e.location ?? null, area: e.area, recurring: e.recurring }} onSaved={onChange} />
+                            <DeleteButton label={e.title} onDelete={() => onDeleteCommitment(e.id)} />
+                          </>
+                        ) : (
+                          <>
+                            <EditBillDialog
+                              bill={{
+                                id: e.id,
+                                title: e.title,
+                                amount: e.amount || 0,
+                                dueDate: e.date,
+                                paid: !!e.paid,
+                                area: e.area,
+                                recurring: e.recurring ?? null,
+                                installments: e.installments ?? null,
+                                installmentNumber: e.installmentNumber ?? null,
+                              }}
+                              onSaved={onChange}
+                            />
+                            <DeleteButton label={e.title} onDelete={() => onDeleteBill(e.id)} />
+                          </>
+                        )}
+                      </span>
                     </li>
                   );
                 })}
