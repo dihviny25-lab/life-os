@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { HandCoins } from "lucide-react";
+import { HandCoins, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +30,7 @@ interface DebtPayment {
   id: string;
   valor: number;
   metodo: string;
+  nota: string | null;
   date: string;
 }
 interface Debt {
@@ -76,13 +77,29 @@ export function DebtsCard() {
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="font-semibold tabular-nums">{currency(d.saldo)}</span>
                   <PayDebtDialog debt={d} onPaid={load} />
+                  <EditDebtDialog debt={d} onSaved={load} />
                   <DeleteButton label={d.pessoa} onDelete={async () => { await fetch(`/api/debts/${d.id}`, { method: "DELETE" }); load(); }} />
                 </div>
               </div>
               {d.pagamentos.length > 0 && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Último pagamento: {currency(d.pagamentos[0].valor)} ({d.pagamentos[0].metodo}) em {new Date(d.pagamentos[0].date).toLocaleDateString("pt-BR")}
-                </p>
+                <ul className="mt-1.5 space-y-1 border-t border-border/50 pt-1.5">
+                  {d.pagamentos.map((p) => (
+                    <li key={p.id} className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                      <span className="shrink-0">{new Date(p.date).toLocaleDateString("pt-BR")}</span>
+                      <span className="min-w-0 flex-1 truncate">{currency(p.valor)} ({p.metodo})</span>
+                      <span className="flex shrink-0 items-center">
+                        <EditDebtPaymentDialog debtId={d.id} payment={p} onSaved={load} />
+                        <DeleteButton
+                          label="pagamento"
+                          onDelete={async () => {
+                            await fetch(`/api/debts/${d.id}/payments/${p.id}`, { method: "DELETE" });
+                            load();
+                          }}
+                        />
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               )}
             </li>
           ))}
@@ -143,6 +160,117 @@ function AddDebtDialog({ onAdded }: { onAdded: () => void }) {
         </div>
         <DialogFooter>
           <Button onClick={submit}>Adicionar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditDebtDialog({ debt, onSaved }: { debt: Debt; onSaved: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [pessoa, setPessoa] = useState(debt.pessoa);
+  const [saldo, setSaldo] = useState(String(debt.saldo));
+  const [nota, setNota] = useState(debt.nota || "");
+
+  async function submit() {
+    const value = Number(saldo.replace(",", "."));
+    if (!pessoa || value < 0) {
+      notify.error("Preencha a pessoa e um valor válido");
+      return;
+    }
+    await fetch(`/api/debts/${debt.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pessoa, saldo: value, nota: nota || null }),
+    });
+    setOpen(false);
+    onSaved();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setPessoa(debt.pessoa); setSaldo(String(debt.saldo)); setNota(debt.nota || ""); } }}>
+      <DialogTrigger asChild>
+        <button className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={`Editar ${debt.pessoa}`}>
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar dívida</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Pessoa</Label>
+            <Input value={pessoa} onChange={(e) => setPessoa(e.target.value)} />
+          </div>
+          <div>
+            <Label>Saldo devido</Label>
+            <Input value={saldo} onChange={(e) => setSaldo(e.target.value)} inputMode="decimal" />
+          </div>
+          <div>
+            <Label>Nota (opcional)</Label>
+            <Input value={nota} onChange={(e) => setNota(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={submit}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditDebtPaymentDialog({ debtId, payment, onSaved }: { debtId: string; payment: DebtPayment; onSaved: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [valor, setValor] = useState(String(payment.valor));
+  const [metodo, setMetodo] = useState(payment.metodo);
+
+  async function submit() {
+    const value = Number(valor.replace(",", "."));
+    if (!value || value <= 0) {
+      notify.error("Preencha um valor válido");
+      return;
+    }
+    await fetch(`/api/debts/${debtId}/payments/${payment.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ valor: value, metodo }),
+    });
+    setOpen(false);
+    onSaved();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setValor(String(payment.valor)); setMetodo(payment.metodo); } }}>
+      <DialogTrigger asChild>
+        <button className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label="Editar pagamento">
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar pagamento</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Valor</Label>
+            <Input autoFocus value={valor} onChange={(e) => setValor(e.target.value)} inputMode="decimal" />
+          </div>
+          <div>
+            <Label>Forma</Label>
+            <Select value={metodo} onValueChange={setMetodo}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="dinheiro">Dinheiro (desconta do saldo)</SelectItem>
+                <SelectItem value="permuta">Permuta (não mexe no saldo)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={submit}>Salvar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
