@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { BookOpen, Film } from "lucide-react";
+import { BookOpen, Film, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -107,7 +107,8 @@ function MediaCard({
                 <ul className="space-y-1.5">
                   {group.map((item) => (
                     <li key={item.id} className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm">
-                      <span className="flex-1 font-medium">{item.title}</span>
+                      <span className="min-w-0 flex-1 truncate font-medium">{item.title}</span>
+                      <EditMediaTitleDialog item={item} onSaved={onChange} />
                       <Select value={item.status} onValueChange={(v) => setStatus(item.id, v as MediaItem["status"])}>
                         <SelectTrigger className="h-7 w-[130px] text-xs">
                           <SelectValue />
@@ -128,6 +129,49 @@ function MediaCard({
         </div>
       )}
     </SectionCard>
+  );
+}
+
+function EditMediaTitleDialog({ item, onSaved }: { item: MediaItem; onSaved: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState(item.title);
+
+  async function submit() {
+    if (!title.trim()) {
+      notify.error("Preencha o título");
+      return;
+    }
+    await fetch(`/api/media/${item.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: title.trim() }),
+    });
+    setOpen(false);
+    onSaved();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) setTitle(item.title); }}>
+      <DialogTrigger asChild>
+        <button className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={`Editar ${item.title}`}>
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar título</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Título</Label>
+            <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={submit}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
