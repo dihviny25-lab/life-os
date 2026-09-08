@@ -3,9 +3,10 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Receipt } from "lucide-react";
+import { ChevronLeft, ChevronRight, Receipt, Repeat } from "lucide-react";
 import { AddCommitmentDialog, EditCommitmentDialog } from "@/components/entry-dialogs";
 import { DeleteButton } from "@/components/delete-button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AREAS } from "@/lib/areas";
 import { startOfWeekMonday } from "@/lib/finance";
 
@@ -17,6 +18,7 @@ interface CalEvent {
   area: string | null;
   location?: string | null;
   recurring?: string | null;
+  done?: boolean;
   amount?: number;
   paid?: boolean;
 }
@@ -95,6 +97,15 @@ export function CalendarView() {
     load();
   }, [load]);
 
+  async function markCommitmentDone(id: string) {
+    await fetch(`/api/commitments/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ done: true }),
+    });
+    load();
+  }
+
   async function deleteCommitment(id: string) {
     await fetch(`/api/commitments/${id}`, { method: "DELETE" });
     load();
@@ -156,9 +167,9 @@ export function CalendarView() {
       ) : view === "month" && gridStart && gridEnd ? (
         <MonthGrid gridStart={gridStart} gridEnd={gridEnd} monthRef={cursor} events={events} onPickDay={(d) => { setCursor(d); setView("day"); }} />
       ) : view === "week" ? (
-        <WeekList weekStart={startOfWeekMonday(cursor)} events={events} onPickDay={(d) => { setCursor(d); setView("day"); }} />
+        <WeekList weekStart={startOfWeekMonday(cursor)} events={events} onPickDay={(d) => { setCursor(d); setView("day"); }} onMarkDone={markCommitmentDone} onChange={load} />
       ) : (
-        <DayAgenda day={cursor} events={events} onDeleteCommitment={deleteCommitment} onChange={load} />
+        <DayAgenda day={cursor} events={events} onDeleteCommitment={deleteCommitment} onMarkDone={markCommitmentDone} onChange={load} />
       )}
     </div>
   );
@@ -232,7 +243,7 @@ function MonthGrid({
   );
 }
 
-function WeekList({ weekStart, events, onPickDay }: { weekStart: Date; events: CalEvent[]; onPickDay: (d: Date) => void }) {
+function WeekList({ weekStart, events, onPickDay, onMarkDone, onChange }: { weekStart: Date; events: CalEvent[]; onPickDay: (d: Date) => void; onMarkDone: (id: string) => Promise<void>; onChange: () => void }) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const today = new Date();
   const dayLabelFmt = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "short" });
@@ -242,27 +253,44 @@ function WeekList({ weekStart, events, onPickDay }: { weekStart: Date; events: C
       {days.map((d) => {
         const dayEvents = events.filter((e) => isSameDay(new Date(e.date), d));
         return (
-          <button
+          <div
             key={d.toISOString()}
-            onClick={() => onPickDay(d)}
-            className={`block w-full rounded-lg border border-border p-3 text-left transition-colors hover:bg-muted/40 ${isSameDay(d, today) ? "bg-primary/5" : "bg-card"}`}
+            className={`block w-full rounded-lg border border-border p-3 text-left transition-colors ${isSameDay(d, today) ? "bg-primary/5" : "bg-card"}`}
           >
             <p className="mb-1.5 text-xs font-medium capitalize text-muted-foreground">{dayLabelFmt.format(d)}</p>
             {dayEvents.length === 0 ? (
               <p className="text-xs text-muted-foreground/60">Nada marcado</p>
             ) : (
               <ul className="space-y-1">
-                {dayEvents.map((e) => (
-                  <li key={e.id + e.date} className="flex items-center gap-1.5 text-sm">
-                    <EventDot event={e} />
-                    <span className="truncate">{e.title}</span>
-                    {e.type === "commitment" && <span className="ml-auto shrink-0 text-xs text-muted-foreground">{timeFmt.format(new Date(e.date))}</span>}
-                    {e.type === "bill" && <span className="ml-auto shrink-0 text-xs text-rose-500">{currency(e.amount || 0)}</span>}
-                  </li>
-                ))}
+                {dayEvents.map((e) => {
+                  const atrasado = e.type === "commitment" && !e.recurring && !e.done && new Date(e.date) < new Date();
+                  return (
+                    <li
+                      key={e.id + e.date}
+                      className={`flex items-center gap-1.5 text-sm rounded px-2 py-1 ${atrasado ? "border border-rose-500/20 bg-rose-500/5" : ""}`}
+                    >
+                      {e.type === "commitment" && !e.recurring && (
+                        <Checkbox
+                          className="shrink-0"
+                          checked={!!e.done}
+                          onCheckedChange={async () => {
+                            await onMarkDone(e.id);
+                          }}
+                          onClick={(event) => event.stopPropagation()}
+                        />
+                      )}
+                      <EventDot event={e} />
+                      <span className={`truncate ${e.done ? "line-through text-muted-foreground" : ""}`}>{e.title}</span>
+                      {e.type === "commitment" && e.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
+                      {atrasado && <span className="shrink-0 text-xs font-medium text-rose-500">Atrasado</span>}
+                      {e.type === "commitment" && <span className="ml-auto shrink-0 text-xs text-muted-foreground">{timeFmt.format(new Date(e.date))}</span>}
+                      {e.type === "bill" && <span className="ml-auto shrink-0 text-xs text-rose-500">{currency(e.amount || 0)}</span>}
+                    </li>
+                  );
+                })}
               </ul>
             )}
-          </button>
+          </div>
         );
       })}
     </div>
@@ -273,11 +301,13 @@ function DayAgenda({
   day,
   events,
   onDeleteCommitment,
+  onMarkDone,
   onChange,
 }: {
   day: Date;
   events: CalEvent[];
   onDeleteCommitment: (id: string) => Promise<void>;
+  onMarkDone: (id: string) => Promise<void>;
   onChange: () => void;
 }) {
   const dayEvents = events.filter((e) => isSameDay(new Date(e.date), day)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -288,24 +318,38 @@ function DayAgenda({
 
   return (
     <ul className="space-y-2">
-      {dayEvents.map((e) => (
-        <li key={e.id + e.date} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 text-sm">
-          {e.type === "bill" ? <Receipt className="h-4 w-4 shrink-0 text-rose-500" /> : <EventDot event={e} />}
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-medium">{e.title}</p>
-            {e.location && <p className="truncate text-xs text-muted-foreground">{e.location}</p>}
-          </div>
-          {e.type === "commitment" ? (
-            <>
-              <span className="shrink-0 text-muted-foreground">{timeFmt.format(new Date(e.date))}</span>
-              <EditCommitmentDialog commitment={{ id: e.id, title: e.title, startAt: e.date, location: e.location ?? null, area: e.area, recurring: e.recurring }} onSaved={onChange} />
-              <DeleteButton label={e.title} onDelete={() => onDeleteCommitment(e.id)} />
-            </>
-          ) : (
-            <span className={`shrink-0 font-semibold tabular-nums ${e.paid ? "text-emerald-500" : "text-rose-500"}`}>{currency(e.amount || 0)}</span>
-          )}
-        </li>
-      ))}
+      {dayEvents.map((e) => {
+        const atrasado = e.type === "commitment" && !e.recurring && !e.done && new Date(e.date) < new Date();
+        return (
+          <li key={e.id + e.date} className={`flex items-center gap-3 rounded-lg border bg-card p-3 text-sm ${atrasado ? "border-rose-500/20 bg-rose-500/5" : "border-border"}`}>
+            {e.type === "commitment" && !e.recurring && (
+              <Checkbox
+                className="shrink-0"
+                checked={!!e.done}
+                onCheckedChange={async () => {
+                  await onMarkDone(e.id);
+                }}
+              />
+            )}
+            {e.type === "bill" ? <Receipt className="h-4 w-4 shrink-0 text-rose-500" /> : <EventDot event={e} />}
+            <div className="min-w-0 flex-1">
+              <p className={`truncate font-medium ${e.done ? "line-through text-muted-foreground" : ""}`}>{e.title}</p>
+              {e.location && <p className="truncate text-xs text-muted-foreground">{e.location}</p>}
+            </div>
+            {e.type === "commitment" ? (
+              <>
+                {e.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
+                {atrasado && <span className="shrink-0 text-xs font-medium text-rose-500">Atrasado</span>}
+                <span className="shrink-0 text-muted-foreground">{timeFmt.format(new Date(e.date))}</span>
+                <EditCommitmentDialog commitment={{ id: e.id, title: e.title, startAt: e.date, location: e.location ?? null, area: e.area, recurring: e.recurring }} onSaved={onChange} />
+                <DeleteButton label={e.title} onDelete={() => onDeleteCommitment(e.id)} />
+              </>
+            ) : (
+              <span className={`shrink-0 font-semibold tabular-nums ${e.paid ? "text-emerald-500" : "text-rose-500"}`}>{currency(e.amount || 0)}</span>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
