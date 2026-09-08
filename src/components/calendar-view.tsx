@@ -61,12 +61,15 @@ function areaColor(area: string | null) {
   return AREAS.find((a) => a.key === area)?.color || "#71717a";
 }
 
+type EventFilter = "all" | "bills";
+
 export function CalendarView() {
   const router = useRouter();
   const [view, setView] = useState<ViewMode>("month");
   const [cursor, setCursor] = useState(() => new Date());
   const [events, setEvents] = useState<CalEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<EventFilter>("all");
 
   const { rangeStart, rangeEnd, gridStart, gridEnd } = useMemo(() => {
     if (view === "day") {
@@ -118,6 +121,21 @@ export function CalendarView() {
     load();
   }
 
+  async function toggleBillPaid(e: CalEvent) {
+    const willPay = !e.paid;
+    if (willPay) {
+      if (!confirm(`Marcar "${e.title}" (${currency(e.amount || 0)}) como paga? Isso desconta o valor do saldo atual.`)) return;
+    }
+    await fetch(`/api/bills/${e.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paid: willPay }),
+    });
+    load();
+  }
+
+  const filteredEvents = filter === "bills" ? events.filter((e) => e.type === "bill") : events;
+
   function step(dir: 1 | -1) {
     if (view === "day") setCursor((c) => addDays(c, dir));
     else if (view === "week") setCursor((c) => addDays(c, dir * 7));
@@ -142,7 +160,7 @@ export function CalendarView() {
         <AddCommitmentDialog onAdded={load} defaultDate={view === "day" ? toISODate(cursor) : undefined} />
       </div>
 
-      <div className="mb-5 flex items-center justify-between gap-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex gap-1.5">
           {(["month", "week", "day"] as ViewMode[]).map((v) => (
             <button
@@ -169,14 +187,31 @@ export function CalendarView() {
         </div>
       </div>
 
+      <div className="mb-5 flex gap-1.5">
+        {([
+          { key: "all", label: "Tudo" },
+          { key: "bills", label: "Só contas" },
+        ] as { key: EventFilter; label: string }[]).map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setFilter(f.key)}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+              filter === f.key ? "border-rose-500 bg-rose-500 text-white" : "border-border bg-transparent text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : view === "month" && gridStart && gridEnd ? (
-        <MonthGrid gridStart={gridStart} gridEnd={gridEnd} monthRef={cursor} events={events} onPickDay={(d) => { setCursor(d); setView("day"); }} />
+        <MonthGrid gridStart={gridStart} gridEnd={gridEnd} monthRef={cursor} events={filteredEvents} onPickDay={(d) => { setCursor(d); setView("day"); }} />
       ) : view === "week" ? (
-        <WeekList weekStart={startOfWeekMonday(cursor)} events={events} onPickDay={(d) => { setCursor(d); setView("day"); }} onMarkDone={markCommitmentDone} onDeleteCommitment={deleteCommitment} onDeleteBill={deleteBill} onChange={load} />
+        <WeekList weekStart={startOfWeekMonday(cursor)} events={filteredEvents} onPickDay={(d) => { setCursor(d); setView("day"); }} onMarkDone={markCommitmentDone} onToggleBillPaid={toggleBillPaid} onDeleteCommitment={deleteCommitment} onDeleteBill={deleteBill} onChange={load} />
       ) : (
-        <DayAgenda day={cursor} events={events} onDeleteCommitment={deleteCommitment} onDeleteBill={deleteBill} onMarkDone={markCommitmentDone} onChange={load} />
+        <DayAgenda day={cursor} events={filteredEvents} onDeleteCommitment={deleteCommitment} onDeleteBill={deleteBill} onMarkDone={markCommitmentDone} onToggleBillPaid={toggleBillPaid} onChange={load} />
       )}
     </div>
   );
@@ -255,6 +290,7 @@ function WeekList({
   events,
   onPickDay,
   onMarkDone,
+  onToggleBillPaid,
   onDeleteCommitment,
   onDeleteBill,
   onChange,
@@ -263,6 +299,7 @@ function WeekList({
   events: CalEvent[];
   onPickDay: (d: Date) => void;
   onMarkDone: (id: string) => Promise<void>;
+  onToggleBillPaid: (e: CalEvent) => Promise<void>;
   onDeleteCommitment: (id: string) => Promise<void>;
   onDeleteBill: (id: string) => Promise<void>;
   onChange: () => void;
@@ -302,12 +339,22 @@ function WeekList({
                           onClick={(event) => event.stopPropagation()}
                         />
                       )}
+                      {e.type === "bill" && (
+                        <Checkbox
+                          className="shrink-0"
+                          checked={!!e.paid}
+                          onCheckedChange={async () => {
+                            await onToggleBillPaid(e);
+                          }}
+                          onClick={(event) => event.stopPropagation()}
+                        />
+                      )}
                       <EventDot event={e} />
-                      <span className={`min-w-0 truncate ${e.done ? "line-through text-muted-foreground" : ""}`}>{e.title}</span>
+                      <span className={`min-w-0 truncate ${e.done || e.paid ? "line-through text-muted-foreground" : ""}`}>{e.title}</span>
                       {e.type === "commitment" && e.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
                       {atrasado && <span className="shrink-0 text-xs font-medium text-rose-500">Atrasado</span>}
                       {e.type === "commitment" && <span className="ml-auto shrink-0 text-xs text-muted-foreground">{timeFmt.format(new Date(e.date))}</span>}
-                      {e.type === "bill" && <span className="ml-auto shrink-0 text-xs text-rose-500">{currency(e.amount || 0)}</span>}
+                      {e.type === "bill" && <span className={`ml-auto shrink-0 text-xs ${e.paid ? "text-emerald-500" : "text-rose-500"}`}>{currency(e.amount || 0)}</span>}
                       <span className="flex shrink-0 items-center" onClick={(event) => event.stopPropagation()}>
                         {e.type === "commitment" ? (
                           <>
@@ -352,6 +399,7 @@ function DayAgenda({
   onDeleteCommitment,
   onDeleteBill,
   onMarkDone,
+  onToggleBillPaid,
   onChange,
 }: {
   day: Date;
@@ -359,6 +407,7 @@ function DayAgenda({
   onDeleteCommitment: (id: string) => Promise<void>;
   onDeleteBill: (id: string) => Promise<void>;
   onMarkDone: (id: string) => Promise<void>;
+  onToggleBillPaid: (e: CalEvent) => Promise<void>;
   onChange: () => void;
 }) {
   const dayEvents = events.filter((e) => isSameDay(new Date(e.date), day)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -382,9 +431,18 @@ function DayAgenda({
                 }}
               />
             )}
-            {e.type === "bill" ? <Receipt className="h-4 w-4 shrink-0 text-rose-500" /> : <EventDot event={e} />}
+            {e.type === "bill" && (
+              <Checkbox
+                className="shrink-0"
+                checked={!!e.paid}
+                onCheckedChange={async () => {
+                  await onToggleBillPaid(e);
+                }}
+              />
+            )}
+            {e.type === "bill" ? <Receipt className={`h-4 w-4 shrink-0 ${e.paid ? "text-emerald-500" : "text-rose-500"}`} /> : <EventDot event={e} />}
             <div className="min-w-0 flex-1">
-              <p className={`truncate font-medium ${e.done ? "line-through text-muted-foreground" : ""}`}>{e.title}</p>
+              <p className={`truncate font-medium ${e.done || e.paid ? "line-through text-muted-foreground" : ""}`}>{e.title}</p>
               {e.location && <p className="truncate text-xs text-muted-foreground">{e.location}</p>}
             </div>
             {e.type === "commitment" ? (
