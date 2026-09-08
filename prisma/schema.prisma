@@ -359,6 +359,11 @@ model Finance {
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   currentBalance   Float    @default(0)
   weeklyBaseIncome Float    @default(1500)
+  // Dízimo is money already owed, not money set aside — no envelope, just a
+  // running total that grows 10% with every income and zeroes out the
+  // moment it's actually sent to the church.
+  dizimoPendente   Float    @default(0)
+  dizimoPagoEm     DateTime?
   updatedAt        DateTime @updatedAt
 }
 

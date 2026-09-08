@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Wallet, AlertTriangle, CalendarDays, TrendingUp, PiggyBank, Repeat, BarChart3, Receipt } from "lucide-react";
+import { Wallet, AlertTriangle, CalendarDays, TrendingUp, PiggyBank, Repeat, BarChart3, Receipt, HandCoins } from "lucide-react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -79,6 +79,7 @@ interface Overview {
   historico: { semana: string; recebido: number; gasto: number }[];
   envelopesChart: { name: string; value: number }[];
   saldoHistorico: { date: string; balance: number }[];
+  dizimo: { pendente: number; pagoEm: string | null };
 }
 interface TransactionRow {
   id: string;
@@ -155,6 +156,13 @@ export function FinanceView() {
     load();
   }
 
+  async function payDizimo(amount: number) {
+    if (!confirm(`Marcar ${currency(amount)} de dízimo como enviado? Isso desconta do saldo atual.`)) return;
+    await fetch("/api/finance/dizimo/pay", { method: "POST" });
+    notify.success(`${currency(amount)} de dízimo marcado como pago`);
+    load();
+  }
+
   if (loading || !overview) {
     return <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">Carregando…</div>;
   }
@@ -171,6 +179,25 @@ export function FinanceView() {
             <SituacaoAtual situacao={overview.situacao} envelopes={envelopes} onChange={load} />
           </SectionCard>
         </motion.div>
+
+        {overview.dizimo.pendente > 0.001 && (
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 }}>
+            <SectionCard title="Dízimo" icon={HandCoins} color="#8b5cf6">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Você deve enviar pra igreja</p>
+                  <p className="font-display text-xl font-semibold tabular-nums">{currency(overview.dizimo.pendente)}</p>
+                  {overview.dizimo.pagoEm && (
+                    <p className="mt-0.5 text-xs text-muted-foreground">Último pago em {dateFmt.format(new Date(overview.dizimo.pagoEm))}</p>
+                  )}
+                </div>
+                <Button size="sm" onClick={() => payDizimo(overview.dizimo.pendente)}>
+                  Já enviei
+                </Button>
+              </div>
+            </SectionCard>
+          </motion.div>
+        )}
 
         {(overview.historico.some((h) => h.recebido > 0 || h.gasto > 0) || overview.envelopesChart.length > 0 || overview.saldoHistorico.length > 1) && (
           <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>

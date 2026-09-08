@@ -36,10 +36,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (newAmount !== existing.amount) {
     const amountDelta = newAmount - existing.amount;
     const balanceDelta = existing.type === "income" ? amountDelta : -amountDelta;
+    // Dízimo is 10% of income, so correcting an income transaction's amount
+    // has to correct the running dízimo total by the same proportion.
+    const dizimoDelta = existing.type === "income" ? Math.round(amountDelta * 0.1 * 100) / 100 : 0;
+    const currentFinance = await db.finance.findUnique({ where: { userId: session.userId } });
+    const newDizimoPendente = Math.max(0, (currentFinance?.dizimoPendente ?? 0) + dizimoDelta);
     const finance = await db.finance.upsert({
       where: { userId: session.userId },
-      create: { userId: session.userId, currentBalance: balanceDelta },
-      update: { currentBalance: { increment: balanceDelta } },
+      create: { userId: session.userId, currentBalance: balanceDelta, dizimoPendente: Math.max(0, dizimoDelta) },
+      update: { currentBalance: { increment: balanceDelta }, dizimoPendente: newDizimoPendente },
     });
     await logBalanceHistory(session.userId, finance.currentBalance);
   }
@@ -56,10 +61,13 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (!existing) return bad("Not found", 404);
 
   const balanceDelta = existing.type === "income" ? -existing.amount : existing.amount;
+  const dizimoDelta = existing.type === "income" ? -Math.round(existing.amount * 0.1 * 100) / 100 : 0;
+  const currentFinance = await db.finance.findUnique({ where: { userId: session.userId } });
+  const newDizimoPendente = Math.max(0, (currentFinance?.dizimoPendente ?? 0) + dizimoDelta);
   const finance = await db.finance.upsert({
     where: { userId: session.userId },
-    create: { userId: session.userId, currentBalance: balanceDelta },
-    update: { currentBalance: { increment: balanceDelta } },
+    create: { userId: session.userId, currentBalance: balanceDelta, dizimoPendente: 0 },
+    update: { currentBalance: { increment: balanceDelta }, dizimoPendente: newDizimoPendente },
   });
   await logBalanceHistory(session.userId, finance.currentBalance);
 

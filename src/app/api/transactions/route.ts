@@ -41,23 +41,18 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // O saldo atual precisa andar junto com a transação — senão o dízimo (que
-  // é separado na hora) fica descontado de um dinheiro que ainda não "chegou"
-  // no saldo, e "disponível de verdade" mostra negativo sem motivo real.
+  // O saldo atual precisa andar junto com a transação, senão "disponível de
+  // verdade" fica errado por dinheiro que ainda não "chegou". Dízimo não é
+  // separado (sem envelope) — é uma dívida que só cresce até o dia que você
+  // manda pra igreja e marca como pago (ver /api/finance/dizimo/pay).
   const balanceDelta = body.type === "income" ? amount : -amount;
+  const dizimoDelta = body.type === "income" ? Math.round(amount * 0.1 * 100) / 100 : 0;
   const finance = await db.finance.upsert({
     where: { userId: session.userId },
-    create: { userId: session.userId, currentBalance: balanceDelta },
-    update: { currentBalance: { increment: balanceDelta } },
+    create: { userId: session.userId, currentBalance: balanceDelta, dizimoPendente: dizimoDelta },
+    update: { currentBalance: { increment: balanceDelta }, dizimoPendente: { increment: dizimoDelta } },
   });
   await logBalanceHistory(session.userId, finance.currentBalance);
-
-  if (body.type === "income") {
-    const dizimo = Math.round(amount * 0.1 * 100) / 100;
-    await db.envelope.create({
-      data: { userId: session.userId, name: `Dízimo (${body.title})`, allocated: dizimo },
-    });
-  }
 
   return ok(transaction);
 }

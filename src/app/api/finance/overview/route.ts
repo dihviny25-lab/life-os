@@ -56,6 +56,7 @@ export async function GET(req: NextRequest) {
 
   const currentBalance = finance?.currentBalance ?? 0;
   const weeklyBaseIncome = finance?.weeklyBaseIncome ?? 1500;
+  const dizimo = { pendente: finance?.dizimoPendente ?? 0, pagoEm: finance?.dizimoPagoEm ?? null };
   const fixedTotal = weeklyBudgets.filter((w) => w.kind === "fixed").reduce((sum, w) => sum + w.amount, 0);
   const ceilingTotal = weeklyBudgets.filter((w) => w.kind !== "fixed").reduce((sum, w) => sum + w.amount, 0);
   const weeklyBudgetTotal = fixedTotal + ceilingTotal;
@@ -142,5 +143,6 @@ export async function GET(req: NextRequest) {
     historico,
     envelopesChart,
     saldoHistorico,
+    dizimo,
   });
 }
