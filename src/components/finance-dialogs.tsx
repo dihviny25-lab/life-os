@@ -81,6 +81,76 @@ export function AddTransactionDialog({ type, onAdded }: { type: "income" | "expe
   );
 }
 
+export function EditTransactionDialog({
+  transaction,
+  onSaved,
+}: {
+  transaction: { id: string; title: string; amount: number; date: string; type: string };
+  onSaved: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState(transaction.title);
+  const [amount, setAmount] = useState(String(transaction.amount));
+  const [date, setDate] = useState(transaction.date.slice(0, 10));
+
+  async function submit() {
+    const value = Number(amount.replace(",", "."));
+    if (!title || !value || value <= 0) {
+      notify.error("Preencha título e um valor válido");
+      return;
+    }
+    await fetch(`/api/transactions/${transaction.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, amount: value, date }),
+    });
+    setOpen(false);
+    onSaved();
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (o) {
+          setTitle(transaction.title);
+          setAmount(String(transaction.amount));
+          setDate(transaction.date.slice(0, 10));
+        }
+      }}
+    >
+      <DialogTrigger asChild>
+        <EditTrigger label={transaction.title} />
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar {transaction.type === "income" ? "entrada" : "gasto"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Título</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <Label>Valor</Label>
+              <Input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" />
+            </div>
+            <div className="flex-1">
+              <Label>Data</Label>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={submit}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function EditTrigger({ label }: { label: string }) {
   return (
     <button className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={`Editar ${label}`}>

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Wallet, AlertTriangle, CalendarDays, TrendingUp, PiggyBank, Repeat, BarChart3 } from "lucide-react";
+import { Wallet, AlertTriangle, CalendarDays, TrendingUp, PiggyBank, Repeat, BarChart3, Receipt } from "lucide-react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -28,6 +28,7 @@ import {
   AddWeeklyBudgetDialog,
   EditEnvelopeDialog,
   EditWeeklyBudgetDialog,
+  EditTransactionDialog,
   LogActualDialog,
 } from "@/components/finance-dialogs";
 import { AddBillDialog, EditBillDialog } from "@/components/entry-dialogs";
@@ -78,6 +79,13 @@ interface Overview {
   envelopesChart: { name: string; value: number }[];
   saldoHistorico: { date: string; balance: number }[];
 }
+interface TransactionRow {
+  id: string;
+  type: string;
+  title: string;
+  amount: number;
+  date: string;
+}
 
 const PIE_COLORS = ["#38bdf8", "#34d399", "#fbbf24", "#a78bfa", "#f472b6", "#f87171"];
 
@@ -98,14 +106,16 @@ export function FinanceView() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [envelopes, setEnvelopes] = useState<Envelope[]>([]);
   const [weeklyBudgets, setWeeklyBudgets] = useState<WeeklyBudgetItem[]>([]);
+  const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const [overviewRes, billsRes, envelopesRes, weeklyBudgetsRes] = await Promise.all([
+    const [overviewRes, billsRes, envelopesRes, weeklyBudgetsRes, transactionsRes] = await Promise.all([
       fetch("/api/finance/overview"),
       fetch("/api/bills"),
       fetch("/api/envelopes"),
       fetch("/api/weekly-budgets"),
+      fetch("/api/transactions?limit=20"),
     ]);
     if (overviewRes.status === 401) {
       router.replace("/login");
@@ -115,6 +125,7 @@ export function FinanceView() {
     setBills((await billsRes.json()).bills);
     setEnvelopes((await envelopesRes.json()).envelopes);
     setWeeklyBudgets((await weeklyBudgetsRes.json()).weeklyBudgets);
+    setTransactions((await transactionsRes.json()).transactions);
     setLoading(false);
   }, [router]);
 
@@ -135,6 +146,11 @@ export function FinanceView() {
 
   async function deleteBill(id: string) {
     await fetch(`/api/bills/${id}`, { method: "DELETE" });
+    load();
+  }
+
+  async function deleteTransaction(id: string) {
+    await fetch(`/api/transactions/${id}`, { method: "DELETE" });
     load();
   }
 
@@ -234,6 +250,30 @@ export function FinanceView() {
                 </div>
               )}
             </div>
+          </SectionCard>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
+          <SectionCard title="Transações recentes" icon={Receipt} color="#0ea5e9">
+            {transactions.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma transação registrada ainda.</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {transactions.map((t) => (
+                  <li key={t.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+                    <span className="min-w-0 flex-1 truncate font-medium">{t.title}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">{dateFmt.format(new Date(t.date))}</span>
+                    <span className={`shrink-0 font-semibold tabular-nums ${t.type === "income" ? "text-emerald-500" : "text-rose-500"}`}>
+                      {t.type === "income" ? "+" : "-"}{currency(t.amount)}
+                    </span>
+                    <span className="flex shrink-0 items-center">
+                      <EditTransactionDialog transaction={t} onSaved={load} />
+                      <DeleteButton label={t.title} onDelete={() => deleteTransaction(t.id)} />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </SectionCard>
         </motion.div>
 
