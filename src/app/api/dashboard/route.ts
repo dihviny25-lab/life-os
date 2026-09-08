@@ -3,7 +3,7 @@ import { ok, bad } from "@/lib/api";
 import { getUserFromRequest } from "@/lib/auth";
 import { projectCommitment } from "@/lib/recurrence";
 import { verseOfDayIndex } from "@/lib/verse";
-import { computeProjectProgress } from "@/lib/projects";
+import { AREAS } from "@/lib/areas";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -28,54 +28,78 @@ export async function GET(req: NextRequest) {
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
 
-  const [allCommitments, billsToday, finance, envelopes, projects, verses, checkin] = await Promise.all([
+  const [user, allCommitments, allBills, finance, envelopes, projects, verses, checkin, doneToday] = await Promise.all([
+    db.user.findUnique({ where: { id: userId }, select: { name: true } }),
     db.commitment.findMany({ where: { userId, archived: false } }),
-    db.bill.findMany({ where: { userId, paid: false, dueDate: { gte: todayStart, lte: todayEnd } } }),
+    db.bill.findMany({ where: { userId, paid: false }, orderBy: { dueDate: "asc" } }),
     db.finance.findUnique({ where: { userId } }),
     db.envelope.findMany({ where: { userId } }),
-    db.project.findMany({ where: { userId, archived: false }, orderBy: { createdAt: "asc" }, include: { tasks: true, stages: true } }),
+    db.project.findMany({ where: { userId, archived: false } }),
     db.verse.findMany({ where: { userId }, orderBy: { order: "asc" } }),
     db.checkin.findUnique({ where: { userId_date: { userId, date: todayStart } } }),
+    db.task.count({ where: { project: { userId }, doneAt: { gte: todayStart, lte: todayEnd } } }),
   ]);
 
+  const firstName = user?.name?.trim().split(" ")[0] || null;
   const verseOfDay = verses.length > 0 ? verses[verseOfDayIndex(now, verses.length)] : null;
 
   const projected = allCommitments
     .map((c) => projectCommitment(c, now))
     .sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
-  const todayCommitments = projected.filter((c) => c.startAt >= todayStart && c.startAt <= todayEnd);
   const upcomingCommitments = projected.filter((c) => c.startAt > todayEnd).slice(0, 10);
 
   const currentBalance = finance?.currentBalance ?? 0;
   const committed = envelopes.reduce((sum, e) => sum + e.allocated, 0);
   const free = currentBalance - committed;
 
-  const devAlerts = projects.filter((p) => p.area === "desenvolvimento" && p.hasAlert).length;
+  const overdueBills = allBills.filter((b) => b.dueDate < todayStart);
+  const billsDueToday = allBills.filter((b) => b.dueDate >= todayStart && b.dueDate <= todayEnd);
+  const commitmentsToday = projected.filter((c) => c.startAt >= todayStart && c.startAt <= todayEnd);
 
-  const STATUS_WEIGHT: Record<string, number> = { bloqueado: 0, esperando: 1, ativo: 2, planejado: 3, concluido: 4 };
-  const projectsAttention = projects
-    .filter((p) => p.status !== "concluido")
-    .map((p) => {
-      const { tasks, stages, ...rest } = p;
-      return { ...rest, progress: computeProjectProgress(tasks, stages) };
-    })
-    .sort((a, b) => {
-      const w = (STATUS_WEIGHT[a.status] ?? 5) - (STATUS_WEIGHT[b.status] ?? 5);
-      if (w !== 0) return w;
-      if (a.prazo && b.prazo) return a.prazo.getTime() - b.prazo.getTime();
-      if (a.prazo) return -1;
-      if (b.prazo) return 1;
-      return 0;
-    })
-    .slice(0, 5);
+  // "Foco do dia" — urgências reais primeiro (vermelho), depois a agenda de
+  // hoje (neutra: um compromisso não é um problema, é só o que vai acontecer).
+  const foco: { label: string; detail: string; href: string; kind: "alerta" | "evento" }[] = [];
+  if (free < 0) {
+    foco.push({ label: "Saldo comprometido além do disponível", detail: `Disponível de verdade: ${free.toFixed(2)}`, href: "/app/areas/financas", kind: "alerta" });
+  }
+  for (const b of overdueBills) {
+    foco.push({ label: `${b.title} está atrasada`, detail: `Vencia em ${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(b.dueDate)}`, href: "/app/areas/financas", kind: "alerta" });
+  }
+  for (const b of billsDueToday) {
+    foco.push({ label: `${b.title} vence hoje`, detail: `${b.amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`, href: "/app/areas/financas", kind: "alerta" });
+  }
+  for (const c of commitmentsToday) {
+    foco.push({ label: c.title, detail: new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(c.startAt), href: "/app", kind: "evento" });
+  }
+
+  const porArea = AREAS.map((a) => {
+    const activeProjects = projects.filter((p) => p.area === a.key && p.status !== "concluido");
+    const nextCommitment = projected.find((c) => c.startAt >= now && c.area === a.key);
+    const nextBill = allBills.find((b) => b.area === a.key);
+    let subtitle: string;
+    if (a.key === "financas") {
+      subtitle = `Disponível: ${free.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`;
+    } else if (nextCommitment && (!nextBill || nextCommitment.startAt <= nextBill.dueDate)) {
+      subtitle = `${nextCommitment.title} · ${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(nextCommitment.startAt)}`;
+    } else if (nextBill) {
+      subtitle = `${nextBill.title} · ${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(nextBill.dueDate)}`;
+    } else {
+      subtitle = "Sem itens agendados";
+    }
+    return { key: a.key, name: a.name, color: a.color, ativos: activeProjects.length, subtitle };
+  });
 
   return ok({
-    today: { commitments: todayCommitments, bills: billsToday },
-    upcomingCommitments,
-    finance: { currentBalance, committed, free, envelopes: envelopes.map((e) => ({ name: e.name, allocated: e.allocated })) },
-    projectsAttention,
-    projectsTotal: projects.length,
-    dev: { alerts: devAlerts },
+    firstName,
+    now: now.toISOString(),
+    foco,
+    resumo: {
+      pendentes: allBills.length,
+      concluidasHoje: doneToday,
+      proximosCompromissos: upcomingCommitments.length,
+      atrasadas: overdueBills.length,
+    },
+    porArea,
     verseOfDay: verseOfDay ? { reference: verseOfDay.reference, text: verseOfDay.text } : null,
     checkin: checkin ? { mood: checkin.mood } : null,
   });

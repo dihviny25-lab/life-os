@@ -4,50 +4,41 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sun, Wallet, FolderKanban, AlertTriangle, ArrowRight, Repeat, Smile } from "lucide-react";
+import { CheckCircle2, ListChecks, CalendarClock, AlertTriangle, Clock, Smile } from "lucide-react";
 import { MOODS } from "@/lib/moods";
-import { Checkbox } from "@/components/ui/checkbox";
-import { SectionCard } from "@/components/section-card";
-import {
-  AddCommitmentDialog,
-  AddBillDialog,
-  EditCommitmentDialog,
-  EditBillDialog,
-} from "@/components/entry-dialogs";
-import { DeleteButton } from "@/components/delete-button";
 import { AREAS } from "@/lib/areas";
-import { STATUS_LABEL } from "@/lib/projects";
-import { notify } from "@/lib/toast";
-import type { Commitment, Bill, Project } from "@/lib/types";
+import { AnimatedNumber } from "@/components/animated-number";
 
-interface ProjectAttention extends Project {
-  progress: { total: number; done: number; percent: number; nextAction: { id: string; title: string } | null };
+interface FocoItem {
+  label: string;
+  detail: string;
+  href: string;
+  kind: "alerta" | "evento";
 }
-
+interface AreaSummary {
+  key: string;
+  name: string;
+  color: string;
+  ativos: number;
+  subtitle: string;
+}
 interface DashboardData {
-  today: { commitments: Commitment[]; bills: Bill[] };
-  upcomingCommitments: Commitment[];
-  finance: { currentBalance: number; committed: number; free: number; envelopes: { name: string; allocated: number }[] };
-  projectsAttention: ProjectAttention[];
-  projectsTotal: number;
-  dev: { alerts: number };
+  firstName: string | null;
+  now: string;
+  foco: FocoItem[];
+  resumo: { pendentes: number; concluidasHoje: number; proximosCompromissos: number; atrasadas: number };
+  porArea: AreaSummary[];
   verseOfDay: { reference: string; text: string | null } | null;
   checkin: { mood: string } | null;
 }
 
-const currency = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const dateFmt = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
 
-const weekdayFmt = new Intl.DateTimeFormat("pt-BR", { weekday: "long" });
-const timeFmt = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
-
-function dayLabel(iso: string) {
-  const d = new Date(iso);
-  const label = weekdayFmt.format(d);
-  return label.charAt(0).toUpperCase() + label.slice(1);
+function greeting(hour: number) {
+  if (hour < 12) return "Bom dia";
+  if (hour < 18) return "Boa tarde";
+  return "Boa noite";
 }
-
-const financasColor = AREAS.find((a) => a.key === "financas")!.color;
 
 export function Dashboard() {
   const router = useRouter();
@@ -77,140 +68,183 @@ export function Dashboard() {
     );
   }
 
+  const now = new Date(data.now);
+  const dateLabel = dateFmt.format(now);
+
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
-      <h1 className="mb-6 font-display text-[26px] font-semibold italic tracking-tight">O que precisa da minha atenção?</h1>
+    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+        <h1 className="font-display text-[26px] font-semibold tracking-tight">
+          {greeting(now.getHours())}{data.firstName ? `, ${data.firstName}` : ""}.
+        </h1>
+        <p className="mt-1 text-sm capitalize text-muted-foreground">{dateLabel}</p>
+      </motion.div>
 
-      <div className="space-y-5">
-        {/* Prioridade 1: o que é urgente agora e o dinheiro. */}
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
-          <AgendaSection data={data} onChange={load} />
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <FinanceSection finance={data.finance} />
-        </motion.div>
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mt-6">
+        <FocoDoDia items={data.foco} />
+      </motion.div>
 
-        {/* Prioridade 2: projetos, agrupados em vez de espalhados em cards repetidos. */}
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <ProjectsOverviewSection data={data} />
-        </motion.div>
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-5">
+        <ResumoGeral resumo={data.resumo} />
+      </motion.div>
 
-        {/* Ritual do dia — calmo, não é urgência, por isso fica por último. */}
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <DailyRitualSection data={data} onChange={load} />
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mt-6">
+        <PorArea areas={data.porArea} />
+      </motion.div>
+
+      {(data.checkin !== undefined || data.verseOfDay) && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-6">
+          <AntesDeSeguir checkin={data.checkin} verseOfDay={data.verseOfDay} onChange={load} />
         </motion.div>
+      )}
+    </div>
+  );
+}
+
+function FocoDoDia({ items }: { items: FocoItem[] }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-5">
+      <p className="mb-3 flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+        <span aria-hidden>🔥</span> Foco do dia
+      </p>
+      {items.length === 0 ? (
+        <div className="flex items-center gap-3 py-2">
+          <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", bounce: 0.4 }}>
+            <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+          </motion.div>
+          <div>
+            <p className="font-medium">Você está em dia.</p>
+            <p className="text-sm text-muted-foreground">Nada urgente exige sua atenção agora.</p>
+          </div>
+        </div>
+      ) : (
+        <ul className="space-y-1.5">
+          {items.map((item, i) => (
+            <motion.li
+              key={i}
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.05 * i }}
+            >
+              <Link
+                href={item.href}
+                className={`flex items-center justify-between gap-3 rounded-md px-3 py-2.5 text-sm transition-colors ${
+                  item.kind === "alerta" ? "bg-rose-500/5 hover:bg-rose-500/10" : "bg-muted/40 hover:bg-muted"
+                }`}
+              >
+                <span className="flex items-center gap-2 font-medium">
+                  {item.kind === "alerta" ? (
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500" />
+                  ) : (
+                    <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  )}
+                  {item.label}
+                </span>
+                <span className="shrink-0 text-muted-foreground">{item.detail}</span>
+              </Link>
+            </motion.li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function ResumoGeral({ resumo }: { resumo: DashboardData["resumo"] }) {
+  const tiles = [
+    { label: "Pendentes", value: resumo.pendentes, icon: ListChecks, color: "#f59e0b" },
+    { label: "Concluídas hoje", value: resumo.concluidasHoje, icon: CheckCircle2, color: "#10b981" },
+    { label: "Próximos compromissos", value: resumo.proximosCompromissos, icon: CalendarClock, color: "#3b82f6" },
+    { label: "Atrasadas", value: resumo.atrasadas, icon: AlertTriangle, color: "#f43f5e" },
+  ];
+
+  return (
+    <div>
+      <p className="mb-2 text-xs font-medium text-muted-foreground">Resumo geral</p>
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+        {tiles.map((t) => (
+          <motion.div
+            key={t.label}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            className="rounded-lg border border-border bg-card p-3.5"
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">{t.label}</span>
+              <t.icon className="h-3.5 w-3.5 shrink-0" style={{ color: t.color }} />
+            </div>
+            <p className="font-display text-2xl font-semibold tabular-nums">
+              <AnimatedNumber value={t.value} format={(v) => Math.round(v).toString()} />
+            </p>
+          </motion.div>
+        ))}
       </div>
     </div>
   );
 }
 
-function AgendaSection({ data, onChange }: { data: DashboardData; onChange: () => void }) {
-  const { commitments, bills } = data.today;
-  const upcoming = data.upcomingCommitments;
-  const empty = commitments.length === 0 && bills.length === 0 && upcoming.length === 0;
-
-  async function markPaid(b: Bill) {
-    if (!confirm(`Marcar "${b.title}" (${currency(b.amount)}) como paga? Isso desconta o valor do saldo atual.`)) return;
-    await fetch(`/api/bills/${b.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paid: true }),
-    });
-    notify.success(`"${b.title}" paga — ${currency(b.amount)} descontado do saldo`);
-    onChange();
-  }
-
-  async function deleteCommitment(id: string) {
-    await fetch(`/api/commitments/${id}`, { method: "DELETE" });
-    onChange();
-  }
-
-  async function deleteBill(id: string) {
-    await fetch(`/api/bills/${id}`, { method: "DELETE" });
-    onChange();
-  }
-
+function PorArea({ areas }: { areas: AreaSummary[] }) {
   return (
-    <SectionCard
-      title="Agenda"
-      icon={Sun}
-      color="#f59e0b"
-      actions={
-        <div className="flex gap-1">
-          <AddCommitmentDialog onAdded={onChange} />
-          <AddBillDialog onAdded={onChange} />
-        </div>
-      }
-    >
-      {empty ? (
-        <p className="text-sm text-muted-foreground">Nada marcado.</p>
-      ) : (
-        <div className="space-y-4">
-          {(commitments.length > 0 || bills.length > 0) && (
-            <div>
-              <p className="mb-1.5 text-xs font-medium text-muted-foreground">Hoje</p>
-              <ul className="space-y-1.5">
-                {commitments.map((c) => (
-                  <li key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
-                    <span className="w-12 shrink-0 tabular-nums text-muted-foreground">{timeFmt.format(new Date(c.startAt))}</span>
-                    <span className="flex-1 font-medium">{c.title}</span>
-                    {c.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
-                    <EditCommitmentDialog commitment={c} onSaved={onChange} />
-                    <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
-                  </li>
-                ))}
-                {bills.map((b) => (
-                  <li key={b.id} className="flex items-center gap-3 rounded-lg border border-rose-500/20 bg-rose-500/5 px-3 py-2 text-sm">
-                    <Checkbox className="shrink-0" onCheckedChange={() => markPaid(b)} />
-                    <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500" />
-                    <span className="flex-1 font-medium">Conta {b.title.toLowerCase()} vence hoje</span>
-                    <span className="font-semibold tabular-nums text-rose-500">{currency(b.amount)}</span>
-                    <EditBillDialog bill={b} onSaved={onChange} />
-                    <DeleteButton label={b.title} onDelete={() => deleteBill(b.id)} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {upcoming.length > 0 && (
-            <div>
-              <p className="mb-1.5 text-xs font-medium text-muted-foreground">Próximos</p>
-              <ul className="space-y-1.5">
-                {upcoming.map((c) => (
-                  <li key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
-                    <span className="w-28 shrink-0 text-muted-foreground">
-                      {dayLabel(c.startAt)} {timeFmt.format(new Date(c.startAt))}
+    <div>
+      <p className="mb-2 text-xs font-medium text-muted-foreground">Por área</p>
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+        {areas.map((a) => {
+          const areaMeta = AREAS.find((m) => m.key === a.key);
+          const Icon = areaMeta?.icon;
+          return (
+            <motion.div key={a.key} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+              <Link
+                href={`/app/areas/${a.key}`}
+                className="block rounded-lg border border-border bg-card p-4 transition-colors hover:border-[var(--card-border-hover)]"
+                style={{ ["--card-border-hover" as string]: a.color }}
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md" style={{ background: `${a.color}1a`, color: a.color }}>
+                      {Icon && <Icon className="h-4 w-4" />}
                     </span>
-                    <span className="flex-1 font-medium">{c.title}</span>
-                    {c.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
-                    <EditCommitmentDialog commitment={c} onSaved={onChange} />
-                    <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
-    </SectionCard>
+                    <div>
+                      <p className="text-sm font-medium">{a.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        <AnimatedNumber value={a.ativos} format={(v) => Math.round(v).toString()} /> ativos
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <p className="truncate text-xs text-muted-foreground">{a.subtitle}</p>
+              </Link>
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
-function DailyRitualSection({ data, onChange }: { data: DashboardData; onChange: () => void }) {
-  if (!data.verseOfDay && !data.checkin) return null;
+function AntesDeSeguir({
+  checkin,
+  verseOfDay,
+  onChange,
+}: {
+  checkin: DashboardData["checkin"];
+  verseOfDay: DashboardData["verseOfDay"];
+  onChange: () => void;
+}) {
   return (
-    <SectionCard title="Antes de seguir" icon={Smile} color="#f59e0b">
-      <div className="space-y-4">
-        <CheckinBlock checkin={data.checkin} onChange={onChange} />
-        {data.verseOfDay && (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <p className="mb-3 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+        <Smile className="h-3.5 w-3.5" /> Antes de seguir
+      </p>
+      <div className="space-y-3.5">
+        <CheckinBlock checkin={checkin} onChange={onChange} />
+        {verseOfDay && (
           <div className="border-t border-border/70 pt-3.5">
-            <p className="mb-1 text-xs font-medium text-muted-foreground">Versículo do dia</p>
-            <p className="text-sm italic leading-relaxed">{data.verseOfDay.text ?? "Texto não cadastrado."}</p>
-            <p className="mt-1.5 text-xs font-medium text-muted-foreground">{data.verseOfDay.reference} (ARC)</p>
+            <p className="text-sm italic leading-relaxed">{verseOfDay.text ?? "Texto não cadastrado."}</p>
+            <p className="mt-1.5 text-xs font-medium text-muted-foreground">{verseOfDay.reference} (ARC)</p>
           </div>
         )}
       </div>
-    </SectionCard>
+    </div>
   );
 }
 
@@ -236,7 +270,7 @@ function CheckinBlock({ checkin, onChange }: { checkin: DashboardData["checkin"]
     </button>
   ) : (
     <div>
-      <p className="mb-1.5 text-xs font-medium text-muted-foreground">Como você está?</p>
+      <p className="mb-1.5 text-xs text-muted-foreground">Como você está?</p>
       <div className="flex flex-wrap gap-2">
         {MOODS.map((m) => (
           <button
@@ -250,103 +284,5 @@ function CheckinBlock({ checkin, onChange }: { checkin: DashboardData["checkin"]
         ))}
       </div>
     </div>
-  );
-}
-
-function FinanceSection({ finance }: { finance: DashboardData["finance"] }) {
-  return (
-    <SectionCard title="Financeiro" icon={Wallet} color={financasColor}>
-      <div className="space-y-3 text-sm">
-        <div>
-          <span className="text-muted-foreground">Disponível de verdade</span>
-          <p className={`font-display text-4xl font-semibold tabular-nums ${finance.free >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-            {currency(finance.free)}
-          </p>
-        </div>
-        <div className="border-t border-border/70 pt-2.5">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Já comprometido</span>
-            <span className="font-medium tabular-nums text-muted-foreground">{currency(finance.committed)}</span>
-          </div>
-          {finance.envelopes.length > 0 && (
-            <ul className="mt-1.5 space-y-1 border-l border-border/70 pl-2.5">
-              {finance.envelopes.map((e) => (
-                <li key={e.name} className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{e.name}</span>
-                  <span className="tabular-nums">{currency(e.allocated)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <Link
-          href="/app/areas/financas"
-          className="mt-1 inline-flex items-center gap-1 text-xs font-medium hover:underline"
-          style={{ color: financasColor }}
-        >
-          Abrir financeiro <ArrowRight className="h-3 w-3" />
-        </Link>
-      </div>
-    </SectionCard>
-  );
-}
-
-const prazoFmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
-
-function ProjectsOverviewSection({ data }: { data: DashboardData }) {
-  const { dev, projectsAttention, projectsTotal } = data;
-
-  return (
-    <SectionCard
-      title="Projetos que precisam de atenção"
-      icon={FolderKanban}
-      color="#71717a"
-      actions={
-        <Link href="/app/projects" className="text-xs font-medium text-muted-foreground hover:text-foreground">
-          Ver todos ({projectsTotal})
-        </Link>
-      }
-    >
-      {dev.alerts > 0 && (
-        <div className="mb-3 flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-400">
-          <AlertTriangle className="h-4 w-4 shrink-0" />
-          {dev.alerts} {dev.alerts === 1 ? "deploy com problema" : "deploys com problema"}
-        </div>
-      )}
-      {projectsAttention.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nada precisando de atenção agora.</p>
-      ) : (
-        <ul className="space-y-2">
-          {projectsAttention.map((p) => {
-            const areaMeta = AREAS.find((a) => a.key === p.area);
-            return (
-              <li key={p.id}>
-                <Link href={`/app/projects/${p.id}`} className="block rounded-lg bg-muted/40 px-3 py-2 text-sm transition-colors hover:bg-muted">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium">{p.name}</p>
-                    <span className="shrink-0 text-xs" style={{ color: areaMeta?.color }}>
-                      {areaMeta?.name || p.area}
-                    </span>
-                  </div>
-                  <p className="text-muted-foreground">
-                    {p.status === "esperando" || p.status === "bloqueado" ? (
-                      <>
-                        {STATUS_LABEL[p.status]}
-                        {p.esperandoMotivo ? ` — ${p.esperandoMotivo}` : ""}
-                      </>
-                    ) : p.progress.nextAction ? (
-                      <>→ {p.progress.nextAction.title}</>
-                    ) : (
-                      "Sem próxima ação definida"
-                    )}
-                    {p.prazo && <span className="ml-1.5 text-xs text-muted-foreground/70">· {prazoFmt.format(new Date(p.prazo))}</span>}
-                  </p>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </SectionCard>
   );
 }

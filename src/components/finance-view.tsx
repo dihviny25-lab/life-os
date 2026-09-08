@@ -30,6 +30,7 @@ import {
 } from "@/components/finance-dialogs";
 import { AddBillDialog, EditBillDialog } from "@/components/entry-dialogs";
 import { DeleteButton } from "@/components/delete-button";
+import { AnimatedNumber } from "@/components/animated-number";
 import { notify } from "@/lib/toast";
 import { AREAS } from "@/lib/areas";
 import type { Bill } from "@/lib/types";
@@ -454,7 +455,7 @@ function SituacaoAtual({
       <div>
         <span className="text-muted-foreground">Disponível de verdade</span>
         <p className={`font-display text-4xl font-semibold tabular-nums ${situacao.free >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-          {currency(situacao.free)}
+          <AnimatedNumber value={situacao.free} format={currency} />
         </p>
       </div>
       <span

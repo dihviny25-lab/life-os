@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 
 export function SectionCard({
@@ -16,7 +17,9 @@ export function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div
+    <motion.div
+      whileHover={{ y: -1 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
       className="overflow-hidden rounded-lg border border-border bg-card"
       style={{ borderLeft: `2px solid ${color}` }}
     >
@@ -33,6 +36,6 @@ export function SectionCard({
         {actions}
       </div>
       <div className="p-4">{children}</div>
-    </div>
+    </motion.div>
   );
 }

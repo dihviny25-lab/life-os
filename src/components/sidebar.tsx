@@ -7,13 +7,6 @@ import { useTheme } from "next-themes";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Home,
-  Users,
-  Wallet,
-  Scissors,
-  Code2,
-  Church,
-  User,
-  BookOpen,
   FolderKanban,
   MoreHorizontal,
   Sun,
@@ -25,20 +18,10 @@ import { notify } from "@/lib/toast";
 import { AREAS } from "@/lib/areas";
 import { cn } from "@/lib/utils";
 
-const AREA_ICONS: Record<string, typeof Users> = {
-  familia: Users,
-  financas: Wallet,
-  barbearia: Scissors,
-  desenvolvimento: Code2,
-  igreja_ministerio: Church,
-  pessoal: User,
-  conhecimento: BookOpen,
-};
-
 const NAV_ITEMS = [
   { key: "hoje", href: "/app", name: "Hoje", icon: Home, color: "#f59e0b" },
   { key: "projetos", href: "/app/projects", name: "Projetos", icon: FolderKanban, color: "#3b82f6" },
-  ...AREAS.map((a) => ({ key: a.key, href: `/app/areas/${a.key}`, name: a.name, icon: AREA_ICONS[a.key] || Home, color: a.color })),
+  ...AREAS.map((a) => ({ key: a.key, href: `/app/areas/${a.key}`, name: a.name, icon: a.icon, color: a.color })),
 ];
 
 function isActive(pathname: string, href: string) {
