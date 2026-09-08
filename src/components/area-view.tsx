@@ -104,7 +104,7 @@ export function AreaView({ area }: { area: string }) {
                     <span className="w-24 shrink-0 text-muted-foreground">
                       {dateFmt.format(new Date(c.startAt))} · {timeFmt.format(new Date(c.startAt))}
                     </span>
-                    <span className="flex-1 font-medium">{c.title}</span>
+                    <span className="min-w-0 flex-1 truncate font-medium">{c.title}</span>
                     {c.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
                     <EditCommitmentDialog commitment={c} onSaved={load} />
                     <DeleteButton label={c.title} onDelete={() => deleteCommitment(c.id)} />
@@ -124,7 +124,7 @@ export function AreaView({ area }: { area: string }) {
                 {upcomingBills.map((b) => (
                   <li key={b.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
                     <Checkbox className="shrink-0" onCheckedChange={() => markPaid(b)} />
-                    <span className="flex-1 font-medium">{b.title}</span>
+                    <span className="min-w-0 flex-1 truncate font-medium">{b.title}</span>
                     <span className="text-muted-foreground">{dateFmt.format(new Date(b.dueDate))}</span>
                     <span className="font-semibold tabular-nums text-rose-500">{currency(b.amount)}</span>
                     <EditBillDialog bill={b} onSaved={load} />

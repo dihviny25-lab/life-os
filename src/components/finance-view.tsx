@@ -171,8 +171,8 @@ export function FinanceView() {
                     <li key={b.id} className={`rounded-lg border p-3 text-sm ${s?.bg}`}>
                       <div className="flex items-center gap-2">
                         <Checkbox className="shrink-0" onCheckedChange={() => markBillPaid(b)} />
-                        <span className="flex-1 font-medium">{b.title}</span>
-                        <span className="font-semibold tabular-nums">{currency(b.amount)}</span>
+                        <span className="min-w-0 flex-1 truncate font-medium">{b.title}</span>
+                        <span className="shrink-0 font-semibold tabular-nums">{currency(b.amount)}</span>
                         <EditBillDialog bill={b} onSaved={load} />
                         <DeleteButton label={b.title} onDelete={() => deleteBill(b.id)} />
                       </div>
@@ -254,12 +254,12 @@ export function FinanceView() {
                 {envelopes.map((e) => {
                   const bill = bills.find((b) => b.id === e.billId);
                   return (
-                    <li key={e.id} className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-sm">
-                      <span className="font-medium">
+                    <li key={e.id} className="flex flex-wrap items-center justify-between gap-y-1.5 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+                      <span className="min-w-0 truncate font-medium">
                         {e.name}
                         {bill && <span className="font-normal text-muted-foreground"> → {bill.title}</span>}
                       </span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-2">
                         <span className="font-semibold tabular-nums">{currency(e.allocated)}</span>
                         <EditEnvelopeDialog envelope={e} bills={bills} onSaved={load} />
                         <DeleteButton label={e.name} onDelete={async () => { await fetch(`/api/envelopes/${e.id}`, { method: "DELETE" }); load(); }} />
@@ -280,14 +280,14 @@ export function FinanceView() {
               <ul className="space-y-1.5">
                 {weeklyBudgets.map((w) => (
                   <li key={w.id} className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">
+                    <div className="flex flex-wrap items-center justify-between gap-y-1.5">
+                      <span className="min-w-0 truncate font-medium">
                         {w.name}
                         <span className="ml-1.5 rounded-full bg-background px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                           {w.kind === "fixed" ? "fixo" : "teto"}
                         </span>
                       </span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-2">
                         <span className="font-semibold tabular-nums">{currency(w.amount)}/semana</span>
                         <EditWeeklyBudgetDialog weeklyBudget={w} onSaved={load} />
                         <DeleteButton label={w.name} onDelete={async () => { await fetch(`/api/weekly-budgets/${w.id}`, { method: "DELETE" }); load(); }} />
