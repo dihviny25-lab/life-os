@@ -4,11 +4,13 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { CheckCircle2, ListChecks, CalendarClock, AlertTriangle, Clock, Smile } from "lucide-react";
+import { CheckCircle2, ListChecks, CalendarClock, AlertTriangle, Clock, Smile, Activity, Receipt, HandCoins, TrendingUp } from "lucide-react";
 import { MOODS } from "@/lib/moods";
 import { AREAS } from "@/lib/areas";
 import { AnimatedNumber } from "@/components/animated-number";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AddTransactionDialog } from "@/components/finance-dialogs";
+import { AddBillDialog, AddCommitmentDialog } from "@/components/entry-dialogs";
 
 interface FocoItem {
   id?: string;
@@ -34,6 +36,7 @@ interface DashboardData {
   porArea: AreaSummary[];
   verseOfDay: { reference: string; text: string | null } | null;
   checkin: { mood: string } | null;
+  atividade: { type: string; label: string; detail: string; at: string }[];
 }
 
 const dateFmt = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
@@ -85,19 +88,31 @@ export function Dashboard() {
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mt-6">
+        <div className="flex gap-2">
+          <AddTransactionDialog type="income" onAdded={load} />
+          <AddBillDialog onAdded={load} />
+          <AddCommitmentDialog onAdded={load} />
+        </div>
+      </motion.div>
+
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-6">
         <FocoDoDia items={data.foco} onChange={load} />
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-5">
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mt-5">
         <ResumoGeral resumo={data.resumo} />
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mt-6">
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-6">
         <PorArea areas={data.porArea} />
       </motion.div>
 
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-6">
+        <AtividadeRecente items={data.atividade} />
+      </motion.div>
+
       {(data.checkin !== undefined || data.verseOfDay) && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-6">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-6">
           <AntesDeSeguir checkin={data.checkin} verseOfDay={data.verseOfDay} onChange={load} />
         </motion.div>
       )}
@@ -295,6 +310,97 @@ function CheckinBlock({ checkin, onChange }: { checkin: DashboardData["checkin"]
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+function formatRelativeTime(dateStr: string, now: Date): string {
+  const date = new Date(dateStr);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "agora";
+  if (diffMins < 60) return `há ${diffMins}m`;
+  if (diffHours < 24) return `há ${diffHours}h`;
+  if (diffDays === 1) return "ontem";
+  if (diffDays < 7) return `há ${diffDays}d`;
+
+  const shortDateFmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
+  return shortDateFmt.format(date);
+}
+
+function AtividadeRecente({ items }: { items: DashboardData["atividade"] }) {
+  const now = new Date();
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case "transacao":
+        return TrendingUp;
+      case "conta":
+        return Receipt;
+      case "tarefa":
+        return CheckCircle2;
+      case "compromisso":
+        return CalendarClock;
+      case "divida":
+        return HandCoins;
+      default:
+        return Activity;
+    }
+  };
+
+  const getColor = (type: string): string => {
+    switch (type) {
+      case "transacao":
+        return "text-blue-500";
+      case "conta":
+        return "text-orange-500";
+      case "tarefa":
+        return "text-emerald-500";
+      case "compromisso":
+        return "text-purple-500";
+      case "divida":
+        return "text-amber-500";
+      default:
+        return "text-muted-foreground";
+    }
+  };
+
+  return (
+    <div className="rounded-lg border border-border bg-card p-5">
+      <p className="mb-3 flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+        <Activity className="h-4 w-4" /> Atividade recente
+      </p>
+      {items.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nada por aqui ainda.</p>
+      ) : (
+        <ul className="space-y-2">
+          {items.map((item, i) => {
+            const Icon = getIcon(item.type);
+            const colorClass = getColor(item.type);
+            return (
+              <motion.li
+                key={i}
+                initial={{ opacity: 0, x: -4 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.02 * i }}
+                className="flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm hover:bg-muted/30"
+              >
+                <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                  <Icon className={`h-4 w-4 shrink-0 ${colorClass}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{item.label}</p>
+                    {item.detail && <p className="text-xs text-muted-foreground truncate">{item.detail}</p>}
+                  </div>
+                </div>
+                <span className="shrink-0 text-xs text-muted-foreground">{formatRelativeTime(item.at, now)}</span>
+              </motion.li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

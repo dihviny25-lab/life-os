@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
 
-  const [user, allCommitments, allBills, finance, envelopes, projects, verses, checkin, doneToday] = await Promise.all([
+  const [user, allCommitments, allBills, finance, envelopes, projects, verses, checkin, doneToday, recentTransactions, recentBills, recentTasks, recentCommitments, recentDebtPayments] = await Promise.all([
     db.user.findUnique({ where: { id: userId }, select: { name: true } }),
     db.commitment.findMany({ where: { userId, archived: false } }),
     db.bill.findMany({ where: { userId, paid: false }, orderBy: { dueDate: "asc" } }),
@@ -38,6 +38,11 @@ export async function GET(req: NextRequest) {
     db.verse.findMany({ where: { userId }, orderBy: { order: "asc" } }),
     db.checkin.findUnique({ where: { userId_date: { userId, date: todayStart } } }),
     db.task.count({ where: { project: { userId }, doneAt: { gte: todayStart, lte: todayEnd } } }),
+    db.transaction.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 8 }),
+    db.bill.findMany({ where: { userId, paid: true, paidAt: { not: null } }, orderBy: { paidAt: "desc" }, take: 8 }),
+    db.task.findMany({ where: { project: { userId }, doneAt: { not: null } }, orderBy: { doneAt: "desc" }, take: 8, include: { project: { select: { name: true } } } }),
+    db.commitment.findMany({ where: { userId, done: true, doneAt: { not: null } }, orderBy: { doneAt: "desc" }, take: 8 }),
+    db.debtPayment.findMany({ where: { debt: { userId } }, orderBy: { date: "desc" }, take: 8, include: { debt: { select: { pessoa: true } } } }),
   ]);
 
   const firstName = user?.name?.trim().split(" ")[0] || null;
@@ -102,6 +107,45 @@ export async function GET(req: NextRequest) {
     return { key: a.key, name: a.name, color: a.color, ativos: activeProjects.length, subtitle };
   });
 
+  // Atividade recente — merge multiple event streams
+  type ActivityItem = { type: string; label: string; detail: string; at: string };
+  const atividade: ActivityItem[] = [];
+
+  for (const t of recentTransactions) {
+    const isIncome = t.type === "income";
+    const sign = isIncome ? "+" : "-";
+    const detail = `${sign}${t.amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`;
+    const label = isIncome ? `Recebeu: ${t.title}` : `Gastou: ${t.title}`;
+    atividade.push({ type: "transacao", label, detail, at: t.createdAt.toISOString() });
+  }
+
+  for (const b of recentBills) {
+    if (b.paidAt) {
+      const detail = b.amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      atividade.push({ type: "conta", label: `Pagou: ${b.title}`, detail, at: b.paidAt.toISOString() });
+    }
+  }
+
+  for (const tk of recentTasks) {
+    const detail = tk.project.name;
+    atividade.push({ type: "tarefa", label: `Concluiu: ${tk.title}`, detail, at: tk.doneAt!.toISOString() });
+  }
+
+  for (const c of recentCommitments) {
+    if (c.doneAt) {
+      atividade.push({ type: "compromisso", label: `Concluiu: ${c.title}`, detail: "", at: c.doneAt.toISOString() });
+    }
+  }
+
+  for (const dp of recentDebtPayments) {
+    const detail = dp.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    atividade.push({ type: "divida", label: `Pagou ${dp.debt.pessoa}`, detail, at: dp.date.toISOString() });
+  }
+
+  // Sort by date descending and take top 8
+  atividade.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+  const topAtividade = atividade.slice(0, 8);
+
   return ok({
     firstName,
     now: now.toISOString(),
@@ -115,5 +159,6 @@ export async function GET(req: NextRequest) {
     porArea,
     verseOfDay: verseOfDay ? { reference: verseOfDay.reference, text: verseOfDay.text } : null,
     checkin: checkin ? { mood: checkin.mood } : null,
+    atividade: topAtividade,
   });
 }
