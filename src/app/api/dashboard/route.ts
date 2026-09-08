@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
 
-  const [user, allCommitments, allBills, finance, envelopes, projects, verses, checkin, doneToday, recentTransactions, recentBills, recentTasks, recentCommitments, recentDebtPayments] = await Promise.all([
+  const [user, allCommitments, allBills, finance, envelopes, projects, verses, checkin, doneToday, recentTransactions, recentBills, recentTasks, recentCommitments, recentDebtPayments, creditCards] = await Promise.all([
     db.user.findUnique({ where: { id: userId }, select: { name: true } }),
     db.commitment.findMany({ where: { userId, archived: false } }),
     db.bill.findMany({ where: { userId, paid: false }, orderBy: { dueDate: "asc" } }),
@@ -46,6 +46,10 @@ export async function GET(req: NextRequest) {
     db.task.findMany({ where: { project: { userId }, doneAt: { not: null } }, orderBy: { doneAt: "desc" }, take: 8, include: { project: { select: { name: true } } } }),
     db.commitment.findMany({ where: { userId, done: true, doneAt: { not: null } }, orderBy: { doneAt: "desc" }, take: 8 }),
     db.debtPayment.findMany({ where: { debt: { userId } }, orderBy: { date: "desc" }, take: 8, include: { debt: { select: { pessoa: true } } } }),
+    db.creditCard.findMany({
+      where: { userId, archived: false },
+      select: { id: true, name: true, purchases: { where: { billId: null } }, bills: { where: { paid: false } } },
+    }),
   ]);
 
   const firstName = user?.name?.trim().split(" ")[0] || null;
@@ -62,6 +66,13 @@ export async function GET(req: NextRequest) {
 
   const overdueBills = allBills.filter((b) => b.dueDate < todayStart);
   const billsDueToday = allBills.filter((b) => b.dueDate >= todayStart && b.dueDate <= todayEnd);
+
+  // Compute total owed across all credit cards
+  const emCartoes = creditCards.reduce((total, card) => {
+    const faturaAtual = Math.round(card.purchases.reduce((sum, p) => sum + p.amount, 0) * 100) / 100;
+    const faturasPendentes = card.bills.reduce((sum, b) => sum + b.amount, 0);
+    return total + faturaAtual + faturasPendentes;
+  }, 0);
 
   // Um compromisso recorrente sempre é projetado pra próxima ocorrência —
   // nunca fica "atrasado". Só um compromisso único (sem recorrência) pode
@@ -158,10 +169,12 @@ export async function GET(req: NextRequest) {
       concluidasHoje: doneToday,
       proximosCompromissos: upcomingCommitments.length,
       atrasadas: overdueBills.length,
+      emCartoes,
     },
     porArea,
     verseOfDay: verseOfDay ? { reference: verseOfDay.reference, text: verseOfDay.text } : null,
     checkin: checkin ? { mood: checkin.mood } : null,
     atividade: topAtividade,
+    creditCards: creditCards.map((c) => ({ id: c.id, name: c.name })),
   });
 }

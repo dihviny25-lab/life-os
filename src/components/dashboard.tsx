@@ -4,13 +4,19 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { CheckCircle2, ListChecks, CalendarClock, AlertTriangle, Clock, Smile, Activity, Receipt, HandCoins, TrendingUp } from "lucide-react";
+import { CheckCircle2, ListChecks, CalendarClock, AlertTriangle, Clock, Smile, Activity, Receipt, HandCoins, TrendingUp, CreditCard } from "lucide-react";
 import { MOODS } from "@/lib/moods";
 import { AREAS } from "@/lib/areas";
 import { AnimatedNumber } from "@/components/animated-number";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AddTransactionDialog } from "@/components/finance-dialogs";
 import { AddBillDialog, AddCommitmentDialog } from "@/components/entry-dialogs";
+import { notify } from "@/lib/toast";
 
 interface FocoItem {
   id?: string;
@@ -32,11 +38,12 @@ interface DashboardData {
   firstName: string | null;
   now: string;
   foco: FocoItem[];
-  resumo: { pendentes: number; concluidasHoje: number; proximosCompromissos: number; atrasadas: number };
+  resumo: { pendentes: number; concluidasHoje: number; proximosCompromissos: number; atrasadas: number; emCartoes: number };
   porArea: AreaSummary[];
   verseOfDay: { reference: string; text: string | null } | null;
   checkin: { mood: string } | null;
   atividade: { type: string; label: string; detail: string; at: string }[];
+  creditCards: { id: string; name: string }[];
 }
 
 const dateFmt = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
@@ -93,6 +100,7 @@ export function Dashboard() {
           <AddTransactionDialog type="expense" onAdded={load} />
           <AddBillDialog onAdded={load} />
           <AddCommitmentDialog onAdded={load} />
+          {data.creditCards.length > 0 && <AddCardPurchaseDialog cards={data.creditCards} onAdded={load} />}
         </div>
       </motion.div>
 
@@ -181,17 +189,20 @@ function FocoDoDia({ items, onChange }: { items: FocoItem[]; onChange: () => voi
 }
 
 function ResumoGeral({ resumo }: { resumo: DashboardData["resumo"] }) {
+  const formatCurrency = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
   const tiles = [
-    { label: "Contas pendentes", sub: "ainda não pagas", value: resumo.pendentes, icon: ListChecks, color: "#f59e0b", href: "/app/areas/financas" },
-    { label: "Tarefas concluídas", sub: "hoje", value: resumo.concluidasHoje, icon: CheckCircle2, color: "#10b981", href: "/app/semana" },
-    { label: "Próximos compromissos", sub: "agendados", value: resumo.proximosCompromissos, icon: CalendarClock, color: "#3b82f6", href: "/app/semana" },
-    { label: "Contas atrasadas", sub: "venceram e não foram pagas", value: resumo.atrasadas, icon: AlertTriangle, color: "#f43f5e", href: "/app/areas/financas" },
+    { label: "Contas pendentes", sub: "ainda não pagas", value: resumo.pendentes, icon: ListChecks, color: "#f59e0b", href: "/app/areas/financas", format: undefined as ((v: number) => string) | undefined },
+    { label: "Tarefas concluídas", sub: "hoje", value: resumo.concluidasHoje, icon: CheckCircle2, color: "#10b981", href: "/app/semana", format: undefined },
+    { label: "Próximos compromissos", sub: "agendados", value: resumo.proximosCompromissos, icon: CalendarClock, color: "#3b82f6", href: "/app/semana", format: undefined },
+    { label: "Contas atrasadas", sub: "venceram e não foram pagas", value: resumo.atrasadas, icon: AlertTriangle, color: "#f43f5e", href: "/app/areas/financas", format: undefined },
+    ...(resumo.emCartoes > 0 ? [{ label: "Nas faturas", sub: "cartão de crédito", value: resumo.emCartoes, icon: CreditCard, color: "#6366f1", href: "/app/areas/financas", format: formatCurrency }] : []),
   ];
 
   return (
     <div>
       <p className="mb-2 text-xs font-medium text-muted-foreground">Resumo geral</p>
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+      <div className={`grid grid-cols-2 gap-2.5 ${tiles.length > 4 ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}>
         {tiles.map((t) => (
           <motion.div key={t.label} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
             <Link href={t.href} className="block rounded-lg border border-border bg-card p-3.5 transition-colors hover:bg-muted/40">
@@ -200,7 +211,7 @@ function ResumoGeral({ resumo }: { resumo: DashboardData["resumo"] }) {
                 <t.icon className="h-3.5 w-3.5 shrink-0" style={{ color: t.color }} />
               </div>
               <p className="font-display text-2xl font-semibold tabular-nums">
-                <AnimatedNumber value={t.value} format={(v) => Math.round(v).toString()} />
+                <AnimatedNumber value={t.value} format={t.format ?? ((v) => Math.round(v).toString())} />
               </p>
               <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{t.sub}</p>
             </Link>
@@ -273,6 +284,83 @@ function AntesDeSeguir({
         )}
       </div>
     </div>
+  );
+}
+
+function AddCardPurchaseDialog({ cards, onAdded }: { cards: { id: string; name: string }[]; onAdded: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [selectedCardId, setSelectedCardId] = useState(cards.length === 1 ? cards[0].id : "");
+  const [title, setTitle] = useState("");
+  const [amount, setAmount] = useState("");
+
+  async function submit() {
+    if (!selectedCardId || !title || !amount) {
+      notify.error("Preencha todos os campos");
+      return;
+    }
+    const value = Number(amount.replace(",", "."));
+    if (value <= 0) {
+      notify.error("Valor deve ser maior que zero");
+      return;
+    }
+    const today = new Date().toISOString().split("T")[0];
+    await fetch(`/api/credit-cards/${selectedCardId}/purchases`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, amount: value, date: today }),
+    });
+    setOpen(false);
+    setTitle("");
+    setAmount("");
+    if (cards.length > 1) {
+      setSelectedCardId("");
+    }
+    onAdded();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+          + Compra no cartão
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Compra no cartão</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          {cards.length > 1 && (
+            <div>
+              <Label>Cartão</Label>
+              <Select value={selectedCardId} onValueChange={setSelectedCardId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um cartão" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cards.map((card) => (
+                    <SelectItem key={card.id} value={card.id}>
+                      {card.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div>
+            <Label>Título</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Supermercado" />
+          </div>
+          <div>
+            <Label>Valor</Label>
+            <Input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" inputMode="decimal" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={submit}>Adicionar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
