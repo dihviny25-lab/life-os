@@ -34,6 +34,8 @@ export interface Project {
   prioridade: string;
   prazo: string | null;
   orcamento: number | null;
+  metaContribuicao: number | null;
+  metaFrequencia: string | null;
   hasAlert: boolean;
   archived?: boolean;
   tasks: Task[];

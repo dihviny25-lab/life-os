@@ -510,6 +510,8 @@ export function EditProjectDialog({ project, onSaved }: { project: Project; onSa
   const [prioridade, setPrioridade] = useState(project.prioridade || "media");
   const [prazo, setPrazo] = useState(project.prazo ? project.prazo.slice(0, 10) : "");
   const [orcamento, setOrcamento] = useState(project.orcamento != null ? String(project.orcamento) : "");
+  const [metaContribuicao, setMetaContribuicao] = useState(project.metaContribuicao != null ? String(project.metaContribuicao) : "");
+  const [metaFrequencia, setMetaFrequencia] = useState(project.metaFrequencia || "semanal");
 
   async function submit() {
     if (!name) {
@@ -528,6 +530,8 @@ export function EditProjectDialog({ project, onSaved }: { project: Project; onSa
         prioridade,
         prazo: prazo || null,
         orcamento: orcamento ? Number(orcamento.replace(",", ".")) : null,
+        metaContribuicao: metaContribuicao ? Number(metaContribuicao.replace(",", ".")) : null,
+        metaFrequencia: metaContribuicao ? metaFrequencia : null,
       }),
     });
     setOpen(false);
@@ -600,6 +604,26 @@ export function EditProjectDialog({ project, onSaved }: { project: Project; onSa
               <Label>Orçamento (opcional)</Label>
               <Input value={orcamento} onChange={(e) => setOrcamento(e.target.value)} placeholder="Ex: 1500" inputMode="decimal" />
             </div>
+          </div>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <Label>Guardar por período (opcional)</Label>
+              <Input value={metaContribuicao} onChange={(e) => setMetaContribuicao(e.target.value)} placeholder="Ex: 100" inputMode="decimal" />
+            </div>
+            {metaContribuicao && (
+              <div className="flex-1">
+                <Label>Frequência</Label>
+                <Select value={metaFrequencia} onValueChange={setMetaFrequencia}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="semanal">Por semana</SelectItem>
+                    <SelectItem value="mensal">Por mês</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </div>
         <DialogFooter>

@@ -97,9 +97,12 @@ model Envelope {
   allocated Float    @default(0)
   billId    String?
   bill      Bill?    @relation(fields: [billId], references: [id], onDelete: SetNull)
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([userId])
+  @@index([projectId])
 }
 
 // A project has a beginning, a goal and an end — unlike a Commitment (fixed
@@ -118,6 +121,8 @@ model Project {
   prioridade      String   @default("media") // baixa | media | alta
   prazo           DateTime?
   orcamento       Float?
+  metaContribuicao Float?  // quanto guardar por período (ex: 100 = "guarde R$100/semana")
+  metaFrequencia   String? // semanal | mensal
   hasAlert        Boolean  @default(false)
   archived        Boolean  @default(false)
   createdAt       DateTime @default(now())
@@ -129,6 +134,8 @@ model Project {
   commitments     Commitment[]
   bills           Bill[]
   transactions    Transaction[]
+  envelopes       Envelope[]
+  links           Link[]
   @@index([userId, area])
   @@index([userId, status])
 }
@@ -178,6 +185,18 @@ model Decision {
   projectId String
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   body      String
+  createdAt DateTime @default(now())
+  @@index([projectId])
+}
+
+// A reference link saved on a Project (a product page, a quote, an article)
+// — just a URL, no file storage needed.
+model Link {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  url       String
+  label     String?
   createdAt DateTime @default(now())
   @@index([projectId])
 }

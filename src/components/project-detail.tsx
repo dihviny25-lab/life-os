@@ -3,10 +3,19 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Plus, Check, Clock3, Archive } from "lucide-react";
+import { ArrowLeft, Plus, Check, Clock3, Archive, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { EditProjectDialog } from "@/components/entry-dialogs";
 import { DeleteButton } from "@/components/delete-button";
 import { AREAS } from "@/lib/areas";
@@ -48,6 +57,16 @@ interface BillRow {
   dueDate: string;
   paid: boolean;
 }
+interface EnvelopeRow {
+  id: string;
+  name: string;
+  allocated: number;
+}
+interface LinkRow {
+  id: string;
+  url: string;
+  label: string | null;
+}
 interface Detail {
   project: Project;
   progress: { total: number; done: number; percent: number; nextAction: { id: string; title: string } | null };
@@ -57,7 +76,9 @@ interface Detail {
   decisions: NoteRow[];
   commitments: CommitmentRow[];
   bills: BillRow[];
-  financeiro: { orcamento: number | null; comprometido: number; gasto: number; disponivel: number | null };
+  envelopes: EnvelopeRow[];
+  links: LinkRow[];
+  financeiro: { orcamento: number | null; comprometido: number; gasto: number; guardado: number; faltaGuardar: number | null; disponivel: number | null };
 }
 
 export function ProjectDetail({ id }: { id: string }) {
@@ -120,7 +141,7 @@ export function ProjectDetail({ id }: { id: string }) {
     return <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">Carregando…</div>;
   }
 
-  const { project: p, progress, stages, tasksSemEtapa, notes, decisions, commitments, bills, financeiro } = data;
+  const { project: p, progress, stages, tasksSemEtapa, notes, decisions, commitments, bills, envelopes, links, financeiro } = data;
   const areaMeta = AREAS.find((a) => a.key === p.area);
 
   return (
@@ -209,6 +230,36 @@ export function ProjectDetail({ id }: { id: string }) {
           )}
         </Section>
       )}
+
+      {/* Guardado — envelope financeiro do projeto, separado do resto */}
+      <Section title="Guardado">
+        {p.metaContribuicao && (
+          <p className="mb-2 text-xs text-muted-foreground">
+            Meta: guardar {currency(p.metaContribuicao)} por {p.metaFrequencia === "mensal" ? "mês" : "semana"}
+          </p>
+        )}
+        <div className="mb-2 flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Guardado até agora</span>
+          <span className="font-semibold tabular-nums">{currency(financeiro.guardado)}</span>
+        </div>
+        {financeiro.faltaGuardar != null && (
+          <div className="mb-2">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary"
+                style={{ width: `${p.orcamento ? Math.min(100, (financeiro.guardado / p.orcamento) * 100) : 0}%` }}
+              />
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">Falta guardar: {currency(financeiro.faltaGuardar)}</p>
+          </div>
+        )}
+        <EnvelopesList items={envelopes} projectId={id} onChange={load} />
+      </Section>
+
+      {/* Links */}
+      <Section title="Links">
+        <LinksList items={links} projectId={id} onChange={load} />
+      </Section>
 
       {/* Agenda */}
       {commitments.length > 0 && (
@@ -404,6 +455,165 @@ function NotesList({ items, projectId, onChange }: { items: NoteRow[]; projectId
       ) : (
         <button onClick={() => setAdding(true)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
           <Plus className="h-3.5 w-3.5" /> Nota
+        </button>
+      )}
+    </div>
+  );
+}
+
+function EnvelopesList({ items, projectId, onChange }: { items: EnvelopeRow[]; projectId: string; onChange: () => void }) {
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState("");
+
+  async function submit() {
+    if (!name.trim()) {
+      setAdding(false);
+      return;
+    }
+    await fetch("/api/envelopes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: name.trim(), allocated: 0, projectId }),
+    });
+    setName("");
+    setAdding(false);
+    onChange();
+  }
+
+  async function remove(id: string) {
+    await fetch(`/api/envelopes/${id}`, { method: "DELETE" });
+    onChange();
+  }
+
+  async function addContribution(env: EnvelopeRow, amount: number) {
+    await fetch(`/api/envelopes/${env.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ allocated: env.allocated + amount }),
+    });
+    onChange();
+  }
+
+  return (
+    <div className="space-y-1.5">
+      {items.map((e) => (
+        <div key={e.id} className="flex flex-wrap items-center justify-between gap-y-1.5 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+          <span className="min-w-0 flex-1 truncate font-medium">{e.name}</span>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="font-semibold tabular-nums">{currency(e.allocated)}</span>
+            <ContributeDialog envelope={e} onContribute={(v) => addContribution(e, v)} />
+            <DeleteButton label={e.name} onDelete={() => remove(e.id)} />
+          </div>
+        </div>
+      ))}
+      {adding ? (
+        <Input
+          autoFocus
+          value={name}
+          onChange={(ev) => setName(ev.target.value)}
+          onBlur={submit}
+          onKeyDown={(ev) => ev.key === "Enter" && submit()}
+          placeholder="Nome do envelope (ex: Hospedagem)…"
+          className="h-8 text-sm"
+        />
+      ) : (
+        <button onClick={() => setAdding(true)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+          <Plus className="h-3.5 w-3.5" /> Envelope
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ContributeDialog({ envelope, onContribute }: { envelope: EnvelopeRow; onContribute: (amount: number) => void }) {
+  const [open, setOpen] = useState(false);
+  const [amount, setAmount] = useState("");
+
+  function submit() {
+    const value = Number(amount.replace(",", "."));
+    if (!value || value <= 0) {
+      notify.error("Valor inválido");
+      return;
+    }
+    onContribute(value);
+    setOpen(false);
+    setAmount("");
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+          + Guardar
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Guardar em {envelope.name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Quanto você quer guardar agora?</Label>
+            <Input autoFocus value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" inputMode="decimal" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={submit}>Adicionar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function LinksList({ items, projectId, onChange }: { items: LinkRow[]; projectId: string; onChange: () => void }) {
+  const [adding, setAdding] = useState(false);
+  const [url, setUrl] = useState("");
+  const [label, setLabel] = useState("");
+
+  async function submit() {
+    if (!url.trim()) {
+      setAdding(false);
+      return;
+    }
+    await fetch(`/api/projects/${projectId}/links`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: url.trim(), label: label.trim() || null }),
+    });
+    setUrl("");
+    setLabel("");
+    setAdding(false);
+    onChange();
+  }
+
+  async function remove(id: string) {
+    await fetch(`/api/links/${id}`, { method: "DELETE" });
+    onChange();
+  }
+
+  return (
+    <div className="space-y-1.5">
+      {items.length === 0 && !adding && <p className="text-sm text-muted-foreground">Nenhum link salvo ainda.</p>}
+      {items.map((l) => (
+        <div key={l.id} className="flex items-center justify-between gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+          <a href={l.url} target="_blank" rel="noopener noreferrer" className="flex min-w-0 flex-1 items-center gap-1.5 truncate text-primary hover:underline">
+            <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{l.label || l.url}</span>
+          </a>
+          <DeleteButton label={l.label || l.url} onDelete={() => remove(l.id)} />
+        </div>
+      ))}
+      {adding ? (
+        <div className="space-y-1.5 rounded-lg bg-muted/40 p-2">
+          <Input autoFocus value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" className="h-8 text-sm" />
+          <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Nome (opcional)" className="h-8 text-sm" onKeyDown={(e) => e.key === "Enter" && submit()} />
+          <Button size="sm" className="h-7 w-full text-xs" onClick={submit}>
+            Salvar link
+          </Button>
+        </div>
+      ) : (
+        <button onClick={() => setAdding(true)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+          <Plus className="h-3.5 w-3.5" /> Link
         </button>
       )}
     </div>

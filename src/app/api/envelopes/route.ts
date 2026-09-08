@@ -27,6 +27,10 @@ export async function POST(req: NextRequest) {
     const bill = await db.bill.findFirst({ where: { id: body.billId, userId: session.userId } });
     if (!bill) return bad("Invalid bill", 400);
   }
+  if (body.projectId) {
+    const project = await db.project.findFirst({ where: { id: body.projectId, userId: session.userId } });
+    if (!project) return bad("Invalid project", 400);
+  }
 
   const envelope = await db.envelope.create({
     data: {
@@ -34,6 +38,7 @@ export async function POST(req: NextRequest) {
       name: body.name,
       allocated: Number(body.allocated) || 0,
       billId: body.billId || null,
+      projectId: body.projectId || null,
     },
   });
   return ok(envelope);
