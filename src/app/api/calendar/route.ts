@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     db.bill.findMany({ where: { userId, dueDate: { gte: rangeStart, lte: rangeEnd } } }),
   ]);
 
-  const events: { id: string; title: string; date: string; type: "commitment" | "bill"; area: string | null; location?: string | null; recurring?: string | null; done?: boolean; amount?: number; paid?: boolean }[] = [];
+  const events: { id: string; title: string; date: string; type: "commitment" | "bill"; area: string | null; location?: string | null; recurring?: string | null; done?: boolean; amount?: number; paid?: boolean; installments?: number | null; installmentNumber?: number | null }[] = [];
 
   for (const c of commitments) {
     for (const date of occurrencesInRange(c, rangeStart, rangeEnd)) {
@@ -46,8 +46,11 @@ export async function GET(req: NextRequest) {
       date: b.dueDate.toISOString(),
       type: "bill",
       area: b.area,
+      recurring: b.recurring,
       amount: b.amount,
       paid: b.paid,
+      installments: b.installments,
+      installmentNumber: b.installmentNumber,
     });
   }
 

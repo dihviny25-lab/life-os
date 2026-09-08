@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Receipt, Repeat } from "lucide-react";
-import { AddCommitmentDialog, EditCommitmentDialog } from "@/components/entry-dialogs";
+import { AddCommitmentDialog, EditCommitmentDialog, EditBillDialog } from "@/components/entry-dialogs";
 import { DeleteButton } from "@/components/delete-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AREAS } from "@/lib/areas";
@@ -21,6 +21,8 @@ interface CalEvent {
   done?: boolean;
   amount?: number;
   paid?: boolean;
+  installments?: number | null;
+  installmentNumber?: number | null;
 }
 
 type ViewMode = "month" | "week" | "day";
@@ -111,6 +113,11 @@ export function CalendarView() {
     load();
   }
 
+  async function deleteBill(id: string) {
+    await fetch(`/api/bills/${id}`, { method: "DELETE" });
+    load();
+  }
+
   function step(dir: 1 | -1) {
     if (view === "day") setCursor((c) => addDays(c, dir));
     else if (view === "week") setCursor((c) => addDays(c, dir * 7));
@@ -169,7 +176,7 @@ export function CalendarView() {
       ) : view === "week" ? (
         <WeekList weekStart={startOfWeekMonday(cursor)} events={events} onPickDay={(d) => { setCursor(d); setView("day"); }} onMarkDone={markCommitmentDone} onChange={load} />
       ) : (
-        <DayAgenda day={cursor} events={events} onDeleteCommitment={deleteCommitment} onMarkDone={markCommitmentDone} onChange={load} />
+        <DayAgenda day={cursor} events={events} onDeleteCommitment={deleteCommitment} onDeleteBill={deleteBill} onMarkDone={markCommitmentDone} onChange={load} />
       )}
     </div>
   );
@@ -301,12 +308,14 @@ function DayAgenda({
   day,
   events,
   onDeleteCommitment,
+  onDeleteBill,
   onMarkDone,
   onChange,
 }: {
   day: Date;
   events: CalEvent[];
   onDeleteCommitment: (id: string) => Promise<void>;
+  onDeleteBill: (id: string) => Promise<void>;
   onMarkDone: (id: string) => Promise<void>;
   onChange: () => void;
 }) {
@@ -345,7 +354,24 @@ function DayAgenda({
                 <DeleteButton label={e.title} onDelete={() => onDeleteCommitment(e.id)} />
               </>
             ) : (
-              <span className={`shrink-0 font-semibold tabular-nums ${e.paid ? "text-emerald-500" : "text-rose-500"}`}>{currency(e.amount || 0)}</span>
+              <>
+                <span className={`shrink-0 font-semibold tabular-nums ${e.paid ? "text-emerald-500" : "text-rose-500"}`}>{currency(e.amount || 0)}</span>
+                <EditBillDialog
+                  bill={{
+                    id: e.id,
+                    title: e.title,
+                    amount: e.amount || 0,
+                    dueDate: e.date,
+                    paid: !!e.paid,
+                    area: e.area,
+                    recurring: e.recurring ?? null,
+                    installments: e.installments ?? null,
+                    installmentNumber: e.installmentNumber ?? null,
+                  }}
+                  onSaved={onChange}
+                />
+                <DeleteButton label={e.title} onDelete={() => onDeleteBill(e.id)} />
+              </>
             )}
           </li>
         );

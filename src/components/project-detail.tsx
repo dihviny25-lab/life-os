@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { EditProjectDialog } from "@/components/entry-dialogs";
+import { EditProjectDialog, EditBillDialog } from "@/components/entry-dialogs";
 import { DeleteButton } from "@/components/delete-button";
 import { AREAS } from "@/lib/areas";
 import { STATUS_LABEL, PRIORITY_LABEL } from "@/lib/projects";
@@ -56,6 +56,10 @@ interface BillRow {
   amount: number;
   dueDate: string;
   paid: boolean;
+  area: string | null;
+  recurring: string | null;
+  installments: number | null;
+  installmentNumber: number | null;
 }
 interface EnvelopeRow {
   id: string;
@@ -120,6 +124,11 @@ export function ProjectDetail({ id }: { id: string }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ order: Date.now() }),
     });
+    load();
+  }
+
+  async function deleteBill(billId: string) {
+    await fetch(`/api/bills/${billId}`, { method: "DELETE" });
     load();
   }
 
@@ -221,9 +230,13 @@ export function ProjectDetail({ id }: { id: string }) {
           {bills.length > 0 && (
             <ul className="mt-3 space-y-1">
               {bills.map((b) => (
-                <li key={b.id} className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{b.title}</span>
-                  <span>{currency(b.amount)}{b.paid && " · pago"}</span>
+                <li key={b.id} className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                  <span className="min-w-0 flex-1 truncate">{b.title}</span>
+                  <span className="shrink-0">{currency(b.amount)}{b.paid && " · pago"}</span>
+                  <span className="flex shrink-0 items-center">
+                    <EditBillDialog bill={b} onSaved={load} />
+                    <DeleteButton label={b.title} onDelete={() => deleteBill(b.id)} />
+                  </span>
                 </li>
               ))}
             </ul>
