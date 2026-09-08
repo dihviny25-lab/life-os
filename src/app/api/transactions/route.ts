@@ -40,6 +40,16 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // O saldo atual precisa andar junto com a transação — senão o dízimo (que
+  // é separado na hora) fica descontado de um dinheiro que ainda não "chegou"
+  // no saldo, e "disponível de verdade" mostra negativo sem motivo real.
+  const balanceDelta = body.type === "income" ? amount : -amount;
+  await db.finance.upsert({
+    where: { userId: session.userId },
+    create: { userId: session.userId, currentBalance: balanceDelta },
+    update: { currentBalance: { increment: balanceDelta } },
+  });
+
   if (body.type === "income") {
     const dizimo = Math.round(amount * 0.1 * 100) / 100;
     await db.envelope.create({

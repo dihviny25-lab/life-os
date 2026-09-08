@@ -25,6 +25,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const bill = await db.bill.update({ where: { id }, data });
 
+  // Paying a bill is real money leaving the account — move it out of the
+  // static saldo, and release any envelope that had been set aside for it
+  // (that money is now spent, not "committed" anymore). Undoing a paid mark
+  // credits the amount back, though the original envelope isn't restored.
+  if (data.paid === true && !existing.paid) {
+    await db.finance.upsert({
+      where: { userId: session.userId },
+      create: { userId: session.userId, currentBalance: -existing.amount },
+      update: { currentBalance: { decrement: existing.amount } },
+    });
+    await db.envelope.deleteMany({ where: { billId: id } });
+  } else if (data.paid === false && existing.paid) {
+    await db.finance.upsert({
+      where: { userId: session.userId },
+      create: { userId: session.userId, currentBalance: existing.amount },
+      update: { currentBalance: { increment: existing.amount } },
+    });
+  }
+
   // Marking a recurring bill as paid rolls the next occurrence forward automatically.
   if (data.paid === true && existing.recurring) {
     const next = new Date(existing.dueDate);

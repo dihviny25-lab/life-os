@@ -117,12 +117,14 @@ export function FinanceView() {
     load();
   }, [load]);
 
-  async function markBillPaid(id: string) {
-    await fetch(`/api/bills/${id}`, {
+  async function markBillPaid(b: BillWithStatus) {
+    if (!confirm(`Marcar "${b.title}" (${currency(b.amount)}) como paga? Isso desconta o valor do saldo atual.`)) return;
+    await fetch(`/api/bills/${b.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paid: true }),
     });
+    notify.success(`"${b.title}" paga — ${currency(b.amount)} descontado do saldo`);
     load();
   }
 
@@ -167,7 +169,7 @@ export function FinanceView() {
                   return (
                     <li key={b.id} className={`rounded-lg border p-3 text-sm ${s?.bg}`}>
                       <div className="flex items-center gap-2">
-                        <Checkbox className="shrink-0" onCheckedChange={() => markBillPaid(b.id)} />
+                        <Checkbox className="shrink-0" onCheckedChange={() => markBillPaid(b)} />
                         <span className="flex-1 font-medium">{b.title}</span>
                         <span className="font-semibold tabular-nums">{currency(b.amount)}</span>
                         <EditBillDialog bill={b} onSaved={load} />

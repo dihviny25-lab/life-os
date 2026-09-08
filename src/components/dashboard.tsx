@@ -17,6 +17,7 @@ import {
 import { DeleteButton } from "@/components/delete-button";
 import { AREAS } from "@/lib/areas";
 import { STATUS_LABEL } from "@/lib/projects";
+import { notify } from "@/lib/toast";
 import type { Commitment, Bill, Project } from "@/lib/types";
 
 interface ProjectAttention extends Project {
@@ -108,12 +109,14 @@ function AgendaSection({ data, onChange }: { data: DashboardData; onChange: () =
   const upcoming = data.upcomingCommitments;
   const empty = commitments.length === 0 && bills.length === 0 && upcoming.length === 0;
 
-  async function markPaid(id: string) {
-    await fetch(`/api/bills/${id}`, {
+  async function markPaid(b: Bill) {
+    if (!confirm(`Marcar "${b.title}" (${currency(b.amount)}) como paga? Isso desconta o valor do saldo atual.`)) return;
+    await fetch(`/api/bills/${b.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paid: true }),
     });
+    notify.success(`"${b.title}" paga — ${currency(b.amount)} descontado do saldo`);
     onChange();
   }
 
@@ -158,9 +161,10 @@ function AgendaSection({ data, onChange }: { data: DashboardData; onChange: () =
                 ))}
                 {bills.map((b) => (
                   <li key={b.id} className="flex items-center gap-3 rounded-lg border border-rose-500/20 bg-rose-500/5 px-3 py-2 text-sm">
-                    <Checkbox className="shrink-0" onCheckedChange={() => markPaid(b.id)} />
+                    <Checkbox className="shrink-0" onCheckedChange={() => markPaid(b)} />
                     <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500" />
                     <span className="flex-1 font-medium">Conta {b.title.toLowerCase()} vence hoje</span>
+                    <span className="font-semibold tabular-nums text-rose-500">{currency(b.amount)}</span>
                     <EditBillDialog bill={b} onSaved={onChange} />
                     <DeleteButton label={b.title} onDelete={() => deleteBill(b.id)} />
                   </li>

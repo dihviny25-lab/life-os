@@ -17,6 +17,7 @@ import {
 import { DeleteButton } from "@/components/delete-button";
 import { MediaLists } from "@/components/media-lists";
 import { STATUS_LABEL } from "@/lib/projects";
+import { notify } from "@/lib/toast";
 import { AREAS } from "@/lib/areas";
 import type { Commitment, Bill, Project } from "@/lib/types";
 
@@ -54,12 +55,14 @@ export function AreaView({ area }: { area: string }) {
     load();
   }, [load]);
 
-  async function markPaid(id: string) {
-    await fetch(`/api/bills/${id}`, {
+  async function markPaid(b: Bill) {
+    if (!confirm(`Marcar "${b.title}" (${currency(b.amount)}) como paga? Isso desconta o valor do saldo atual.`)) return;
+    await fetch(`/api/bills/${b.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paid: true }),
     });
+    notify.success(`"${b.title}" paga — ${currency(b.amount)} descontado do saldo`);
     load();
   }
 
@@ -120,7 +123,7 @@ export function AreaView({ area }: { area: string }) {
               <ul className="space-y-1.5">
                 {upcomingBills.map((b) => (
                   <li key={b.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
-                    <Checkbox className="shrink-0" onCheckedChange={() => markPaid(b.id)} />
+                    <Checkbox className="shrink-0" onCheckedChange={() => markPaid(b)} />
                     <span className="flex-1 font-medium">{b.title}</span>
                     <span className="text-muted-foreground">{dateFmt.format(new Date(b.dueDate))}</span>
                     <span className="font-semibold tabular-nums text-rose-500">{currency(b.amount)}</span>
