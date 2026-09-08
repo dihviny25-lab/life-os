@@ -57,6 +57,21 @@ export async function materializeDueCreditCardInvoices(userId: string) {
         where: { id: { in: cycleItems.map((p) => p.id) } },
         data: { billId: bill.id },
       });
+
+      // Create new purchases for recurring items in the next cycle
+      const recurringItems = cycleItems.filter((p) => p.recurring);
+      if (recurringItems.length > 0) {
+        const nextCycleDate = new Date(closingDate.getTime() + 1);
+        await db.creditCardPurchase.createMany({
+          data: recurringItems.map((p) => ({
+            cardId: p.cardId,
+            title: p.title,
+            amount: p.amount,
+            recurring: true,
+            date: nextCycleDate,
+          })),
+        });
+      }
     }
   }
 }

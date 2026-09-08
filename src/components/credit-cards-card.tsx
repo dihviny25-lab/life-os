@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { CreditCard as CreditCardIcon, Pencil } from "lucide-react";
+import { CreditCard as CreditCardIcon, Pencil, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,7 @@ interface Purchase {
   amount: number;
   date: string;
   billId: string | null;
+  recurring: boolean;
 }
 interface FaturaPendente {
   id: string;
@@ -41,6 +43,8 @@ interface Card {
   faturaAtual: number;
   purchases: Purchase[];
   faturasPendentes: FaturaPendente[];
+  limite: number | null;
+  disponivel: number | null;
 }
 
 // A credit card's monthly invoice — purchases pile up here until the cycle
@@ -89,6 +93,9 @@ export function CreditCardsCard() {
                   <p className="text-xs text-muted-foreground">
                     Fecha dia {c.closingDay} · vence dia {c.dueDay}
                   </p>
+                  {c.limite != null && (
+                    <p className="text-xs text-muted-foreground">Disponível: {currency(c.disponivel || 0)}</p>
+                  )}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="font-semibold tabular-nums">{currency(c.faturaAtual)}</span>
@@ -117,7 +124,10 @@ export function CreditCardsCard() {
                   {c.purchases.map((p) => (
                     <li key={p.id} className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
                       <span className="shrink-0">{dateFmt.format(new Date(p.date))}</span>
-                      <span className="min-w-0 flex-1 truncate">{p.title}</span>
+                      <div className="min-w-0 flex-1 flex items-center gap-1">
+                        <span className="truncate">{p.title}</span>
+                        {p.recurring && <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
+                      </div>
                       <span className="shrink-0 font-medium">{currency(p.amount)}</span>
                       <span className="flex shrink-0 items-center">
                         <EditPurchaseDialog purchase={p} onSaved={load} />
@@ -146,6 +156,7 @@ function AddCardDialog({ onAdded }: { onAdded: () => void }) {
   const [name, setName] = useState("");
   const [closingDay, setClosingDay] = useState("");
   const [dueDay, setDueDay] = useState("");
+  const [limite, setLimite] = useState("");
 
   async function submit() {
     const closing = Number(closingDay);
@@ -157,12 +168,13 @@ function AddCardDialog({ onAdded }: { onAdded: () => void }) {
     await fetch("/api/credit-cards", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, closingDay: closing, dueDay: due }),
+      body: JSON.stringify({ name, closingDay: closing, dueDay: due, limite: limite ? Number(limite.replace(",", ".")) : null }),
     });
     setOpen(false);
     setName("");
     setClosingDay("");
     setDueDay("");
+    setLimite("");
     onAdded();
   }
 
@@ -192,6 +204,10 @@ function AddCardDialog({ onAdded }: { onAdded: () => void }) {
               <Input value={dueDay} onChange={(e) => setDueDay(e.target.value.replace(/\D/g, ""))} placeholder="Ex: 5" inputMode="numeric" />
             </div>
           </div>
+          <div>
+            <Label>Limite (opcional)</Label>
+            <Input value={limite} onChange={(e) => setLimite(e.target.value)} placeholder="0,00" inputMode="decimal" />
+          </div>
         </div>
         <DialogFooter>
           <Button onClick={submit}>Adicionar</Button>
@@ -206,6 +222,7 @@ function EditCardDialog({ card, onSaved }: { card: Card; onSaved: () => void }) 
   const [name, setName] = useState(card.name);
   const [closingDay, setClosingDay] = useState(String(card.closingDay));
   const [dueDay, setDueDay] = useState(String(card.dueDay));
+  const [limite, setLimite] = useState(card.limite ? String(card.limite) : "");
 
   async function submit() {
     const closing = Number(closingDay);
@@ -217,14 +234,14 @@ function EditCardDialog({ card, onSaved }: { card: Card; onSaved: () => void }) 
     await fetch(`/api/credit-cards/${card.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, closingDay: closing, dueDay: due }),
+      body: JSON.stringify({ name, closingDay: closing, dueDay: due, limite: limite ? Number(limite.replace(",", ".")) : null }),
     });
     setOpen(false);
     onSaved();
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setName(card.name); setClosingDay(String(card.closingDay)); setDueDay(String(card.dueDay)); } }}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setName(card.name); setClosingDay(String(card.closingDay)); setDueDay(String(card.dueDay)); setLimite(card.limite ? String(card.limite) : ""); } }}>
       <DialogTrigger asChild>
         <button className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={`Editar ${card.name}`}>
           <Pencil className="h-3.5 w-3.5" />
@@ -249,6 +266,10 @@ function EditCardDialog({ card, onSaved }: { card: Card; onSaved: () => void }) 
               <Input value={dueDay} onChange={(e) => setDueDay(e.target.value.replace(/\D/g, ""))} inputMode="numeric" />
             </div>
           </div>
+          <div>
+            <Label>Limite (opcional)</Label>
+            <Input value={limite} onChange={(e) => setLimite(e.target.value)} inputMode="decimal" />
+          </div>
         </div>
         <DialogFooter>
           <Button onClick={submit}>Salvar</Button>
@@ -263,6 +284,7 @@ function AddPurchaseDialog({ card, onAdded }: { card: Card; onAdded: () => void 
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [recurring, setRecurring] = useState(false);
 
   async function submit() {
     const value = Number(amount.replace(",", "."));
@@ -273,11 +295,12 @@ function AddPurchaseDialog({ card, onAdded }: { card: Card; onAdded: () => void 
     await fetch(`/api/credit-cards/${card.id}/purchases`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, amount: value, date }),
+      body: JSON.stringify({ title, amount: value, date, recurring }),
     });
     setOpen(false);
     setTitle("");
     setAmount("");
+    setRecurring(false);
     onAdded();
   }
 
@@ -306,6 +329,10 @@ function AddPurchaseDialog({ card, onAdded }: { card: Card; onAdded: () => void 
               <Label>Data</Label>
               <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox id="recurring" checked={recurring} onCheckedChange={(checked) => setRecurring(Boolean(checked))} />
+            <Label htmlFor="recurring" className="font-normal cursor-pointer">Compra recorrente (repete todo mês)</Label>
           </div>
         </div>
         <DialogFooter>

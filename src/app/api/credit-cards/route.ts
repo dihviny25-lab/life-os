@@ -31,6 +31,14 @@ export async function GET(req: NextRequest) {
     // Already closed (materialized into a Bill) but not paid yet — the
     // actual amount due, unlike faturaAtual which is still accumulating.
     faturasPendentes: c.bills.map((b) => ({ id: b.id, title: b.title, amount: b.amount, dueDate: b.dueDate })),
+    limite: c.limite,
+    disponivel:
+      c.limite != null
+        ? Math.round(
+            (c.limite - c.purchases.reduce((s, p) => s + p.amount, 0) - c.bills.reduce((s, b) => s + b.amount, 0)) *
+              100
+          ) / 100
+        : null,
   }));
 
   return ok({ cards: withFatura });
@@ -48,7 +56,13 @@ export async function POST(req: NextRequest) {
   if (!dueDay || dueDay < 1 || dueDay > 28) return bad("dueDay must be between 1 and 28");
 
   const card = await db.creditCard.create({
-    data: { userId: session.userId, name: body.name, closingDay, dueDay },
+    data: {
+      userId: session.userId,
+      name: body.name,
+      closingDay,
+      dueDay,
+      limite: Number(body.limite) || null,
+    },
   });
   return ok(card);
 }

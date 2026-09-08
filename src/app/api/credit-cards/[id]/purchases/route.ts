@@ -24,6 +24,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       title: body.title,
       amount,
       date: body.date ? new Date(body.date) : new Date(),
+      recurring: typeof body.recurring === "boolean" ? body.recurring : false,
     },
   });
   return ok(purchase);

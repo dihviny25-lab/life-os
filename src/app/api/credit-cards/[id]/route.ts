@@ -26,6 +26,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!v || v < 1 || v > 28) return bad("dueDay must be between 1 and 28");
     data.dueDay = v;
   }
+  if (body.limite !== undefined) data.limite = body.limite ? Number(body.limite) || null : null;
 
   const card = await db.creditCard.update({ where: { id }, data });
   return ok(card);
