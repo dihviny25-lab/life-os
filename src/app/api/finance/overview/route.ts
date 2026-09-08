@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
 
   const historyStart = startOfDay(new Date(weekStart.getTime() - 5 * 7 * 86400000));
 
-  const [finance, envelopes, weeklyBudgets, unpaidBills, weekIncome, weekExpense, recentIncome, historyTx, balanceHistory] = await Promise.all([
+  const [finance, envelopes, weeklyBudgets, unpaidBills, weekIncome, weekExpense, recentIncome, historyTx, balanceHistory, expensesByCategoria] = await Promise.all([
     db.finance.findUnique({ where: { userId } }),
     db.envelope.findMany({ where: { userId } }),
     db.weeklyBudget.findMany({ where: { userId } }),
@@ -52,6 +52,7 @@ export async function GET(req: NextRequest) {
     db.transaction.findMany({ where: { userId, type: "income", date: { gte: last30DaysStart, lte: now } } }),
     db.transaction.findMany({ where: { userId, date: { gte: historyStart, lte: weekEnd } } }),
     db.balanceHistory.findMany({ where: { userId }, orderBy: { date: "asc" }, take: 200 }),
+    db.transaction.findMany({ where: { userId, type: "expense", date: { gte: last30DaysStart, lte: now }, categoria: { not: null } } }),
   ]);
 
   const currentBalance = finance?.currentBalance ?? 0;
@@ -123,6 +124,26 @@ export async function GET(req: NextRequest) {
 
   const envelopesChart = envelopes.filter((e) => e.allocated > 0).map((e) => ({ name: e.name, value: e.allocated }));
 
+  const CATEGORIA_LABELS: Record<string, string> = {
+    moradia: "Moradia",
+    alimentacao: "Alimentação",
+    transporte: "Transporte",
+    saude: "Saúde",
+    lazer: "Lazer",
+    educacao: "Educação",
+    outros: "Outros",
+  };
+
+  const categoriasSum: Record<string, number> = {};
+  expensesByCategoria.forEach((tx) => {
+    if (tx.categoria) {
+      categoriasSum[tx.categoria] = (categoriasSum[tx.categoria] || 0) + tx.amount;
+    }
+  });
+  const categoriasChart = Object.entries(categoriasSum)
+    .filter(([_, value]) => value > 0)
+    .map(([key, value]) => ({ name: CATEGORIA_LABELS[key] || key, value }));
+
   const saldoHistorico = balanceHistory.map((bh) => ({
     date: weekLabelFmt.format(new Date(bh.date)),
     balance: bh.balance,
@@ -142,6 +163,7 @@ export async function GET(req: NextRequest) {
     projecao30d: { entradas: entradas30d, contas: contas30d, margem: margem30d },
     historico,
     envelopesChart,
+    categoriasChart,
     saldoHistorico,
     dizimo,
   });

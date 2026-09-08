@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
       title: body.title,
       amount,
       date: body.date ? new Date(body.date) : new Date(),
+      categoria: body.type === "expense" && typeof body.categoria === "string" ? body.categoria : null,
     },
   });
 

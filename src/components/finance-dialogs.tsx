@@ -23,11 +23,22 @@ import {
 import { notify } from "@/lib/toast";
 import type { Bill } from "@/lib/types";
 
+const CATEGORIA_LABELS: Record<string, string> = {
+  moradia: "Moradia",
+  alimentacao: "Alimentação",
+  transporte: "Transporte",
+  saude: "Saúde",
+  lazer: "Lazer",
+  educacao: "Educação",
+  outros: "Outros",
+};
+
 export function AddTransactionDialog({ type, onAdded }: { type: "income" | "expense"; onAdded: () => void }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [categoria, setCategoria] = useState("");
 
   async function submit() {
     const value = Number(amount.replace(",", "."));
@@ -38,11 +49,18 @@ export function AddTransactionDialog({ type, onAdded }: { type: "income" | "expe
     await fetch("/api/transactions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, title, amount: value, date }),
+      body: JSON.stringify({
+        type,
+        title,
+        amount: value,
+        date,
+        ...(type === "expense" && { categoria: categoria || null }),
+      }),
     });
     setOpen(false);
     setTitle("");
     setAmount("");
+    setCategoria("");
     onAdded();
   }
 
@@ -72,6 +90,24 @@ export function AddTransactionDialog({ type, onAdded }: { type: "income" | "expe
               <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
           </div>
+          {type === "expense" && (
+            <div>
+              <Label>Categoria (opcional)</Label>
+              <Select value={categoria || "none"} onValueChange={(v) => setCategoria(v === "none" ? "" : v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Selecione (opcional)</SelectItem>
+                  {Object.entries(CATEGORIA_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button onClick={submit}>Adicionar</Button>
@@ -85,13 +121,14 @@ export function EditTransactionDialog({
   transaction,
   onSaved,
 }: {
-  transaction: { id: string; title: string; amount: number; date: string; type: string };
+  transaction: { id: string; title: string; amount: number; date: string; type: string; categoria?: string | null };
   onSaved: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState(transaction.title);
   const [amount, setAmount] = useState(String(transaction.amount));
   const [date, setDate] = useState(transaction.date.slice(0, 10));
+  const [categoria, setCategoria] = useState(transaction.categoria || "");
 
   async function submit() {
     const value = Number(amount.replace(",", "."));
@@ -102,7 +139,12 @@ export function EditTransactionDialog({
     await fetch(`/api/transactions/${transaction.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, amount: value, date }),
+      body: JSON.stringify({
+        title,
+        amount: value,
+        date,
+        ...(transaction.type === "expense" && { categoria: categoria || null }),
+      }),
     });
     setOpen(false);
     onSaved();
@@ -117,6 +159,7 @@ export function EditTransactionDialog({
           setTitle(transaction.title);
           setAmount(String(transaction.amount));
           setDate(transaction.date.slice(0, 10));
+          setCategoria(transaction.categoria || "");
         }
       }}
     >
@@ -142,6 +185,24 @@ export function EditTransactionDialog({
               <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
           </div>
+          {transaction.type === "expense" && (
+            <div>
+              <Label>Categoria (opcional)</Label>
+              <Select value={categoria || "none"} onValueChange={(v) => setCategoria(v === "none" ? "" : v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Selecione (opcional)</SelectItem>
+                  {Object.entries(CATEGORIA_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button onClick={submit}>Salvar</Button>

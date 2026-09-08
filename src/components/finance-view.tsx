@@ -78,6 +78,7 @@ interface Overview {
   projecao30d: { entradas: number; contas: number; margem: number };
   historico: { semana: string; recebido: number; gasto: number }[];
   envelopesChart: { name: string; value: number }[];
+  categoriasChart: { name: string; value: number }[];
   saldoHistorico: { date: string; balance: number }[];
   dizimo: { pendente: number; pagoEm: string | null };
 }
@@ -87,9 +88,20 @@ interface TransactionRow {
   title: string;
   amount: number;
   date: string;
+  categoria?: string | null;
 }
 
 const PIE_COLORS = ["#38bdf8", "#34d399", "#fbbf24", "#a78bfa", "#f472b6", "#f87171"];
+
+const CATEGORIA_LABELS: Record<string, string> = {
+  moradia: "Moradia",
+  alimentacao: "Alimentação",
+  transporte: "Transporte",
+  saude: "Saúde",
+  lazer: "Lazer",
+  educacao: "Educação",
+  outros: "Outros",
+};
 
 const currency = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const dateFmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
@@ -199,10 +211,10 @@ export function FinanceView() {
           </motion.div>
         )}
 
-        {(overview.historico.some((h) => h.recebido > 0 || h.gasto > 0) || overview.envelopesChart.length > 0 || overview.saldoHistorico.length > 1) && (
+        {(overview.historico.some((h) => h.recebido > 0 || h.gasto > 0) || overview.envelopesChart.length > 0 || overview.categoriasChart.length > 0 || overview.saldoHistorico.length > 1) && (
           <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>
             <SectionCard title="Gráficos" icon={BarChart3} color="#38bdf8">
-              <FinanceCharts historico={overview.historico} envelopesChart={overview.envelopesChart} saldoHistorico={overview.saldoHistorico} />
+              <FinanceCharts historico={overview.historico} envelopesChart={overview.envelopesChart} categoriasChart={overview.categoriasChart} saldoHistorico={overview.saldoHistorico} />
             </SectionCard>
           </motion.div>
         )}
@@ -289,7 +301,14 @@ export function FinanceView() {
               <ul className="space-y-1.5">
                 {transactions.map((t) => (
                   <li key={t.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm">
-                    <span className="min-w-0 flex-1 truncate font-medium">{t.title}</span>
+                    <span className="min-w-0 flex-1 truncate font-medium">
+                      {t.title}
+                      {t.type === "expense" && t.categoria && (
+                        <span className="ml-2 text-[10px] text-muted-foreground">
+                          {CATEGORIA_LABELS[t.categoria] || t.categoria}
+                        </span>
+                      )}
+                    </span>
                     <span className="shrink-0 text-xs text-muted-foreground">{dateFmt.format(new Date(t.date))}</span>
                     <span className={`shrink-0 font-semibold tabular-nums ${t.type === "income" ? "text-emerald-500" : "text-rose-500"}`}>
                       {t.type === "income" ? "+" : "-"}{currency(t.amount)}
@@ -396,10 +415,12 @@ export function FinanceView() {
 function FinanceCharts({
   historico,
   envelopesChart,
+  categoriasChart,
   saldoHistorico,
 }: {
   historico: { semana: string; recebido: number; gasto: number }[];
   envelopesChart: { name: string; value: number }[];
+  categoriasChart: { name: string; value: number }[];
   saldoHistorico: { date: string; balance: number }[];
 }) {
   const tooltipStyle = {
@@ -474,6 +495,34 @@ function FinanceCharts({
               <li key={e.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
                 {e.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {categoriasChart.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-medium text-muted-foreground">
+            Gastos por categoria
+          </p>
+          <div className="flex items-center gap-4">
+            <ResponsiveContainer width="100%" height={160}>
+              <PieChart>
+                <Pie data={categoriasChart} dataKey="value" nameKey="name" innerRadius={40} outerRadius={70} paddingAngle={2}>
+                  {categoriasChart.map((_, i) => (
+                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => currency(v)} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+            {categoriasChart.map((c, i) => (
+              <li key={c.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                {c.name}
               </li>
             ))}
           </ul>

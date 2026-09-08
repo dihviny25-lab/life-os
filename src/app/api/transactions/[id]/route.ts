@@ -24,6 +24,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const data: Record<string, any> = {};
   if (typeof body.title === "string" && body.title.trim()) data.title = body.title.trim();
   if (body.date) data.date = new Date(body.date);
+  if (body.categoria !== undefined) data.categoria = body.categoria || null;
   let newAmount = existing.amount;
   if (body.amount !== undefined) {
     newAmount = Number(body.amount) || 0;
