@@ -31,6 +31,7 @@ import {
 import { AddBillDialog, EditBillDialog } from "@/components/entry-dialogs";
 import { DeleteButton } from "@/components/delete-button";
 import { AnimatedNumber } from "@/components/animated-number";
+import { DebtsCard } from "@/components/debts-card";
 import { notify } from "@/lib/toast";
 import { AREAS } from "@/lib/areas";
 import type { Bill } from "@/lib/types";
@@ -307,6 +308,10 @@ export function FinanceView() {
               </ul>
             )}
           </SectionCard>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <DebtsCard />
         </motion.div>
       </div>
     </div>

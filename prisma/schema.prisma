@@ -28,6 +28,7 @@ model User {
   verses       Verse[]
   checkins     Checkin[]
   mediaItems   MediaItem[]
+  debts        Debt[]
 }
 
 model Commitment {
@@ -197,6 +198,38 @@ model WeeklyBudget {
   weekOf         DateTime @default(now())
   createdAt      DateTime @default(now())
   @@index([userId])
+}
+
+// An informal debt to a person — no due date, no fixed parcela, paid down
+// irregularly (whatever amount, whenever possible), sometimes in cash and
+// sometimes in permuta (trade). Deliberately outside the Bill/committed
+// system: it never counts as "comprometido" and never shows as a negative
+// saldo or an alert — just a quiet running balance the user checks by choice.
+model Debt {
+  id         String        @id @default(cuid())
+  userId     String
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pessoa     String
+  nota       String?
+  saldo      Float
+  archived   Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  pagamentos DebtPayment[]
+  @@index([userId])
+}
+
+// One partial settlement against a Debt — dinheiro reduces the saldo
+// bancário too (real money left), permuta only reduces what's owed.
+model DebtPayment {
+  id     String   @id @default(cuid())
+  debtId String
+  debt   Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  valor  Float
+  metodo String // dinheiro | permuta
+  nota   String?
+  date   DateTime @default(now())
+  @@index([debtId])
 }
 
 // Personal reading/watching list — livro or filme_serie, tracked through
