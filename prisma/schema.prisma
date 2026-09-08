@@ -141,8 +141,25 @@ model Project {
   transactions    Transaction[]
   envelopes       Envelope[]
   links           Link[]
+  attachments     Attachment[]
   @@index([userId, area])
   @@index([userId, status])
+}
+
+// A file uploaded to Vercel Blob and attached to a Project — receipts,
+// photos, PDFs. `pathname` is the blob's own key (needed to delete it from
+// storage later); `url` is what the UI links to directly.
+model Attachment {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fileName    String
+  url         String
+  pathname    String
+  contentType String?
+  size        Int?
+  createdAt   DateTime @default(now())
+  @@index([projectId])
 }
 
 // A named group of tasks inside a Project (e.g. "Reserva", "Preparação") —

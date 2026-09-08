@@ -23,11 +23,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       transactions: { orderBy: { date: "desc" } },
       envelopes: { orderBy: { createdAt: "asc" } },
       links: { orderBy: { createdAt: "desc" } },
+      attachments: { orderBy: { createdAt: "desc" } },
     },
   });
   if (!project) return bad("Not found", 404);
 
-  const { tasks, stages, notes, decisions, commitments, bills, transactions, envelopes, links, ...rest } = project;
+  const { tasks, stages, notes, decisions, commitments, bills, transactions, envelopes, links, attachments, ...rest } = project;
   const progress = computeProjectProgress(tasks, stages);
   const ordered = orderTasks(tasks, stages);
   const stagesWithTasks = stages.map((s) => ({ ...s, tasks: ordered.filter((t) => t.stageId === s.id) }));
@@ -49,6 +50,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     transactions,
     envelopes,
     links,
+    attachments,
     financeiro: {
       orcamento: rest.orcamento,
       comprometido,

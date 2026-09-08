@@ -19,6 +19,7 @@ import {
 import { EditProjectDialog, EditBillDialog, EditCommitmentDialog } from "@/components/entry-dialogs";
 import { EditEnvelopeDialog } from "@/components/finance-dialogs";
 import { DeleteButton } from "@/components/delete-button";
+import { AttachmentsList } from "@/components/attachments-list";
 import { AREAS } from "@/lib/areas";
 import { STATUS_LABEL, PRIORITY_LABEL } from "@/lib/projects";
 import { notify } from "@/lib/toast";
@@ -77,6 +78,13 @@ interface LinkRow {
   url: string;
   label: string | null;
 }
+interface AttachmentRow {
+  id: string;
+  fileName: string;
+  url: string;
+  contentType: string | null;
+  size: number | null;
+}
 interface Detail {
   project: Project;
   progress: { total: number; done: number; percent: number; nextAction: { id: string; title: string } | null };
@@ -88,6 +96,7 @@ interface Detail {
   bills: BillRow[];
   envelopes: EnvelopeRow[];
   links: LinkRow[];
+  attachments: AttachmentRow[];
   financeiro: { orcamento: number | null; comprometido: number; gasto: number; guardado: number; faltaGuardar: number | null; disponivel: number | null };
 }
 
@@ -171,7 +180,7 @@ export function ProjectDetail({ id }: { id: string }) {
     return <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">Carregando…</div>;
   }
 
-  const { project: p, progress, stages, tasksSemEtapa, notes, decisions, commitments, bills, envelopes, links, financeiro } = data;
+  const { project: p, progress, stages, tasksSemEtapa, notes, decisions, commitments, bills, envelopes, links, attachments, financeiro } = data;
   const areaMeta = AREAS.find((a) => a.key === p.area);
 
   return (
@@ -293,6 +302,11 @@ export function ProjectDetail({ id }: { id: string }) {
       {/* Links */}
       <Section title="Links">
         <LinksList items={links} projectId={id} onChange={load} />
+      </Section>
+
+      {/* Anexos */}
+      <Section title="Anexos">
+        <AttachmentsList items={attachments} projectId={id} onChange={load} />
       </Section>
 
       {/* Agenda */}
