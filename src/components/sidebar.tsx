@@ -10,6 +10,7 @@ import {
   FolderKanban,
   BarChart3,
   CalendarRange,
+  CalendarDays,
   MoreHorizontal,
   Sun,
   Moon,
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { key: "calendario", href: "/app/calendario", name: "Calendário", icon: CalendarRange, color: "#8b5cf6" },
   { key: "projetos", href: "/app/projects", name: "Projetos", icon: FolderKanban, color: "#3b82f6" },
   { key: "semana", href: "/app/semana", name: "Progresso da semana", icon: BarChart3, color: "#10b981" },
+  { key: "mes", href: "/app/mes", name: "Relatório mensal", icon: CalendarDays, color: "#0ea5e9" },
   ...AREAS.map((a) => ({ key: a.key, href: `/app/areas/${a.key}`, name: a.name, icon: a.icon, color: a.color })),
 ];
 function isActive(pathname: string, href: string) { return href === "/app" ? pathname === href : pathname.startsWith(href); }
