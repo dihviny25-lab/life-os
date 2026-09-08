@@ -75,8 +75,7 @@ export async function GET(req: NextRequest) {
 
   const atencao = billsWithStatus
     .filter((b) => b.status !== "separado")
-    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-    .slice(0, 6);
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
   const recebidoSemana = weekIncome.reduce((sum, t) => sum + t.amount, 0);
   const gastoSemana = weekExpense.reduce((sum, t) => sum + t.amount, 0);
