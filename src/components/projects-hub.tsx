@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { AddProjectDialog } from "@/components/entry-dialogs";
+import { KanbanBoard } from "@/components/kanban-board";
 import { AREAS } from "@/lib/areas";
 import { STATUS_LABEL } from "@/lib/projects";
 import type { Project } from "@/lib/types";
@@ -31,10 +32,11 @@ export function ProjectsHub() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
   const [area, setArea] = useState(searchParams.get("area") || "");
+  const [view, setView] = useState<"lista" | "kanban">("lista");
 
   const load = useCallback(async () => {
     const params = new URLSearchParams();
-    if (status) params.set("status", status);
+    if (status && view === "lista") params.set("status", status);
     if (area) params.set("area", area);
     const res = await fetch(`/api/projects?${params.toString()}`);
     if (res.status === 401) {
@@ -44,7 +46,7 @@ export function ProjectsHub() {
     const json = await res.json();
     setProjects(json.projects || []);
     setLoading(false);
-  }, [router, status, area]);
+  }, [router, status, area, view]);
 
   useEffect(() => {
     setLoading(true);
@@ -62,7 +64,12 @@ export function ProjectsHub() {
       </div>
 
       <div className="mb-5 space-y-2.5">
-        <Pills options={STATUS_FILTERS} value={status} onChange={setStatus} />
+        <Pills
+          options={[{ value: "lista", label: "Lista" }, { value: "kanban", label: "Kanban" }]}
+          value={view}
+          onChange={(v) => setView(v as "lista" | "kanban")}
+        />
+        {view === "lista" && <Pills options={STATUS_FILTERS} value={status} onChange={setStatus} />}
         <Pills
           options={[{ value: "", label: "Todas as áreas" }, ...AREAS.map((a) => ({ value: a.key, label: a.name }))]}
           value={area}
@@ -74,6 +81,8 @@ export function ProjectsHub() {
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : projects.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nenhum projeto por aqui.</p>
+      ) : view === "kanban" ? (
+        <KanbanBoard projects={projects} onChange={load} />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {projects.map((p, i) => (
