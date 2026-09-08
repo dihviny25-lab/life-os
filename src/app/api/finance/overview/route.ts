@@ -70,6 +70,8 @@ export async function GET(req: NextRequest) {
       priority: b.priority,
       area: b.area,
       recurring: b.recurring,
+      installments: b.installments,
+      installmentNumber: b.installmentNumber,
       separated,
       missing,
       status: billStatus(b, separated, today),

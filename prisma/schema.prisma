@@ -58,6 +58,8 @@ model Bill {
   paid      Boolean    @default(false)
   priority  String     @default("normal") // critico | importante | normal | opcional
   recurring String?    // monthly | weekly | null (one-off)
+  installments      Int?     // total parcelas — null means indeterminado (repete até cancelar, ex: streaming)
+  installmentNumber Int?     // parcela atual (1-based), só relevante quando installments está definido
   area      String?
   createdAt DateTime   @default(now())
   envelopes Envelope[]

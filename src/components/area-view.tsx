@@ -124,7 +124,10 @@ export function AreaView({ area }: { area: string }) {
                 {upcomingBills.map((b) => (
                   <li key={b.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
                     <Checkbox className="shrink-0" onCheckedChange={() => markPaid(b)} />
-                    <span className="min-w-0 flex-1 truncate font-medium">{b.title}</span>
+                    <span className="min-w-0 flex-1 truncate font-medium">
+                      {b.title}
+                      {b.installments && <span className="ml-1 text-xs font-normal text-muted-foreground">({b.installmentNumber || 1}/{b.installments})</span>}
+                    </span>
                     <span className="text-muted-foreground">{dateFmt.format(new Date(b.dueDate))}</span>
                     <span className="font-semibold tabular-nums text-rose-500">{currency(b.amount)}</span>
                     <EditBillDialog bill={b} onSaved={load} />

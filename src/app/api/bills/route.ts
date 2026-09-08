@@ -26,6 +26,8 @@ export async function POST(req: NextRequest) {
   if (!body.title) return bad("title is required");
   if (!body.dueDate) return bad("dueDate is required");
 
+  const installments = body.recurring && Number(body.installments) > 0 ? Number(body.installments) : null;
+
   const bill = await db.bill.create({
     data: {
       userId: session.userId,
@@ -35,6 +37,8 @@ export async function POST(req: NextRequest) {
       area: body.area || null,
       priority: body.priority || "normal",
       recurring: body.recurring || null,
+      installments,
+      installmentNumber: installments ? 1 : null,
       projectId: body.projectId || null,
     },
   });

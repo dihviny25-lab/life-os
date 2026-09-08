@@ -21,7 +21,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.dueDate) data.dueDate = new Date(body.dueDate);
   if (typeof body.priority === "string") data.priority = body.priority;
   if (body.area !== undefined) data.area = body.area || null;
-  if (body.recurring !== undefined) data.recurring = body.recurring || null;
+  if (body.recurring !== undefined) {
+    data.recurring = body.recurring || null;
+    if (!body.recurring) {
+      data.installments = null;
+      data.installmentNumber = null;
+    }
+  }
+  if (body.installments !== undefined) {
+    data.installments = Number(body.installments) > 0 ? Number(body.installments) : null;
+    data.installmentNumber = data.installments ? existing.installmentNumber || 1 : null;
+  }
 
   const bill = await db.bill.update({ where: { id }, data });
 
@@ -44,8 +54,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     });
   }
 
-  // Marking a recurring bill as paid rolls the next occurrence forward automatically.
-  if (data.paid === true && existing.recurring) {
+  // Marking a recurring bill as paid rolls the next occurrence forward
+  // automatically — unless it's on a fixed number of parcelas and this was
+  // the last one, in which case the series just ends (nothing left to roll).
+  const nextInstallmentNumber = existing.installments ? (existing.installmentNumber || 1) + 1 : null;
+  const seriesFinished = existing.installments != null && nextInstallmentNumber != null && nextInstallmentNumber > existing.installments;
+
+  if (data.paid === true && existing.recurring && !seriesFinished) {
     const next = new Date(existing.dueDate);
     if (existing.recurring === "monthly") next.setMonth(next.getMonth() + 1);
     else if (existing.recurring === "weekly") next.setDate(next.getDate() + 7);
@@ -58,6 +73,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         area: existing.area,
         priority: existing.priority,
         recurring: existing.recurring,
+        installments: existing.installments,
+        installmentNumber: nextInstallmentNumber,
       },
     });
   }

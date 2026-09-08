@@ -212,6 +212,38 @@ export function EditCommitmentDialog({ commitment, onSaved }: { commitment: Comm
   );
 }
 
+function DurationSelect({
+  installments,
+  onChange,
+}: {
+  installments: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <Label>Duração</Label>
+      <Select value={installments ? "parcelas" : "indeterminado"} onValueChange={(v) => onChange(v === "parcelas" ? "1" : "")}>
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="indeterminado">Indeterminado (até cancelar — ex: streaming)</SelectItem>
+          <SelectItem value="parcelas">Número de parcelas (ex: financiamento)</SelectItem>
+        </SelectContent>
+      </Select>
+      {installments && (
+        <Input
+          className="mt-1.5"
+          value={installments}
+          onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
+          inputMode="numeric"
+          placeholder="Ex: 60"
+        />
+      )}
+    </div>
+  );
+}
+
 export function AddBillDialog({ onAdded, defaultArea }: { onAdded: () => void; defaultArea?: string }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -219,6 +251,7 @@ export function AddBillDialog({ onAdded, defaultArea }: { onAdded: () => void; d
   const [dueDate, setDueDate] = useState("");
   const [area, setArea] = useState(defaultArea || "");
   const [recurring, setRecurring] = useState("");
+  const [installments, setInstallments] = useState("");
 
   async function submit() {
     if (!title || !dueDate) {
@@ -228,13 +261,21 @@ export function AddBillDialog({ onAdded, defaultArea }: { onAdded: () => void; d
     await fetch("/api/bills", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, amount: Number(amount.replace(",", ".")) || 0, dueDate, area: area || null, recurring: recurring || null }),
+      body: JSON.stringify({
+        title,
+        amount: Number(amount.replace(",", ".")) || 0,
+        dueDate,
+        area: area || null,
+        recurring: recurring || null,
+        installments: recurring ? Number(installments) || null : null,
+      }),
     });
     setOpen(false);
     setTitle("");
     setAmount("");
     setDueDate("");
     setRecurring("");
+    setInstallments("");
     onAdded();
   }
 
@@ -277,6 +318,7 @@ export function AddBillDialog({ onAdded, defaultArea }: { onAdded: () => void; d
               </SelectContent>
             </Select>
           </div>
+          {recurring && <DurationSelect installments={installments} onChange={setInstallments} />}
           {!defaultArea && <AreaSelect value={area} onChange={setArea} />}
         </div>
         <DialogFooter>
@@ -294,6 +336,7 @@ export function EditBillDialog({ bill, onSaved }: { bill: Bill; onSaved: () => v
   const [dueDate, setDueDate] = useState(new Date(bill.dueDate).toISOString().slice(0, 10));
   const [area, setArea] = useState(bill.area || "");
   const [recurring, setRecurring] = useState(bill.recurring || "");
+  const [installments, setInstallments] = useState(bill.installments ? String(bill.installments) : "");
 
   async function submit() {
     if (!title || !dueDate) {
@@ -309,6 +352,7 @@ export function EditBillDialog({ bill, onSaved }: { bill: Bill; onSaved: () => v
         dueDate,
         area: area || null,
         recurring: recurring || null,
+        installments: recurring ? Number(installments) || null : null,
       }),
     });
     setOpen(false);
@@ -352,6 +396,10 @@ export function EditBillDialog({ bill, onSaved }: { bill: Bill; onSaved: () => v
               </SelectContent>
             </Select>
           </div>
+          {recurring && <DurationSelect installments={installments} onChange={setInstallments} />}
+          {bill.installments && recurring && (
+            <p className="text-xs text-muted-foreground">Parcela atual: {bill.installmentNumber || 1} de {bill.installments}</p>
+          )}
           <AreaSelect value={area} onChange={setArea} />
         </div>
         <DialogFooter>

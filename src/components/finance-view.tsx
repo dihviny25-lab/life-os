@@ -171,7 +171,10 @@ export function FinanceView() {
                     <li key={b.id} className={`rounded-lg border p-3 text-sm ${s?.bg}`}>
                       <div className="flex items-center gap-2">
                         <Checkbox className="shrink-0" onCheckedChange={() => markBillPaid(b)} />
-                        <span className="min-w-0 flex-1 truncate font-medium">{b.title}</span>
+                        <span className="min-w-0 flex-1 truncate font-medium">
+                          {b.title}
+                          {b.installments && <span className="ml-1 text-xs font-normal text-muted-foreground">({b.installmentNumber || 1}/{b.installments})</span>}
+                        </span>
                         <span className="shrink-0 font-semibold tabular-nums">{currency(b.amount)}</span>
                         <EditBillDialog bill={b} onSaved={load} />
                         <DeleteButton label={b.title} onDelete={() => deleteBill(b.id)} />

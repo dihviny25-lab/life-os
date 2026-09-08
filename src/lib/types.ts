@@ -14,6 +14,8 @@ export interface Bill {
   paid: boolean;
   area?: string | null;
   recurring?: string | null;
+  installments?: number | null;
+  installmentNumber?: number | null;
 }
 export interface Task {
   id: string;
