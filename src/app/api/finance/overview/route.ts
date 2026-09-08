@@ -76,8 +76,12 @@ export async function GET(req: NextRequest) {
     };
   });
 
+  // Só entra aqui quem está atrasado ou vence nesta semana — uma conta
+  // pequena vencendo daqui a três semanas não é "atenção" ainda, porque o
+  // plano é pagá-la com o dinheiro da semana do vencimento, não separar
+  // com antecedência (isso é reservado pra contas grandes tipo carro/casa).
   const atencao = billsWithStatus
-    .filter((b) => b.status !== "separado")
+    .filter((b) => b.status !== "separado" && (b.status === "atrasado" || b.dueDate <= weekEnd))
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
   const recebidoSemana = weekIncome.reduce((sum, t) => sum + t.amount, 0);
