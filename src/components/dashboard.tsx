@@ -148,7 +148,7 @@ function AgendaSection({ data, onChange }: { data: DashboardData; onChange: () =
         <div className="space-y-4">
           {(commitments.length > 0 || bills.length > 0) && (
             <div>
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Hoje</p>
+              <p className="mb-1.5 text-xs font-medium text-muted-foreground">Hoje</p>
               <ul className="space-y-1.5">
                 {commitments.map((c) => (
                   <li key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
@@ -174,7 +174,7 @@ function AgendaSection({ data, onChange }: { data: DashboardData; onChange: () =
           )}
           {upcoming.length > 0 && (
             <div>
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Próximos</p>
+              <p className="mb-1.5 text-xs font-medium text-muted-foreground">Próximos</p>
               <ul className="space-y-1.5">
                 {upcoming.map((c) => (
                   <li key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
@@ -204,7 +204,7 @@ function DailyRitualSection({ data, onChange }: { data: DashboardData; onChange:
         <CheckinBlock checkin={data.checkin} onChange={onChange} />
         {data.verseOfDay && (
           <div className="border-t border-border/70 pt-3.5">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Versículo do dia</p>
+            <p className="mb-1 text-xs font-medium text-muted-foreground">Versículo do dia</p>
             <p className="text-sm italic leading-relaxed">{data.verseOfDay.text ?? "Texto não cadastrado."}</p>
             <p className="mt-1.5 text-xs font-medium text-muted-foreground">{data.verseOfDay.reference} (ARC)</p>
           </div>
@@ -236,7 +236,7 @@ function CheckinBlock({ checkin, onChange }: { checkin: DashboardData["checkin"]
     </button>
   ) : (
     <div>
-      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Como você está?</p>
+      <p className="mb-1.5 text-xs font-medium text-muted-foreground">Como você está?</p>
       <div className="flex flex-wrap gap-2">
         {MOODS.map((m) => (
           <button
@@ -259,7 +259,7 @@ function FinanceSection({ finance }: { finance: DashboardData["finance"] }) {
       <div className="space-y-3 text-sm">
         <div>
           <span className="text-muted-foreground">Disponível de verdade</span>
-          <p className={`font-display text-3xl font-semibold tabular-nums ${finance.free >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
+          <p className={`font-display text-4xl font-semibold tabular-nums ${finance.free >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
             {currency(finance.free)}
           </p>
         </div>

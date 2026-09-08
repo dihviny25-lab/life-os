@@ -141,7 +141,7 @@ function ProjectCard({ project: p }: { project: ProjectWithProgress }) {
           <span className="font-medium">{p.progress.nextAction.title}</span>
         </p>
       ) : p.progress.total > 0 ? (
-        <p className="mb-2 text-xs text-emerald-600">Todas as etapas concluídas</p>
+        <p className="mb-2 text-xs text-emerald-500">Todas as etapas concluídas</p>
       ) : (
         <p className="mb-2 text-xs text-muted-foreground">Sem etapas cadastradas ainda</p>
       )}

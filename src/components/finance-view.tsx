@@ -210,7 +210,7 @@ export function FinanceView() {
               <Row
                 label={overview.excedente.sobraOuDeficit >= 0 ? "Excedente da semana" : "Déficit da semana"}
                 value={currency(overview.excedente.sobraOuDeficit)}
-                valueClass={overview.excedente.sobraOuDeficit >= 0 ? "text-emerald-600" : "text-rose-500"}
+                valueClass={overview.excedente.sobraOuDeficit >= 0 ? "text-emerald-500" : "text-rose-500"}
                 bold
               />
               {overview.excedente.sugestao && (
@@ -237,7 +237,7 @@ export function FinanceView() {
               <Row
                 label="Margem projetada"
                 value={currency(overview.projecao30d.margem)}
-                valueClass={overview.projecao30d.margem >= 0 ? "text-emerald-600" : "text-rose-500"}
+                valueClass={overview.projecao30d.margem >= 0 ? "text-emerald-500" : "text-rose-500"}
                 bold
               />
             </div>
@@ -329,7 +329,7 @@ function FinanceCharts({
     <div className="space-y-6">
       {hasHistory && (
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
+          <p className="mb-2 text-xs font-medium text-muted-foreground">
             Recebido vs. gasto (últimas 6 semanas)
           </p>
           <ResponsiveContainer width="100%" height={200}>
@@ -351,7 +351,7 @@ function FinanceCharts({
 
       {envelopesChart.length > 0 && (
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
+          <p className="mb-2 text-xs font-medium text-muted-foreground">
             Para onde vai o dinheiro comprometido
           </p>
           <div className="flex items-center gap-4">
@@ -453,7 +453,7 @@ function SituacaoAtual({
       <div className="my-1 border-t border-border/60" />
       <div>
         <span className="text-muted-foreground">Disponível de verdade</span>
-        <p className={`font-display text-3xl font-semibold tabular-nums ${situacao.free >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
+        <p className={`font-display text-4xl font-semibold tabular-nums ${situacao.free >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
           {currency(situacao.free)}
         </p>
       </div>

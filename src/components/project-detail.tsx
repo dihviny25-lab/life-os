@@ -157,7 +157,7 @@ export function ProjectDetail({ id }: { id: string }) {
 
       {/* Próxima ação */}
       <div className="mb-5 rounded-xl border border-primary/30 bg-primary/5 p-4">
-        <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Próxima ação</p>
+        <p className="mb-1 text-xs font-medium text-muted-foreground">Próxima ação</p>
         {progress.nextAction ? (
           <>
             <p className="mb-3 text-base font-medium">{progress.nextAction.title}</p>
@@ -195,7 +195,7 @@ export function ProjectDetail({ id }: { id: string }) {
             {p.orcamento != null && <Row label="Orçamento" value={currency(p.orcamento)} />}
             <Row label="Comprometido (contas)" value={currency(financeiro.comprometido)} valueClass="text-rose-500" />
             <Row label="Gasto (transações)" value={currency(financeiro.gasto)} valueClass="text-rose-500" />
-            {financeiro.disponivel != null && <Row label="Disponível" value={currency(financeiro.disponivel)} bold valueClass={financeiro.disponivel >= 0 ? "text-emerald-600" : "text-rose-600"} />}
+            {financeiro.disponivel != null && <Row label="Disponível" value={currency(financeiro.disponivel)} bold valueClass={financeiro.disponivel >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"} />}
           </div>
           {bills.length > 0 && (
             <ul className="mt-3 space-y-1">
@@ -240,7 +240,7 @@ export function ProjectDetail({ id }: { id: string }) {
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-wide text-muted-foreground/70">{label}</p>
+      <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
       <p className="font-medium">{value}</p>
     </div>
   );
@@ -295,7 +295,7 @@ function StageBlock({
 
   return (
     <div>
-      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">{stage.name}</p>
+      <p className="mb-1.5 text-xs font-medium text-muted-foreground">{stage.name}</p>
       <ul className="space-y-1">
         {stage.tasks.map((t) => (
           <li key={t.id} className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-1.5 text-sm">
