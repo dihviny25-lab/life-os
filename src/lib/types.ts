@@ -5,6 +5,8 @@ export interface Commitment {
   location: string | null;
   area?: string | null;
   recurring?: string | null;
+  done?: boolean;
+  doneAt?: string | null;
 }
 export interface Bill {
   id: string;

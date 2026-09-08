@@ -54,22 +54,35 @@ export async function GET(req: NextRequest) {
 
   const overdueBills = allBills.filter((b) => b.dueDate < todayStart);
   const billsDueToday = allBills.filter((b) => b.dueDate >= todayStart && b.dueDate <= todayEnd);
-  const commitmentsToday = projected.filter((c) => c.startAt >= todayStart && c.startAt <= todayEnd);
+
+  // Um compromisso recorrente sempre é projetado pra próxima ocorrência —
+  // nunca fica "atrasado". Só um compromisso único (sem recorrência) pode
+  // passar do horário e ficar esquecido sem ninguém saber.
+  const overdueCommitments = allCommitments.filter((c) => !c.recurring && !c.done && c.startAt < now);
+  const commitmentsTodayUpcoming = projected.filter(
+    (c) => !c.done && c.startAt >= todayStart && c.startAt <= todayEnd && c.startAt >= now,
+  );
+
+  const timeFmt = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const dateFmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
 
   // "Foco do dia" — urgências reais primeiro (vermelho), depois a agenda de
   // hoje (neutra: um compromisso não é um problema, é só o que vai acontecer).
-  const foco: { label: string; detail: string; href: string; kind: "alerta" | "evento" }[] = [];
+  const foco: { id?: string; type: string; label: string; detail: string; href: string; kind: "alerta" | "evento"; checkable?: boolean }[] = [];
   if (free < 0) {
-    foco.push({ label: "Saldo comprometido além do disponível", detail: `Disponível de verdade: ${free.toFixed(2)}`, href: "/app/areas/financas", kind: "alerta" });
+    foco.push({ type: "saldo", label: "Saldo comprometido além do disponível", detail: `Disponível de verdade: ${free.toFixed(2)}`, href: "/app/areas/financas", kind: "alerta" });
   }
   for (const b of overdueBills) {
-    foco.push({ label: `${b.title} está atrasada`, detail: `Vencia em ${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(b.dueDate)}`, href: "/app/areas/financas", kind: "alerta" });
+    foco.push({ type: "conta", label: `${b.title} está atrasada`, detail: `Vencia em ${dateFmt.format(b.dueDate)}`, href: "/app/areas/financas", kind: "alerta" });
   }
   for (const b of billsDueToday) {
-    foco.push({ label: `${b.title} vence hoje`, detail: `${b.amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`, href: "/app/areas/financas", kind: "alerta" });
+    foco.push({ type: "conta", label: `${b.title} vence hoje`, detail: `${b.amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`, href: "/app/areas/financas", kind: "alerta" });
   }
-  for (const c of commitmentsToday) {
-    foco.push({ label: c.title, detail: new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(c.startAt), href: "/app", kind: "evento" });
+  for (const c of overdueCommitments) {
+    foco.push({ id: c.id, type: "compromisso", label: `${c.title} passou do horário`, detail: `Era ${dateFmt.format(c.startAt)} às ${timeFmt.format(c.startAt)}`, href: "/app", kind: "alerta", checkable: true });
+  }
+  for (const c of commitmentsTodayUpcoming) {
+    foco.push({ id: c.id, type: "compromisso", label: c.title, detail: timeFmt.format(c.startAt), href: "/app", kind: "evento", checkable: !c.recurring });
   }
 
   const porArea = AREAS.map((a) => {

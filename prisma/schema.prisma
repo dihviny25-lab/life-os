@@ -40,6 +40,9 @@ model Commitment {
   location  String?
   area      String?
   recurring String?  // daily | weekdays | weekly | monthly | null (one-off)
+  done      Boolean   @default(false) // só faz sentido pra compromisso não-recorrente — um recorrente
+                                       // é sempre projetado pra próxima ocorrência, nunca fica "atrasado"
+  doneAt    DateTime?
   archived  Boolean  @default(false)
   createdAt DateTime @default(now())
   projectId String?

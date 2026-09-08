@@ -8,12 +8,16 @@ import { CheckCircle2, ListChecks, CalendarClock, AlertTriangle, Clock, Smile } 
 import { MOODS } from "@/lib/moods";
 import { AREAS } from "@/lib/areas";
 import { AnimatedNumber } from "@/components/animated-number";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface FocoItem {
+  id?: string;
+  type: string;
   label: string;
   detail: string;
   href: string;
   kind: "alerta" | "evento";
+  checkable?: boolean;
 }
 interface AreaSummary {
   key: string;
@@ -81,7 +85,7 @@ export function Dashboard() {
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mt-6">
-        <FocoDoDia items={data.foco} />
+        <FocoDoDia items={data.foco} onChange={load} />
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-5">
@@ -101,7 +105,16 @@ export function Dashboard() {
   );
 }
 
-function FocoDoDia({ items }: { items: FocoItem[] }) {
+function FocoDoDia({ items, onChange }: { items: FocoItem[]; onChange: () => void }) {
+  async function markCommitmentDone(id: string) {
+    await fetch(`/api/commitments/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ done: true }),
+    });
+    onChange();
+  }
+
   return (
     <div className="rounded-lg border border-border bg-card p-5">
       <p className="mb-3 flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
@@ -125,13 +138,14 @@ function FocoDoDia({ items }: { items: FocoItem[] }) {
               initial={{ opacity: 0, x: -6 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.05 * i }}
+              className={`flex items-center gap-2 rounded-md px-3 py-2.5 text-sm transition-colors ${
+                item.kind === "alerta" ? "bg-rose-500/5 hover:bg-rose-500/10" : "bg-muted/40 hover:bg-muted"
+              }`}
             >
-              <Link
-                href={item.href}
-                className={`flex items-center justify-between gap-3 rounded-md px-3 py-2.5 text-sm transition-colors ${
-                  item.kind === "alerta" ? "bg-rose-500/5 hover:bg-rose-500/10" : "bg-muted/40 hover:bg-muted"
-                }`}
-              >
+              {item.checkable && item.id && (
+                <Checkbox className="shrink-0" onCheckedChange={() => markCommitmentDone(item.id!)} />
+              )}
+              <Link href={item.href} className="flex flex-1 items-center justify-between gap-3">
                 <span className="flex items-center gap-2 font-medium">
                   {item.kind === "alerta" ? (
                     <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500" />
