@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Home,
   FolderKanban,
+  BarChart3,
   MoreHorizontal,
   Sun,
   Moon,
@@ -21,6 +22,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { key: "hoje", href: "/app", name: "Hoje", icon: Home, color: "#f59e0b" },
   { key: "projetos", href: "/app/projects", name: "Projetos", icon: FolderKanban, color: "#3b82f6" },
+  { key: "semana", href: "/app/semana", name: "Progresso da semana", icon: BarChart3, color: "#10b981" },
   ...AREAS.map((a) => ({ key: a.key, href: `/app/areas/${a.key}`, name: a.name, icon: a.icon, color: a.color })),
 ];
 
