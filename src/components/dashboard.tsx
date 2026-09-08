@@ -90,6 +90,7 @@ export function Dashboard() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mt-6">
         <div className="flex gap-2">
           <AddTransactionDialog type="income" onAdded={load} />
+          <AddTransactionDialog type="expense" onAdded={load} />
           <AddBillDialog onAdded={load} />
           <AddCommitmentDialog onAdded={load} />
         </div>

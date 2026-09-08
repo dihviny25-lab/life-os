@@ -27,6 +27,12 @@ interface Purchase {
   date: string;
   billId: string | null;
 }
+interface FaturaPendente {
+  id: string;
+  title: string;
+  amount: number;
+  dueDate: string;
+}
 interface Card {
   id: string;
   name: string;
@@ -34,6 +40,7 @@ interface Card {
   dueDay: number;
   faturaAtual: number;
   purchases: Purchase[];
+  faturasPendentes: FaturaPendente[];
 }
 
 // A credit card's monthly invoice — purchases pile up here until the cycle
@@ -54,6 +61,17 @@ export function CreditCardsCard() {
   useEffect(() => {
     load();
   }, [load]);
+
+  async function payFatura(f: FaturaPendente) {
+    if (!confirm(`Marcar "${f.title}" (${currency(f.amount)}) como paga? Isso desconta o valor do saldo atual.`)) return;
+    await fetch(`/api/bills/${f.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paid: true }),
+    });
+    notify.success(`"${f.title}" paga — ${currency(f.amount)} descontado do saldo`);
+    load();
+  }
 
   if (loading) return null;
 
@@ -79,6 +97,21 @@ export function CreditCardsCard() {
                   <DeleteButton label={c.name} onDelete={async () => { await fetch(`/api/credit-cards/${c.id}`, { method: "DELETE" }); load(); }} />
                 </div>
               </div>
+              {c.faturasPendentes.length > 0 && (
+                <ul className="mt-1.5 space-y-1 border-t border-border/50 pt-1.5">
+                  {c.faturasPendentes.map((f) => (
+                    <li key={f.id} className="flex min-w-0 items-center gap-2 rounded-md bg-rose-500/5 px-2 py-1 text-xs">
+                      <span className="min-w-0 flex-1 truncate text-rose-600 dark:text-rose-400">
+                        Fatura fechada — vence {dateFmt.format(new Date(f.dueDate))}
+                      </span>
+                      <span className="shrink-0 font-semibold text-rose-600 dark:text-rose-400">{currency(f.amount)}</span>
+                      <Button size="sm" variant="ghost" className="h-6 shrink-0 px-2 text-xs" onClick={() => payFatura(f)}>
+                        Pagar fatura
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
               {c.purchases.length > 0 && (
                 <ul className="mt-1.5 space-y-1 border-t border-border/50 pt-1.5">
                   {c.purchases.map((p) => (

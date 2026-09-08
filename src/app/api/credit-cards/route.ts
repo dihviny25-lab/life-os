@@ -15,7 +15,10 @@ export async function GET(req: NextRequest) {
   const cards = await db.creditCard.findMany({
     where: { userId: session.userId, archived: false },
     orderBy: { createdAt: "asc" },
-    include: { purchases: { where: { billId: null }, orderBy: { date: "desc" } } },
+    include: {
+      purchases: { where: { billId: null }, orderBy: { date: "desc" } },
+      bills: { where: { paid: false }, orderBy: { dueDate: "asc" } },
+    },
   });
 
   const withFatura = cards.map((c) => ({
@@ -25,6 +28,9 @@ export async function GET(req: NextRequest) {
     dueDay: c.dueDay,
     faturaAtual: Math.round(c.purchases.reduce((sum, p) => sum + p.amount, 0) * 100) / 100,
     purchases: c.purchases,
+    // Already closed (materialized into a Bill) but not paid yet — the
+    // actual amount due, unlike faturaAtual which is still accumulating.
+    faturasPendentes: c.bills.map((b) => ({ id: b.id, title: b.title, amount: b.amount, dueDate: b.dueDate })),
   }));
 
   return ok({ cards: withFatura });
