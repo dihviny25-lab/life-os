@@ -82,7 +82,7 @@ const dateFmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short
 
 const STATUS_LABEL: Record<string, { label: string; color: string; bg: string }> = {
   atrasado: { label: "Atrasado", color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-500/10 border-rose-500/20" },
-  sem_cobertura: { label: "Sem cobertura", color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-500/10 border-rose-500/20" },
+  sem_cobertura: { label: "Nada separado ainda", color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-500/10 border-rose-500/20" },
   parcial: { label: "Parcialmente separado", color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
   separado: { label: "Separado", color: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
   pago: { label: "Pago", color: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
