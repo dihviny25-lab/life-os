@@ -152,10 +152,10 @@ function FocoDoDia({ items }: { items: FocoItem[] }) {
 
 function ResumoGeral({ resumo }: { resumo: DashboardData["resumo"] }) {
   const tiles = [
-    { label: "Pendentes", value: resumo.pendentes, icon: ListChecks, color: "#f59e0b" },
-    { label: "Concluídas hoje", value: resumo.concluidasHoje, icon: CheckCircle2, color: "#10b981" },
-    { label: "Próximos compromissos", value: resumo.proximosCompromissos, icon: CalendarClock, color: "#3b82f6" },
-    { label: "Atrasadas", value: resumo.atrasadas, icon: AlertTriangle, color: "#f43f5e" },
+    { label: "Contas pendentes", sub: "ainda não pagas", value: resumo.pendentes, icon: ListChecks, color: "#f59e0b", href: "/app/areas/financas" },
+    { label: "Tarefas concluídas", sub: "hoje", value: resumo.concluidasHoje, icon: CheckCircle2, color: "#10b981", href: "/app/semana" },
+    { label: "Próximos compromissos", sub: "agendados", value: resumo.proximosCompromissos, icon: CalendarClock, color: "#3b82f6", href: "/app/semana" },
+    { label: "Contas atrasadas", sub: "venceram e não foram pagas", value: resumo.atrasadas, icon: AlertTriangle, color: "#f43f5e", href: "/app/areas/financas" },
   ];
 
   return (
@@ -163,19 +163,17 @@ function ResumoGeral({ resumo }: { resumo: DashboardData["resumo"] }) {
       <p className="mb-2 text-xs font-medium text-muted-foreground">Resumo geral</p>
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         {tiles.map((t) => (
-          <motion.div
-            key={t.label}
-            whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className="rounded-lg border border-border bg-card p-3.5"
-          >
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">{t.label}</span>
-              <t.icon className="h-3.5 w-3.5 shrink-0" style={{ color: t.color }} />
-            </div>
-            <p className="font-display text-2xl font-semibold tabular-nums">
-              <AnimatedNumber value={t.value} format={(v) => Math.round(v).toString()} />
-            </p>
+          <motion.div key={t.label} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+            <Link href={t.href} className="block rounded-lg border border-border bg-card p-3.5 transition-colors hover:bg-muted/40">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">{t.label}</span>
+                <t.icon className="h-3.5 w-3.5 shrink-0" style={{ color: t.color }} />
+              </div>
+              <p className="font-display text-2xl font-semibold tabular-nums">
+                <AnimatedNumber value={t.value} format={(v) => Math.round(v).toString()} />
+              </p>
+              <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{t.sub}</p>
+            </Link>
           </motion.div>
         ))}
       </div>
