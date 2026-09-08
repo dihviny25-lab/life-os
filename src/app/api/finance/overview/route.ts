@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
   const historyStart = startOfDay(new Date(weekStart.getTime() - 5 * 7 * 86400000));
 
-  const [finance, envelopes, weeklyBudgets, unpaidBills, weekIncome, weekExpense, recentIncome, historyTx] = await Promise.all([
+  const [finance, envelopes, weeklyBudgets, unpaidBills, weekIncome, weekExpense, recentIncome, historyTx, balanceHistory] = await Promise.all([
     db.finance.findUnique({ where: { userId } }),
     db.envelope.findMany({ where: { userId } }),
     db.weeklyBudget.findMany({ where: { userId } }),
@@ -48,6 +48,7 @@ export async function GET(req: NextRequest) {
     db.transaction.findMany({ where: { userId, type: "expense", date: { gte: weekStart, lte: weekEnd } } }),
     db.transaction.findMany({ where: { userId, type: "income", date: { gte: last30DaysStart, lte: now } } }),
     db.transaction.findMany({ where: { userId, date: { gte: historyStart, lte: weekEnd } } }),
+    db.balanceHistory.findMany({ where: { userId }, orderBy: { date: "asc" }, take: 200 }),
   ]);
 
   const currentBalance = finance?.currentBalance ?? 0;
@@ -118,6 +119,11 @@ export async function GET(req: NextRequest) {
 
   const envelopesChart = envelopes.filter((e) => e.allocated > 0).map((e) => ({ name: e.name, value: e.allocated }));
 
+  const saldoHistorico = balanceHistory.map((bh) => ({
+    date: weekLabelFmt.format(new Date(bh.date)),
+    balance: bh.balance,
+  }));
+
   return ok({
     situacao: { currentBalance, committed, free, status: free < 0 ? "atencao" : "ok" },
     atencao,
@@ -132,5 +138,6 @@ export async function GET(req: NextRequest) {
     projecao30d: { entradas: entradas30d, contas: contas30d, margem: margem30d },
     historico,
     envelopesChart,
+    saldoHistorico,
   });
 }

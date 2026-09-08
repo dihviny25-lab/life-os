@@ -15,6 +15,8 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
 } from "recharts";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -74,6 +76,7 @@ interface Overview {
   projecao30d: { entradas: number; contas: number; margem: number };
   historico: { semana: string; recebido: number; gasto: number }[];
   envelopesChart: { name: string; value: number }[];
+  saldoHistorico: { date: string; balance: number }[];
 }
 
 const PIE_COLORS = ["#38bdf8", "#34d399", "#fbbf24", "#a78bfa", "#f472b6", "#f87171"];
@@ -152,10 +155,10 @@ export function FinanceView() {
           </SectionCard>
         </motion.div>
 
-        {(overview.historico.some((h) => h.recebido > 0 || h.gasto > 0) || overview.envelopesChart.length > 0) && (
+        {(overview.historico.some((h) => h.recebido > 0 || h.gasto > 0) || overview.envelopesChart.length > 0 || overview.saldoHistorico.length > 1) && (
           <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>
             <SectionCard title="Gráficos" icon={BarChart3} color="#38bdf8">
-              <FinanceCharts historico={overview.historico} envelopesChart={overview.envelopesChart} />
+              <FinanceCharts historico={overview.historico} envelopesChart={overview.envelopesChart} saldoHistorico={overview.saldoHistorico} />
             </SectionCard>
           </motion.div>
         )}
@@ -321,9 +324,11 @@ export function FinanceView() {
 function FinanceCharts({
   historico,
   envelopesChart,
+  saldoHistorico,
 }: {
   historico: { semana: string; recebido: number; gasto: number }[];
   envelopesChart: { name: string; value: number }[];
+  saldoHistorico: { date: string; balance: number }[];
 }) {
   const tooltipStyle = {
     background: "var(--popover)",
@@ -336,6 +341,23 @@ function FinanceCharts({
 
   return (
     <div className="space-y-6">
+      {saldoHistorico.length > 1 && (
+        <div>
+          <p className="mb-2 text-xs font-medium text-muted-foreground">
+            Evolução do saldo
+          </p>
+          <ResponsiveContainer width="100%" height={180}>
+            <LineChart data={saldoHistorico} margin={{ left: -20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
+              <YAxis stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} width={48} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => currency(v)} cursor={{ fill: "var(--muted)" }} />
+              <Line dataKey="balance" name="Saldo" stroke="#3b82f6" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
       {hasHistory && (
         <div>
           <p className="mb-2 text-xs font-medium text-muted-foreground">
