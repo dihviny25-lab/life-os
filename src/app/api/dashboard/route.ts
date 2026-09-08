@@ -3,6 +3,7 @@ import { ok, bad } from "@/lib/api";
 import { getUserFromRequest } from "@/lib/auth";
 import { projectCommitment } from "@/lib/recurrence";
 import { verseOfDayIndex } from "@/lib/verse";
+import { materializeDueCreditCardInvoices } from "@/lib/creditCard";
 import { AREAS } from "@/lib/areas";
 import type { NextRequest } from "next/server";
 
@@ -23,6 +24,8 @@ export async function GET(req: NextRequest) {
   const session = await getUserFromRequest(req);
   if (!session) return bad("Unauthorized", 401);
   const userId = session.userId;
+
+  await materializeDueCreditCardInvoices(userId);
 
   const now = new Date();
   const todayStart = startOfDay(now);

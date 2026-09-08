@@ -30,6 +30,7 @@ model User {
   mediaItems   MediaItem[]
   debts        Debt[]
   balanceHistory BalanceHistory[]
+  creditCards  CreditCard[]
 }
 
 model Commitment {
@@ -71,9 +72,47 @@ model Bill {
   envelopes Envelope[]
   projectId String?
   project   Project?   @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  creditCardId String?
+  creditCard   CreditCard? @relation(fields: [creditCardId], references: [id], onDelete: SetNull)
+  creditCardPurchases CreditCardPurchase[]
   @@index([userId, dueDate])
   @@index([userId, area])
   @@index([projectId])
+}
+
+// A credit card with a monthly billing cycle: purchases accumulate until
+// closingDay, then the whole cycle's total is materialized into one Bill due
+// on dueDay — see lib/creditCard.ts. Deliberately no per-purchase Bill (that's
+// what Bill.installments is for, on a normal non-card purchase).
+model CreditCard {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  closingDay Int
+  dueDay     Int
+  archived   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  purchases  CreditCardPurchase[]
+  bills      Bill[]
+  @@index([userId])
+}
+
+// A single purchase on a card. `billId` is null while its cycle is still
+// open; once the cycle closes it's stamped with the Bill created for that
+// invoice and its amount is frozen (part of the invoice total from then on).
+model CreditCardPurchase {
+  id        String     @id @default(cuid())
+  cardId    String
+  card      CreditCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  title     String
+  amount    Float
+  date      DateTime   @default(now())
+  billId    String?
+  bill      Bill?      @relation(fields: [billId], references: [id], onDelete: SetNull)
+  createdAt DateTime   @default(now())
+  @@index([cardId, date])
+  @@index([billId])
 }
 
 // Something that happened: money in or out.
