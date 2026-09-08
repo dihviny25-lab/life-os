@@ -26,3 +26,29 @@ export function projectCommitment<T extends { startAt: Date; recurring?: string 
   if (!c.recurring) return c;
   return { ...c, startAt: nextOccurrence(c.startAt, c.recurring, from) };
 }
+
+// A calendar grid needs every occurrence inside a range, not just the next
+// one — a recurring commitment repeats across the whole month/week shown.
+export function occurrencesInRange(c: { startAt: Date; recurring?: string | null }, rangeStart: Date, rangeEnd: Date): Date[] {
+  if (!c.recurring) {
+    return c.startAt >= rangeStart && c.startAt <= rangeEnd ? [c.startAt] : [];
+  }
+
+  const dates: Date[] = [];
+  let d = nextOccurrence(c.startAt, c.recurring, rangeStart);
+  let guard = 0;
+  while (d <= rangeEnd && guard < 400) {
+    dates.push(new Date(d));
+    guard++;
+    if (c.recurring === "monthly") {
+      d.setMonth(d.getMonth() + 1);
+    } else {
+      const stepDays = c.recurring === "weekly" ? 7 : 1;
+      d.setDate(d.getDate() + stepDays);
+      if (c.recurring === "weekdays") {
+        while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+      }
+    }
+  }
+  return dates;
+}

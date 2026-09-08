@@ -53,10 +53,10 @@ function AreaSelect({ value, onChange, allowNone = true }: { value: string; onCh
   );
 }
 
-export function AddCommitmentDialog({ onAdded, defaultArea }: { onAdded: () => void; defaultArea?: string }) {
+export function AddCommitmentDialog({ onAdded, defaultArea, defaultDate }: { onAdded: () => void; defaultArea?: string; defaultDate?: string }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(defaultDate || "");
   const [time, setTime] = useState("");
   const [area, setArea] = useState(defaultArea || "");
   const [recurring, setRecurring] = useState("");
@@ -78,7 +78,7 @@ export function AddCommitmentDialog({ onAdded, defaultArea }: { onAdded: () => v
     });
     setOpen(false);
     setTitle("");
-    setDate("");
+    setDate(defaultDate || "");
     setTime("");
     setRecurring("");
     onAdded();
