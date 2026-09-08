@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/components/query-provider";
+import { ServiceWorkerRegister } from "@/components/sw-register";
 import { siteConfig } from "@/lib/seo";
 
 const fraunces = Fraunces({
@@ -77,6 +78,7 @@ export default function RootLayout({
             <Toaster richColors position="bottom-right" closeButton />
           </QueryProvider>
         </ThemeProvider>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );
