@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { ok, bad, parseBody } from "@/lib/api";
 import { getUserFromRequest } from "@/lib/auth";
+import { logBalanceHistory } from "@/lib/finance";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -28,11 +29,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Pagar em dinheiro é dinheiro real saindo da conta; permuta não mexe no
   // saldo bancário (foi trocado por mercadoria/serviço, não por dinheiro).
   if (metodo === "dinheiro") {
-    await db.finance.upsert({
+    const finance = await db.finance.upsert({
       where: { userId: session.userId },
       create: { userId: session.userId, currentBalance: -valor },
       update: { currentBalance: { decrement: valor } },
     });
+    await logBalanceHistory(session.userId, finance.currentBalance);
   }
 
   return ok({ payment, saldo: novoSaldo });

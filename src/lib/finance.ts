@@ -1,3 +1,12 @@
+import { db } from "@/lib/db";
+
+// Call right after any write that changes Finance.currentBalance, passing
+// the balance it now holds — this is the only place balance-over-time data
+// comes from, since currentBalance itself only ever holds the latest value.
+export async function logBalanceHistory(userId: string, balance: number) {
+  await db.balanceHistory.create({ data: { userId, balance } });
+}
+
 export function startOfWeekMonday(d: Date): Date {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);

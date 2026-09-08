@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { ok, bad, parseBody } from "@/lib/api";
 import { getUserFromRequest } from "@/lib/auth";
+import { logBalanceHistory } from "@/lib/finance";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -44,11 +45,12 @@ export async function POST(req: NextRequest) {
   // é separado na hora) fica descontado de um dinheiro que ainda não "chegou"
   // no saldo, e "disponível de verdade" mostra negativo sem motivo real.
   const balanceDelta = body.type === "income" ? amount : -amount;
-  await db.finance.upsert({
+  const finance = await db.finance.upsert({
     where: { userId: session.userId },
     create: { userId: session.userId, currentBalance: balanceDelta },
     update: { currentBalance: { increment: balanceDelta } },
   });
+  await logBalanceHistory(session.userId, finance.currentBalance);
 
   if (body.type === "income") {
     const dizimo = Math.round(amount * 0.1 * 100) / 100;

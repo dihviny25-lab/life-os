@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { ok, bad, parseBody } from "@/lib/api";
 import { getUserFromRequest } from "@/lib/auth";
+import { logBalanceHistory } from "@/lib/finance";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -40,18 +41,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   // (that money is now spent, not "committed" anymore). Undoing a paid mark
   // credits the amount back, though the original envelope isn't restored.
   if (data.paid === true && !existing.paid) {
-    await db.finance.upsert({
+    data.paidAt = new Date();
+    const finance = await db.finance.upsert({
       where: { userId: session.userId },
       create: { userId: session.userId, currentBalance: -existing.amount },
       update: { currentBalance: { decrement: existing.amount } },
     });
+    await logBalanceHistory(session.userId, finance.currentBalance);
     await db.envelope.deleteMany({ where: { billId: id } });
   } else if (data.paid === false && existing.paid) {
-    await db.finance.upsert({
+    data.paidAt = null;
+    const finance = await db.finance.upsert({
       where: { userId: session.userId },
       create: { userId: session.userId, currentBalance: existing.amount },
       update: { currentBalance: { increment: existing.amount } },
     });
+    await logBalanceHistory(session.userId, finance.currentBalance);
   }
 
   // Marking a recurring bill as paid rolls the next occurrence forward

@@ -29,6 +29,7 @@ model User {
   checkins     Checkin[]
   mediaItems   MediaItem[]
   debts        Debt[]
+  balanceHistory BalanceHistory[]
 }
 
 model Commitment {
@@ -60,6 +61,7 @@ model Bill {
   amount    Float
   dueDate   DateTime
   paid      Boolean    @default(false)
+  paidAt    DateTime?
   priority  String     @default("normal") // critico | importante | normal | opcional
   recurring String?    // monthly | weekly | null (one-off)
   installments      Int?     // total parcelas — null means indeterminado (repete até cancelar, ex: streaming)
@@ -302,4 +304,17 @@ model Finance {
   currentBalance   Float    @default(0)
   weeklyBaseIncome Float    @default(1500)
   updatedAt        DateTime @updatedAt
+}
+
+// A log of currentBalance after every change that touches it (income/expense
+// transactions, bills marked paid/unpaid, debt payments in cash) — the only
+// way to chart balance over time, since currentBalance itself only ever
+// holds the latest value.
+model BalanceHistory {
+  id      String   @id @default(cuid())
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance Float
+  date    DateTime @default(now())
+  @@index([userId, date])
 }
