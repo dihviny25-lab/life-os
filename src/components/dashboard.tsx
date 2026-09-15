@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { CheckCircle2, ListChecks, CalendarClock, AlertTriangle, Clock, Smile, Activity, Receipt, HandCoins, TrendingUp, CreditCard } from "lucide-react";
+import { CheckCircle2, ListChecks, CalendarClock, AlertTriangle, Clock, Smile, Activity, Receipt, HandCoins, TrendingUp, CreditCard, Target, ArrowRight } from "lucide-react";
 import { MOODS } from "@/lib/moods";
 import { AREAS } from "@/lib/areas";
 import { AnimatedNumber } from "@/components/animated-number";
@@ -44,6 +44,16 @@ interface DashboardData {
   checkin: { mood: string } | null;
   atividade: { type: string; label: string; detail: string; at: string }[];
   creditCards: { id: string; name: string }[];
+  planoAjuste: {
+    id: string;
+    percent: number;
+    done: number;
+    total: number;
+    nextAction: { id: string; title: string } | null;
+    deadline: string | null;
+    activeDevelopmentCount: number;
+    developmentWipLimit: number;
+  } | null;
 }
 
 const dateFmt = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
@@ -113,19 +123,68 @@ export function Dashboard() {
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-6">
-        <PorArea areas={data.porArea} />
+        <PlanoAjusteCard plan={data.planoAjuste} />
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-6">
+        <PorArea areas={data.porArea} />
+      </motion.div>
+
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-6">
         <AtividadeRecente items={data.atividade} />
       </motion.div>
 
       {(data.checkin !== undefined || data.verseOfDay) && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-6">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="mt-6">
           <AntesDeSeguir checkin={data.checkin} verseOfDay={data.verseOfDay} onChange={load} />
         </motion.div>
       )}
     </div>
+  );
+}
+
+function PlanoAjusteCard({ plan }: { plan: DashboardData["planoAjuste"] }) {
+  if (!plan) {
+    return (
+      <Link href="/app/plano" className="group flex items-center gap-3 rounded-lg border border-primary/25 bg-primary/5 p-4 transition-colors hover:bg-primary/10">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <Target className="h-5 w-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-medium">Ativar plano de ajuste</span>
+          <span className="block text-sm text-muted-foreground">Organize os próximos 90 dias sem criar mais dez projetos.</span>
+        </span>
+        <ArrowRight className="h-4 w-4 shrink-0 text-primary transition-transform group-hover:translate-x-0.5" />
+      </Link>
+    );
+  }
+
+  const overLimit = plan.activeDevelopmentCount > plan.developmentWipLimit;
+
+  return (
+    <Link href="/app/plano" className="group block rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary/40">
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Target className="h-5 w-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-medium">Plano de ajuste</span>
+            <span className="text-sm font-semibold text-primary">{plan.percent}%</span>
+          </span>
+          <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-primary/15">
+            <span className="block h-full rounded-full bg-primary transition-all" style={{ width: `${plan.percent}%` }} />
+          </span>
+          <span className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+            <span className="truncate">{plan.nextAction ? `Agora: ${plan.nextAction.title}` : "Todas as ações foram concluídas"}</span>
+            <span className={overLimit ? "font-medium text-rose-500" : ""}>
+              Desenvolvimento {plan.activeDevelopmentCount}/{plan.developmentWipLimit}
+            </span>
+          </span>
+        </span>
+        <ArrowRight className="mt-3 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+      </div>
+    </Link>
   );
 }
 

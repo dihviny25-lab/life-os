@@ -17,10 +17,13 @@ interface ProjectWithProgress extends Project {
 const STATUS_FILTERS = [
   { value: "", label: "Todos" },
   { value: "ativo", label: "Ativos" },
-  { value: "esperando", label: "Esperando" },
+  { value: "manutencao", label: "Manutenção" },
+  { value: "esperando", label: "Em espera" },
   { value: "bloqueado", label: "Bloqueados" },
   { value: "planejado", label: "Planejados" },
+  { value: "experimental", label: "Experimentais" },
   { value: "concluido", label: "Concluídos" },
+  { value: "descartado", label: "Descartados" },
 ];
 
 const prazoFmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
