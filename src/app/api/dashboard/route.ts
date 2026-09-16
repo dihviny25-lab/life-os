@@ -5,6 +5,8 @@ import { projectCommitment } from "@/lib/recurrence";
 import { verseOfDayIndex } from "@/lib/verse";
 import { materializeDueCreditCardInvoices } from "@/lib/creditCard";
 import { AREAS } from "@/lib/areas";
+import { ADJUSTMENT_PLAN_MARKER, DEVELOPMENT_WIP_LIMIT } from "@/lib/adjustment-plan";
+import { computeProjectProgress } from "@/lib/projects";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +33,7 @@ export async function GET(req: NextRequest) {
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
 
-  const [user, allCommitments, allBills, finance, envelopes, projects, verses, checkin, doneToday, recentTransactions, recentBills, recentTasks, recentCommitments, recentDebtPayments, creditCards] = await Promise.all([
+  const [user, allCommitments, allBills, finance, envelopes, projects, verses, checkin, doneToday, recentTransactions, recentBills, recentTasks, recentCommitments, recentDebtPayments, creditCards, adjustmentPlan] = await Promise.all([
     db.user.findUnique({ where: { id: userId }, select: { name: true } }),
     db.commitment.findMany({ where: { userId, archived: false } }),
     db.bill.findMany({ where: { userId, paid: false }, orderBy: { dueDate: "asc" } }),
@@ -49,6 +51,10 @@ export async function GET(req: NextRequest) {
     db.creditCard.findMany({
       where: { userId, archived: false },
       select: { id: true, name: true, purchases: { where: { billId: null } }, bills: { where: { paid: false } } },
+    }),
+    db.project.findFirst({
+      where: { userId, statusNote: ADJUSTMENT_PLAN_MARKER, archived: false },
+      include: { tasks: true, stages: true },
     }),
   ]);
 
@@ -105,7 +111,7 @@ export async function GET(req: NextRequest) {
   }
 
   const porArea = AREAS.map((a) => {
-    const activeProjects = projects.filter((p) => p.area === a.key && p.status !== "concluido");
+    const activeProjects = projects.filter((p) => p.area === a.key && !["concluido", "descartado"].includes(p.status));
     const nextCommitment = projected.find((c) => c.startAt >= now && c.area === a.key);
     const nextBill = allBills.find((b) => b.area === a.key);
     let subtitle: string;
@@ -159,6 +165,12 @@ export async function GET(req: NextRequest) {
   // Sort by date descending and take top 8
   atividade.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
   const topAtividade = atividade.slice(0, 8);
+  const adjustmentProgress = adjustmentPlan
+    ? computeProjectProgress(adjustmentPlan.tasks, adjustmentPlan.stages)
+    : null;
+  const activeDevelopmentCount = projects.filter(
+    (project) => project.area === "desenvolvimento" && project.status === "ativo",
+  ).length;
 
   return ok({
     firstName,
@@ -176,5 +188,17 @@ export async function GET(req: NextRequest) {
     checkin: checkin ? { mood: checkin.mood } : null,
     atividade: topAtividade,
     creditCards: creditCards.map((c) => ({ id: c.id, name: c.name })),
+    planoAjuste: adjustmentProgress
+      ? {
+          id: adjustmentPlan!.id,
+          percent: adjustmentProgress.percent,
+          done: adjustmentProgress.done,
+          total: adjustmentProgress.total,
+          nextAction: adjustmentProgress.nextAction,
+          deadline: adjustmentPlan!.prazo,
+          activeDevelopmentCount,
+          developmentWipLimit: DEVELOPMENT_WIP_LIMIT,
+        }
+      : null,
   });
 }

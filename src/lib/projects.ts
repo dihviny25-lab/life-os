@@ -39,14 +39,17 @@ export function computeProjectProgress<T extends TaskLike>(tasks: T[], stages: S
   };
 }
 
-export const STATUS_ORDER = ["ativo", "bloqueado", "esperando", "planejado", "concluido"];
+export const STATUS_ORDER = ["ativo", "manutencao", "bloqueado", "esperando", "planejado", "experimental", "concluido", "descartado"];
 
 export const STATUS_LABEL: Record<string, string> = {
   planejado: "Planejado",
+  experimental: "Experimental",
   ativo: "Ativo",
-  esperando: "Esperando",
+  manutencao: "Manutenção",
+  esperando: "Em espera",
   bloqueado: "Bloqueado",
   concluido: "Concluído",
+  descartado: "Descartado",
 };
 
 export const PRIORITY_LABEL: Record<string, string> = {

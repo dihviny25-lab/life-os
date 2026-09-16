@@ -412,10 +412,13 @@ export function EditBillDialog({ bill, onSaved }: { bill: Bill; onSaved: () => v
 
 const PROJECT_STATUSES = [
   { value: "planejado", label: "Planejado" },
+  { value: "experimental", label: "Experimental" },
   { value: "ativo", label: "Ativo" },
-  { value: "esperando", label: "Esperando" },
+  { value: "manutencao", label: "Manutenção" },
+  { value: "esperando", label: "Em espera" },
   { value: "bloqueado", label: "Bloqueado" },
   { value: "concluido", label: "Concluído" },
+  { value: "descartado", label: "Descartado" },
 ];
 
 const PRIORITIES = [

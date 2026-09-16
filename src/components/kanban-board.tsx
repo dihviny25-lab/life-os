@@ -17,7 +17,7 @@ interface ProjectWithProgress extends Project {
   progress: { total: number; done: number; percent: number; nextAction: { id: string; title: string } | null };
 }
 
-const COLUMNS = ["planejado", "ativo", "esperando", "bloqueado", "concluido"];
+const COLUMNS = ["planejado", "experimental", "ativo", "manutencao", "esperando", "bloqueado", "concluido", "descartado"];
 
 export function KanbanBoard({ projects, onChange }: { projects: ProjectWithProgress[]; onChange: () => void }) {
   async function moveTo(id: string, status: string) {

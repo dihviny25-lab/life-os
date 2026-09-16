@@ -11,6 +11,7 @@ import {
   BarChart3,
   CalendarRange,
   CalendarDays,
+  Target,
   MoreHorizontal,
   Sun,
   Moon,
@@ -23,6 +24,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { key: "hoje", href: "/app", name: "Hoje", icon: Home, color: "#f59e0b" },
+  { key: "plano", href: "/app/plano", name: "Plano de ajuste", icon: Target, color: "#2563eb" },
   { key: "calendario", href: "/app/calendario", name: "Calendário", icon: CalendarRange, color: "#8b5cf6" },
   { key: "projetos", href: "/app/projects", name: "Projetos", icon: FolderKanban, color: "#3b82f6" },
   { key: "semana", href: "/app/semana", name: "Progresso da semana", icon: BarChart3, color: "#10b981" },

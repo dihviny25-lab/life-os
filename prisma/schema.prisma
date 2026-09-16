@@ -166,7 +166,7 @@ model Project {
   area            String
   objetivo        String?
   statusNote      String?
-  status          String   @default("planejado") // planejado | ativo | esperando | bloqueado | concluido
+  status          String   @default("planejado") // planejado | experimental | ativo | manutencao | esperando | bloqueado | concluido | descartado
   esperandoMotivo String?
   prioridade      String   @default("media") // baixa | media | alta
   prazo           DateTime?
